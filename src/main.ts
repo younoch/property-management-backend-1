@@ -26,6 +26,9 @@ async function bootstrap() {
     next();
   });
 
+  // Optional: Set global prefix for all APIs (uncomment if you want /api prefix)
+  // app.setGlobalPrefix('api');
+
   // Swagger documentation (only in development)
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
@@ -42,11 +45,15 @@ async function bootstrap() {
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
+    // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document);
     SwaggerModule.setup('api', app, document);
   }
 
   const port = process.env.PORT || 8000;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  // Bind to all interfaces for containerized environments
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on port: ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
 }
 bootstrap();
