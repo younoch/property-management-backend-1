@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: property-management-api
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_SYNC
+        value: false
+      - key: DB_SSL
+        value: true
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend-domain.onrender.com
+      - key: COOKIE_KEY
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: property-management-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: property-management-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: property-management-db
+          property: username
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: property-management-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: property-management-db
+          property: database
+
+databases:
+  - name: property-management-db
+    plan: free
+    databaseName: property_management_prod
