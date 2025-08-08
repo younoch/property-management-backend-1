@@ -1,0 +1,108 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password_123
+          POSTGRES_DB: property_management_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Install dependencies
+      run: pnpm install
+    
+    - name: Create environment files
+      run: |
+        cp env.test.example .env.test
+        cp env.example .env.development
+    
+    - name: Run linter
+      run: pnpm run lint
+    
+    - name: Run tests
+      run: pnpm run test
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USERNAME: postgres
+        DB_PASSWORD: test_password_123
+        DB_NAME: property_management_test
+        DB_SYNC: true
+        DB_SSL: false
+        COOKIE_KEY: test-cookie-key-for-ci-only-not-for-production
+    
+    - name: Run e2e tests
+      run: pnpm run test:e2e
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USERNAME: postgres
+        DB_PASSWORD: test_password_123
+        DB_NAME: property_management_test
+        DB_SYNC: true
+        DB_SSL: false
+        COOKIE_KEY: test-cookie-key-for-ci-only-not-for-production
+    
+    - name: Build application
+      run: pnpm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    
+    - name: Install dependencies
+      run: pnpm install
+    
+    - name: Build application
+      run: pnpm run build
+    
+    - name: Deploy to production
+      run: echo "Deploy to production server"
+      # Add your deployment commands here 
