@@ -9,6 +9,12 @@
 .env.*.local
 .env.render
 
+# Process and temporary files
+.app.pid
+*.pid
+.pid
+pid
+
 # compiled output
 /dist
 /node_modules
