@@ -29,7 +29,11 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  COOKIE_KEY: string;
+  JWT_ACCESS_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_ACCESS_EXPIRES_IN?: string;
 
   @IsOptional()
   @IsString()

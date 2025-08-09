@@ -39,7 +39,7 @@ fi
 DB_HOST=${DB_HOST:-localhost}
 DB_PORT=${DB_PORT:-5432}
 DB_USERNAME=${DB_USERNAME:-postgres}
-DB_PASSWORD=${DB_PASSWORD:-rR%jrYKNqQdnYVQUkzuN}
+DB_PASSWORD=${DB_PASSWORD:-postgres123}
 DB_NAME=${DB_NAME:-property_rental_management_db}
 
 # Validate required environment variables

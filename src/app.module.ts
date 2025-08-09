@@ -1,4 +1,4 @@
-import { Module, ValidationPipe, MiddlewareConsumer } from '@nestjs/common';
+import { Module, ValidationPipe, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -23,7 +23,7 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
-const cookieSession = require('cookie-session');
+import * as cookieParser from 'cookie-parser';
 
 @Module({
   imports: [
@@ -96,16 +96,10 @@ const cookieSession = require('cookie-session');
     },
   ],
 })
-export class AppModule {
+export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(
-        cookieSession({
-          keys: [this.configService.get('COOKIE_KEY')],
-        }),
-      )
-      .forRoutes('*');
+    consumer.apply(cookieParser()).forRoutes('*');
   }
 }

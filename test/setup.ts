@@ -1,20 +1,27 @@
 import { getConnection } from 'typeorm';
 
 global.beforeEach(async () => {
-  const conn = getConnection();
-  if (conn.isConnected) {
-    // Clear all tables before each test
-    const entities = conn.entityMetadatas;
-    for (const entity of entities) {
-      const repository = conn.getRepository(entity.name);
-      await repository.clear();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        try {
+    const conn = getConnection();
+    if ((conn as any).isConnected) {
+      const entities = (conn as any).entityMetadatas;
+      for (const entity of entities) {
+        const repository = (conn as any).getRepository(entity.name);
+        await repository.clear();
+      }
     }
+  } catch (_) {
+    // No active connection yet; skip
   }
 });
 
 global.afterEach(async () => {
-  const conn = getConnection();
-  if (conn.isConnected) {
-    await conn.close();
+  try {
+    const conn = getConnection();
+    if ((conn as any).isConnected) {
+      await (conn as any).close();
+    }
+  } catch (_) {
+    // No connection; skip
   }
 });

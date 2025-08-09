@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService, private configService: ConfigService) {}
 
   async signup(email: string, password: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant' = 'tenant') {
     // See if email is in use
@@ -41,5 +43,14 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  generateAccessToken(user: any): string {
+    const payload = { sub: user.id, role: user.role };
+    return jwt.sign(
+      payload,
+      this.configService.get<string>('JWT_ACCESS_SECRET') as string,
+      { expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m' },
+    );
   }
 }

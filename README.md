@@ -120,7 +120,8 @@ This application requires several environment variables for secure operation. **
 - `DB_SSL`: Enable SSL connection (default: true in production)
 
 #### Security Configuration
-- `COOKIE_KEY`: Secret key for session encryption (required)
+- `JWT_ACCESS_SECRET`: Secret for signing access JWTs (required)
+- `JWT_ACCESS_EXPIRES_IN`: Access token TTL, e.g., `15m` (optional)
 - `NODE_ENV`: Environment mode (development/production/test)
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
 
@@ -192,7 +193,7 @@ pnpm run db:reset
 ### User Management
 - **Multi-Role System**: Support for Super Admin, Landlord, Manager, and Tenant roles
 - **Profile Management**: Complete user profiles with contact information
-- **Authentication**: Secure session-based authentication with password hashing
+- **Authentication**: JWT with HttpOnly, Secure cookies for stateless auth
 
 ### Account Management
 - **Landlord Accounts**: Subscription-based account management

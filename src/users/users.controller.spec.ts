@@ -72,14 +72,23 @@ describe('UsersController', () => {
     }
   });
 
-  it('signin updates session object and returns user', async () => {
-    const session = { userId: -10 };
-    const user = await controller.signin(
+  it('signin returns login payload and sets cookie header', async () => {
+    const res: any = { setHeader: jest.fn() };
+    // Extend fake auth service to attach setCookie
+    (fakeAuthService as any).issueLoginResponse = (user: any) => ({
+      id: user.id,
+      email: user.email,
+      setCookie: 'access_token=abc; HttpOnly; Path=/; SameSite=None',
+    });
+    // Rewire controller's authService method call path by spying if needed
+    const login = await (controller as any).signin(
       { email: 'asdf@asdf.com', password: 'asdf' },
-      session,
+      res,
     );
-
-    expect(user.id).toEqual(1);
-    expect(session.userId).toEqual(1);
+    expect(login.id).toEqual(1);
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Set-Cookie',
+      expect.stringContaining('access_token='),
+    );
   });
 });

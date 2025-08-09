@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   
   // CORS configuration for production
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
@@ -41,7 +43,7 @@ async function bootstrap() {
       .addTag('properties', 'Property management endpoints')
       .addTag('notifications', 'Notification management endpoints')
       .addTag('reports', 'Reporting endpoints')
-      .addCookieAuth('session')
+      .addCookieAuth('access_token')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);

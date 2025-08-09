@@ -52,7 +52,7 @@ cp env.production.example .env
 
 ### CORS Settings
 - **Origins**: Configurable via `ALLOWED_ORIGINS` environment variable
-- **Credentials**: Enabled for session cookies
+- **Credentials**: Enabled for HttpOnly, Secure JWT cookies
 - **Methods**: GET, POST, PUT, DELETE, PATCH, OPTIONS
 - **Headers**: Content-Type, Authorization, X-Requested-With
 - **Exposed Headers**: Set-Cookie
@@ -67,7 +67,7 @@ cp env.production.example .env
 - `NODE_ENV`: Set to 'production'
 - `PORT`: Configurable (default: 8000)
 - `ALLOWED_ORIGINS`: Your frontend domain(s)
-- `COOKIE_KEY`: Strong secret for session cookies
+- `JWT_ACCESS_SECRET`: Strong secret for signing JWTs
 - Database configuration variables
 
 ## 📋 Next Steps
