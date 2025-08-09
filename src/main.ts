@@ -29,8 +29,8 @@ async function bootstrap() {
   // Optional: Set global prefix for all APIs (uncomment if you want /api prefix)
   // app.setGlobalPrefix('api');
 
-  // Swagger documentation (only in development)
-  if (process.env.NODE_ENV !== 'production') {
+  // Swagger documentation (enabled for development and production)
+  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
     const config = new DocumentBuilder()
       .setTitle('Property & Rental Management for Small Landlords API')
       .setDescription('Comprehensive property management system for small landlords with user authentication, property management, and rental operations')

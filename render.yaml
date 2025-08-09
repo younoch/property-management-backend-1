@@ -18,6 +18,8 @@ services:
         value: https://your-frontend-domain.onrender.com
       - key: COOKIE_KEY
         generateValue: true
+      - key: ENABLE_SWAGGER
+        value: true
       - key: DB_HOST
         fromDatabase:
           name: property-management-db
