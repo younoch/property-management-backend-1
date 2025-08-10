@@ -57,6 +57,14 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  ENABLE_SWAGGER?: string;
+
+  @IsOptional()
+  @IsString()
+  SWAGGER_PATH?: string;
+
+  @IsOptional()
+  @IsString()
   TEST_PASSWORD?: string;
 }
 

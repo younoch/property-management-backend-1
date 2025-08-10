@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { SigninDto } from './dtos/signin.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
@@ -24,6 +25,7 @@ import { AuthGuard } from '../guards/auth.guard';
 import { Response } from 'express';
 import { Res } from '@nestjs/common';
 import { RefreshTokenResponseDto } from './dtos/refresh-token.dto';
+import { SigninResponseDto } from './dtos/signin-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -70,7 +72,11 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User registered successfully', 
+    type: SigninResponseDto 
+  })
   @ApiResponse({ status: 400, description: 'Email already in use' })
   @Post('/signup')
   async createUser(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response) {
@@ -102,15 +108,25 @@ export class UsersController {
       maxAge: this.parseMaxAge(process.env.JWT_REFRESH_EXPIRES_IN || '7d'),
     });
 
-    return { id: user.id, email: user.email, name: user.name, role: user.role };
+    // Return only user data since tokens are set as HttpOnly cookies
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
   }
 
   @ApiOperation({ summary: 'Sign in user' })
-  @ApiResponse({ status: 200, description: 'User signed in successfully' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User signed in successfully', 
+    type: SigninResponseDto 
+  })
   @ApiResponse({ status: 400, description: 'Invalid credentials' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Post('/signin')
-  async signin(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response) {
+  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.signin(body.email, body.password);
     const accessToken = this.authService.generateAccessToken(user);
     const refreshToken = this.authService.generateRefreshToken(user);
@@ -133,7 +149,13 @@ export class UsersController {
       maxAge: this.parseMaxAge(process.env.JWT_REFRESH_EXPIRES_IN || '7d'),
     });
 
-    return { id: user.id, email: user.email, name: user.name, role: user.role };
+    // Return only user data since tokens are set as HttpOnly cookies
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
   }
 
   @ApiOperation({ summary: 'Refresh access token' })

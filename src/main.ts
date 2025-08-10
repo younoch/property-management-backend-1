@@ -33,6 +33,7 @@ async function bootstrap() {
 
   // Swagger documentation (enabled for development and production)
   if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+    const swaggerPath = process.env.SWAGGER_PATH || 'api';
     const config = new DocumentBuilder()
       .setTitle('Property & Rental Management for Small Landlords API')
       .setDescription('Comprehensive property management system for small landlords with user authentication, property management, and rental operations')
@@ -48,16 +49,25 @@ async function bootstrap() {
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
-    // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document);
-    SwaggerModule.setup('api', app, document, {
+    // If using global prefix, change to: SwaggerModule.setup(`${swaggerPath}/docs`, app, document);
+    SwaggerModule.setup(swaggerPath, app, document, {
       swaggerOptions: {
         persistAuthorization: true,
+        deepLinking: true,
+        docExpansion: 'none',
+        displayRequestDuration: true,
+        filter: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+        tryItOutEnabled: true,
+        defaultModelsExpandDepth: -1,
         requestInterceptor: (req: any) => {
           // Ensure cookies are included in Swagger "Try it out" requests
           req.credentials = 'include';
           return req;
         },
       },
+      customSiteTitle: 'Property Management API Docs',
     });
   }
 
