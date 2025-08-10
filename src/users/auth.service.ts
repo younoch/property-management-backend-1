@@ -53,4 +53,59 @@ export class AuthService {
       { expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m' },
     );
   }
+
+  generateRefreshToken(user: any): string {
+    const payload = { sub: user.id, type: 'refresh' };
+    return jwt.sign(
+      payload,
+      this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_ACCESS_SECRET') as string,
+      { expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d' },
+    );
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+    try {
+      const payload = jwt.verify(
+        refreshToken,
+        this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_ACCESS_SECRET') as string,
+      ) as { sub: number; type: string };
+
+      if (payload.type !== 'refresh') {
+        throw new BadRequestException('Invalid token type');
+      }
+
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const newAccessToken = this.generateAccessToken(user);
+      const newRefreshToken = this.generateRefreshToken(user);
+
+      return {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+      };
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new BadRequestException('Refresh token expired');
+      }
+      throw error;
+    }
+  }
+
+  async validateAccessToken(token: string): Promise<{ sub: number; role: string } | null> {
+    try {
+      const payload = jwt.verify(
+        token,
+        this.configService.get<string>('JWT_ACCESS_SECRET') as string,
+      ) as { sub: number; role: string };
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  }
 }

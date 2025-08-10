@@ -44,11 +44,21 @@ async function bootstrap() {
       .addTag('notifications', 'Notification management endpoints')
       .addTag('reports', 'Reporting endpoints')
       .addCookieAuth('access_token')
+      .addCookieAuth('refresh_token')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
     // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        requestInterceptor: (req: any) => {
+          // Ensure cookies are included in Swagger "Try it out" requests
+          req.credentials = 'include';
+          return req;
+        },
+      },
+    });
   }
 
   const port = process.env.PORT || 8000;

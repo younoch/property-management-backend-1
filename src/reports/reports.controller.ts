@@ -8,7 +8,7 @@ import {
   Get,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
 import { CreateReportDto } from './dtos/create-report.dto';
 import { ReportsService } from './reports.service';
 import { AuthGuard } from '../guards/auth.guard';
@@ -35,6 +35,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'Create a new car report' })
   @ApiResponse({ status: 201, description: 'Report created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiCookieAuth('access_token')
   @Post()
   @UseGuards(AuthGuard)
   @Serialize(ReportDto)

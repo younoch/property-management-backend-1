@@ -8,34 +8,53 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { Property } from './property.entity';
 
+@ApiTags('properties')
 @Controller('properties')
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
+  @ApiOperation({ summary: 'Create a new property' })
+  @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @Post()
   create(@Body() createPropertyDto: CreatePropertyDto) {
     return this.propertiesService.create(createPropertyDto);
   }
 
+  @ApiOperation({ summary: 'Get all properties' })
+  @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: [Property] })
   @Get()
   findAll() {
     return this.propertiesService.findAll();
   }
 
+  @ApiOperation({ summary: 'Get property by ID' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property found successfully', type: Property })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.propertiesService.findOne(+id);
   }
 
+  @ApiOperation({ summary: 'Get properties by account ID' })
+  @ApiParam({ name: 'accountId', description: 'Account ID' })
+  @ApiResponse({ status: 200, description: 'Account properties retrieved successfully', type: [Property] })
   @Get('account/:accountId')
   findByAccount(@Param('accountId') accountId: string) {
     return this.propertiesService.findByAccount(+accountId);
   }
 
+  @ApiOperation({ summary: 'Search properties by location' })
+  @ApiQuery({ name: 'city', description: 'City name', required: false })
+  @ApiQuery({ name: 'state', description: 'State name', required: false })
+  @ApiResponse({ status: 200, description: 'Properties found by location', type: [Property] })
   @Get('location/search')
   findByLocation(
     @Query('city') city: string,
@@ -44,11 +63,20 @@ export class PropertiesController {
     return this.propertiesService.findByLocation(city, state);
   }
 
+  @ApiOperation({ summary: 'Update property by ID' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property updated successfully', type: Property })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
     return this.propertiesService.update(+id, updatePropertyDto);
   }
 
+  @ApiOperation({ summary: 'Delete property by ID' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.propertiesService.remove(+id);

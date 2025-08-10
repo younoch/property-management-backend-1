@@ -37,6 +37,14 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  JWT_REFRESH_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_REFRESH_EXPIRES_IN?: string;
+
+  @IsOptional()
+  @IsString()
   NODE_ENV?: string;
 
   @IsOptional()
