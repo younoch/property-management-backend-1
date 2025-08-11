@@ -20,6 +20,7 @@ import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './user.entity';
 import { AuthGuard } from '../guards/auth.guard';
+import { CsrfGuard } from '../guards/csrf.guard';
 import { Response } from 'express';
 import { Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -43,11 +44,14 @@ export class UsersController {
     return user;
   }
 
+  @ApiOperation({ summary: 'Sign out user' })
+  @ApiResponse({ status: 200, description: 'User signed out successfully' })
   @Post('/signout')
+  @UseGuards(AuthGuard, CsrfGuard)
   signOut(@Res({ passthrough: true }) res: Response) {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     
-    // Clear cookie with same configuration as login
+    // Clear both JWT and CSRF cookies
     res.cookie('access_token', '', {
       httpOnly: true,
       secure: isProduction,
@@ -56,6 +60,16 @@ export class UsersController {
       path: '/',
       maxAge: 0,
     });
+    
+    res.cookie('csrf_token', '', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      expires: new Date(0),
+      path: '/',
+      maxAge: 0,
+    });
+    
     return { message: 'Signed out' };
   }
 
@@ -88,6 +102,9 @@ export class UsersController {
     return login;
   }
 
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({ status: 200, description: 'User found successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @Get('/:id')
   async findUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(parseInt(id));
@@ -97,17 +114,29 @@ export class UsersController {
     return user;
   }
 
+  @ApiOperation({ summary: 'Get all users or search by email' })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Get()
   findAllUsers(@Query('email') email: string) {
     return this.usersService.find(email);
   }
 
+  @ApiOperation({ summary: 'Delete user by ID' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @Delete('/:id')
+  @UseGuards(AuthGuard, CsrfGuard)
   removeUser(@Param('id') id: string) {
     return this.usersService.remove(parseInt(id));
   }
 
+  @ApiOperation({ summary: 'Update user by ID' })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @Patch('/:id')
+  @UseGuards(AuthGuard, CsrfGuard)
   updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
     return this.usersService.update(parseInt(id), body);
   }

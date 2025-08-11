@@ -14,6 +14,7 @@ import { PropertiesModule } from './properties/properties.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { CsrfModule } from './modules/csrf.module';
 import { User } from './users/user.entity';
 import { Report } from './reports/report.entity';
 import { Account } from './accounts/account.entity';
@@ -74,6 +75,7 @@ import * as cookieParser from 'cookie-parser';
     NotificationsModule,
     HealthModule,
     MonitoringModule,
+    CsrfModule,
   ],
   controllers: [AppController],
   providers: [

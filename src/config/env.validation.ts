@@ -50,6 +50,14 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   TEST_PASSWORD?: string;
+
+  @IsOptional()
+  @IsString()
+  CSRF_SECRET?: string;
+
+  @IsOptional()
+  @IsNumber()
+  CSRF_TOKEN_EXPIRY_HOURS?: number;
 }
 
 export function validate(config: Record<string, unknown>) {
