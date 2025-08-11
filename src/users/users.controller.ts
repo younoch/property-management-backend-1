@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { SigninDto } from './dtos/signin.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
@@ -44,10 +45,14 @@ export class UsersController {
     return user;
   }
 
-  @ApiOperation({ summary: 'Sign out user' })
+  @ApiOperation({ 
+    summary: 'Sign out user',
+    description: 'Sign out the currently authenticated user. Clears authentication cookies and CSRF token.'
+  })
   @ApiResponse({ status: 200, description: 'User signed out successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - User not authenticated' })
   @Post('/signout')
-  @UseGuards(AuthGuard, CsrfGuard)
+  @UseGuards(AuthGuard)
   signOut(@Res({ passthrough: true }) res: Response) {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     
@@ -90,12 +95,15 @@ export class UsersController {
     return login;
   }
 
-  @ApiOperation({ summary: 'Sign in user' })
+  @ApiOperation({ 
+    summary: 'Sign in user',
+    description: 'Sign in with user credentials. Only email and password are required.'
+  })
   @ApiResponse({ status: 200, description: 'User signed in successfully' })
   @ApiResponse({ status: 400, description: 'Invalid credentials' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Post('/signin')
-  async signin(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response) {
+  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
     res.setHeader('Set-Cookie', login.setCookie);
