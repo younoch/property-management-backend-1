@@ -37,14 +37,6 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
-  JWT_REFRESH_SECRET?: string;
-
-  @IsOptional()
-  @IsString()
-  JWT_REFRESH_EXPIRES_IN?: string;
-
-  @IsOptional()
-  @IsString()
   NODE_ENV?: string;
 
   @IsOptional()
@@ -54,14 +46,6 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   ALLOWED_ORIGINS?: string;
-
-  @IsOptional()
-  @IsString()
-  ENABLE_SWAGGER?: string;
-
-  @IsOptional()
-  @IsString()
-  SWAGGER_PATH?: string;
 
   @IsOptional()
   @IsString()

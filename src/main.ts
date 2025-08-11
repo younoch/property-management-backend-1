@@ -12,12 +12,61 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   
+  // Enhanced CORS configuration for JWT cookies
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      
+      // For development, allow localhost variations
+      if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+        return callback(null, true);
+      }
+      
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With',
+      'Cookie',
+      'Accept',
+      'Origin'
+    ],
+    exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+  
+  // CORS preflight middleware for better cookie handling
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Max-Age', '86400'); // 24 hours
+      res.status(204).end();
+      return;
+    }
+    
+    // Set CORS headers for all responses
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    next();
   });
   
   // Security headers
@@ -25,6 +74,12 @@ async function bootstrap() {
   app.use((req, res, next) => {
     res.removeHeader('x-powered-by');
     res.removeHeader('date');
+    
+    // Additional security headers for cookies
+    res.header('X-Content-Type-Options', 'nosniff');
+    res.header('X-Frame-Options', 'DENY');
+    res.header('X-XSS-Protection', '1; mode=block');
+    
     next();
   });
 
@@ -33,7 +88,6 @@ async function bootstrap() {
 
   // Swagger documentation (enabled for development and production)
   if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
-    const swaggerPath = process.env.SWAGGER_PATH || 'api';
     const config = new DocumentBuilder()
       .setTitle('Property & Rental Management for Small Landlords API')
       .setDescription('Comprehensive property management system for small landlords with user authentication, property management, and rental operations')
@@ -45,30 +99,11 @@ async function bootstrap() {
       .addTag('notifications', 'Notification management endpoints')
       .addTag('reports', 'Reporting endpoints')
       .addCookieAuth('access_token')
-      .addCookieAuth('refresh_token')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
-    // If using global prefix, change to: SwaggerModule.setup(`${swaggerPath}/docs`, app, document);
-    SwaggerModule.setup(swaggerPath, app, document, {
-      swaggerOptions: {
-        persistAuthorization: true,
-        deepLinking: true,
-        docExpansion: 'none',
-        displayRequestDuration: true,
-        filter: true,
-        tagsSorter: 'alpha',
-        operationsSorter: 'alpha',
-        tryItOutEnabled: true,
-        defaultModelsExpandDepth: -1,
-        requestInterceptor: (req: any) => {
-          // Ensure cookies are included in Swagger "Try it out" requests
-          req.credentials = 'include';
-          return req;
-        },
-      },
-      customSiteTitle: 'Property Management API Docs',
-    });
+    // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup('api', app, document);
   }
 
   const port = process.env.PORT || 8000;
@@ -77,5 +112,7 @@ async function bootstrap() {
   console.log(`Application is running on port: ${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
+  console.log(`CORS Credentials: enabled`);
+  console.log(`Cookie Security: ${process.env.NODE_ENV === 'production' ? 'Secure + SameSite=None' : 'SameSite=Lax (dev)'}`);
 }
 bootstrap();
