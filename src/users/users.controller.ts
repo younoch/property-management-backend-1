@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { SigninDto } from './dtos/signin.dto';
+import { SigninResponseDto } from './dtos/signin-response.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
@@ -36,12 +37,19 @@ export class UsersController {
     private configService: ConfigService,
   ) {}
 
-  @ApiOperation({ summary: 'Get current user information' })
-  @ApiResponse({ status: 200, description: 'Current user information retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get current user information',
+    description: 'Retrieve complete information about the currently authenticated user'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Current user information retrieved successfully',
+    type: SigninResponseDto
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Get('/whoami')
   @UseGuards(AuthGuard)
-  whoAmI(@CurrentUser() user: User) {
+  whoAmI(@CurrentUser() user: User): SigninResponseDto {
     return user;
   }
 
@@ -79,10 +87,14 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User registered successfully',
+    type: SigninResponseDto
+  })
   @ApiResponse({ status: 400, description: 'Email already in use' })
   @Post('/signup')
-  async createUser(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response) {
+  async createUser(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response): Promise<SigninResponseDto> {
     const user = await this.authService.signup(
       body.email, 
       body.password, 
@@ -99,11 +111,15 @@ export class UsersController {
     summary: 'Sign in user',
     description: 'Sign in with user credentials. Only email and password are required.'
   })
-  @ApiResponse({ status: 200, description: 'User signed in successfully' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User signed in successfully',
+    type: SigninResponseDto
+  })
   @ApiResponse({ status: 400, description: 'Invalid credentials' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Post('/signin')
-  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response) {
+  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response): Promise<SigninResponseDto> {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
     res.setHeader('Set-Cookie', login.setCookie);
