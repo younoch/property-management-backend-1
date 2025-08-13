@@ -9,6 +9,10 @@ import {
   Query,
   NotFoundException,
   UseGuards,
+  ForbiddenException,
+  InternalServerErrorException,
+  HttpException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -26,6 +30,8 @@ import { CsrfGuard } from '../guards/csrf.guard';
 import { Response } from 'express';
 import { Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ErrorResponseDto } from './dtos/error-response.dto';
+import { TokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -46,11 +52,60 @@ export class UsersController {
     description: 'Current user information retrieved successfully',
     type: SigninResponseDto
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - User account is deactivated',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Not Found - User not found in database',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    type: ErrorResponseDto
+  })
   @Get('/whoami')
   @UseGuards(AuthGuard)
-  whoAmI(@CurrentUser() user: User): SigninResponseDto {
-    return user;
+  @UseInterceptors(TokenRefreshInterceptor)
+  async whoAmI(@CurrentUser() user: User): Promise<SigninResponseDto> {
+    try {
+      // Check if user exists and is active
+      if (!user) {
+        throw new NotFoundException({
+          message: 'User not found',
+          errorType: 'USER_NOT_FOUND'
+        });
+      }
+
+      // Check if user account is active
+      if (!user.is_active) {
+        throw new ForbiddenException({
+          message: 'User account is deactivated',
+          errorType: 'ACCOUNT_DEACTIVATED'
+        });
+      }
+
+      return user;
+    } catch (error) {
+      // Re-throw HTTP exceptions as they are already properly formatted
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      
+      // Handle unexpected errors
+      throw new InternalServerErrorException({
+        message: 'Internal server error occurred while retrieving user information',
+        errorType: 'INTERNAL_ERROR'
+      });
+    }
   }
 
   @ApiOperation({ 
@@ -63,26 +118,32 @@ export class UsersController {
   @UseGuards(AuthGuard)
   signOut(@Res({ passthrough: true }) res: Response) {
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
-    
-    // Clear both JWT and CSRF cookies
-    res.cookie('access_token', '', {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
+    const cookieHttpOnly = this.configService.get<string>('COOKIE_HTTP_ONLY') !== 'false';
+    const cookieSameSite = (this.configService.get<string>('COOKIE_SAME_SITE') || (isProduction ? 'none' : 'lax')) as any;
+    const cookieSecure = this.configService.get<string>('COOKIE_SECURE') === 'true' || isProduction;
+
+    const clearOpts: any = {
+      httpOnly: cookieHttpOnly,
+      secure: cookieSecure,
+      sameSite: cookieSameSite,
       expires: new Date(0),
       path: '/',
-      maxAge: 0,
-    });
-    
-    res.cookie('csrf_token', '', {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      expires: new Date(0),
-      path: '/',
-      maxAge: 0,
-    });
-    
+    };
+    if (cookieDomain) clearOpts.domain = cookieDomain;
+
+    // Clear access, refresh and CSRF cookies
+    res.cookie('access_token', '', clearOpts);
+    res.cookie('refresh_token', '', clearOpts);
+    res.cookie('csrf_token', '', clearOpts);
+
+    const frontendDomain = this.configService.get<string>('FRONTEND_DOMAIN');
+    if (frontendDomain) {
+      const origin = frontendDomain.startsWith('http') ? frontendDomain : `http://${frontendDomain}`;
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+
     return { message: 'Signed out' };
   }
 
@@ -123,6 +184,13 @@ export class UsersController {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
     res.setHeader('Set-Cookie', login.setCookie);
+    // Option C: explicitly reflect frontend origin for credentials in dev
+    const frontendDomain = this.configService.get<string>('FRONTEND_DOMAIN');
+    if (frontendDomain) {
+      const origin = frontendDomain.startsWith('http') ? frontendDomain : `http://${frontendDomain}`;
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     return login;
   }
 

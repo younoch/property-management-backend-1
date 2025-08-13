@@ -38,9 +38,10 @@ async function bootstrap() {
       'X-Requested-With',
       'Cookie',
       'Accept',
-      'Origin'
+      'Origin',
+      'X-CSRF-Token',
     ],
-    exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials'],
+    exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials', 'X-CSRF-Token'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
@@ -53,7 +54,7 @@ async function bootstrap() {
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', origin);
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin, X-CSRF-Token');
       res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Max-Age', '86400'); // 24 hours
       res.status(204).end();
