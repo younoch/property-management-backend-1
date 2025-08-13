@@ -1,5 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class SuccessResponseDto<T> {
+  @ApiProperty({
+    description: 'Indicates if the request was successful',
+    example: true
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: 'Human-readable success message',
+    example: 'Operation completed successfully'
+  })
+  message: string;
+
+  @ApiProperty({
+    description: 'Response data payload'
+  })
+  data: T;
+
+  @ApiProperty({
+    description: 'Timestamp when the response was generated',
+    example: '2024-01-01T00:00:00.000Z'
+  })
+  timestamp: string;
+
+  @ApiProperty({
+    description: 'API endpoint path',
+    example: '/auth/whoami'
+  })
+  path: string;
+}
+
 export class ErrorResponseDto {
   @ApiProperty({
     description: 'Indicates if the request was successful',

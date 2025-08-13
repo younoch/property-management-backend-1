@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class UserDto {
+export class UserDataDto {
   @Expose()
   id: number;
 
@@ -32,4 +32,21 @@ export class UserDto {
   admin: boolean;
 
   // Note: password_hash and password fields are intentionally excluded for security
+}
+
+export class UserDto {
+  @Expose()
+  success: boolean;
+
+  @Expose()
+  message: string;
+
+  @Expose()
+  data: UserDataDto;
+
+  @Expose()
+  timestamp: string;
+
+  @Expose()
+  path: string;
 }

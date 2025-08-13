@@ -18,7 +18,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { SigninDto } from './dtos/signin.dto';
-import { SigninResponseDto } from './dtos/signin-response.dto';
+import { SigninResponseDto, SigninDataDto } from './dtos/signin-response.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
@@ -30,12 +30,11 @@ import { CsrfGuard } from '../guards/csrf.guard';
 import { Response } from 'express';
 import { Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ErrorResponseDto } from './dtos/error-response.dto';
+import { ErrorResponseDto, SuccessResponseDto } from '../common/dtos/api-response.dto';
 import { TokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
 
 @ApiTags('auth')
 @Controller('auth')
-@Serialize(UserDto)
 export class UsersController {
   constructor(
     private usersService: UsersService,
@@ -50,7 +49,7 @@ export class UsersController {
   @ApiResponse({ 
     status: 200, 
     description: 'Current user information retrieved successfully',
-    type: SigninResponseDto
+    type: SigninDataDto
   })
   @ApiResponse({ 
     status: 401, 
@@ -75,7 +74,7 @@ export class UsersController {
   @Get('/whoami')
   @UseGuards(AuthGuard)
   @UseInterceptors(TokenRefreshInterceptor)
-  async whoAmI(@CurrentUser() user: User): Promise<SigninResponseDto> {
+  async whoAmI(@CurrentUser() user: User): Promise<User> {
     try {
       // Check if user exists and is active
       if (!user) {
@@ -144,7 +143,7 @@ export class UsersController {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
 
-    return { message: 'Signed out' };
+    return { success: true, message: 'Signed out successfully' };
   }
 
   @ApiOperation({ summary: 'Register a new user' })
@@ -155,7 +154,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 400, description: 'Email already in use' })
   @Post('/signup')
-  async createUser(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response): Promise<SigninResponseDto> {
+  async createUser(@Body() body: CreateUserDto, @Res({ passthrough: true }) res: Response): Promise<any> {
     const user = await this.authService.signup(
       body.email, 
       body.password, 
@@ -180,7 +179,7 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Invalid credentials' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Post('/signin')
-  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response): Promise<SigninResponseDto> {
+  async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response): Promise<any> {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
     res.setHeader('Set-Cookie', login.setCookie);

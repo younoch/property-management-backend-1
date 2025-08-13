@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SigninResponseDto {
+export class SigninDataDto {
   @ApiProperty({
     description: 'User ID',
     example: 1,
@@ -63,5 +63,55 @@ export class SigninResponseDto {
   })
   admin: boolean;
 
+  @ApiProperty({
+    description: 'Access token for authentication',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+  })
+  accessToken: string;
+
+  @ApiProperty({
+    description: 'Refresh token for token renewal',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+  })
+  refreshToken: string;
+
+  @ApiProperty({
+    description: 'Cookie headers to be set by the client',
+    example: ['access_token=...; HttpOnly; Secure; SameSite=None', 'refresh_token=...; HttpOnly; Secure; SameSite=None']
+  })
+  setCookie: string[];
+
   // Note: password_hash and password fields are intentionally excluded for security
+}
+
+export class SigninResponseDto {
+  @ApiProperty({
+    description: 'Indicates if the request was successful',
+    example: true
+  })
+  success: boolean;
+
+  @ApiProperty({
+    description: 'Success message',
+    example: 'User signed in successfully'
+  })
+  message: string;
+
+  @ApiProperty({
+    description: 'User authentication data',
+    type: SigninDataDto
+  })
+  data: SigninDataDto;
+
+  @ApiProperty({
+    description: 'Timestamp when the response was generated',
+    example: '2024-01-01T00:00:00.000Z'
+  })
+  timestamp: string;
+
+  @ApiProperty({
+    description: 'API endpoint path',
+    example: '/auth/signin'
+  })
+  path: string;
 }
