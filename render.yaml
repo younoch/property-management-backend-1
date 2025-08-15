@@ -34,9 +34,9 @@ services:
         generateValue: true
       - key: CSRF_TOKEN_EXPIRY_HOURS
         value: "24"
-      # Cookie Configuration (works with current vercel.app domain)
+      # Cookie Configuration (works with specific frontend domain)
       - key: COOKIE_DOMAIN
-        value: ".vercel.app"
+        value: "property-manegment-frontend.vercel.app"
       - key: COOKIE_SECURE
         value: true
       - key: COOKIE_SAME_SITE

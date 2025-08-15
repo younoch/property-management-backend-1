@@ -73,6 +73,19 @@ async function bootstrap() {
     next();
   });
 
+  // Debug middleware to log cookies and headers
+  app.use((req, res, next) => {
+    console.log('=== Request Debug ===');
+    console.log('URL:', req.url);
+    console.log('Method:', req.method);
+    console.log('Origin:', req.headers.origin);
+    console.log('Cookies:', req.cookies);
+    console.log('Signed Cookies:', req.signedCookies);
+    console.log('Authorization Header:', req.headers.authorization);
+    console.log('====================');
+    next();
+  });
+
   // Optional: Set global prefix for all APIs (uncomment if you want /api prefix)
   // app.setGlobalPrefix('api');
 
