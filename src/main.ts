@@ -52,17 +52,23 @@ async function bootstrap() {
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin, X-CSRF-Token');
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Max-Age', '86400'); // 24 hours
-      res.status(204).end();
-      return;
+      // Only set CORS headers for allowed origins
+      if (origin && allowedOrigins.indexOf(origin) !== -1) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin, X-CSRF-Token');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Max-Age', '86400'); // 24 hours
+        res.status(204).end();
+        return;
+      } else {
+        res.status(403).end();
+        return;
+      }
     }
     
-    // Set CORS headers for all responses
-    if (origin) {
+    // Set CORS headers for all responses (only for allowed origins)
+    if (origin && allowedOrigins.indexOf(origin) !== -1) {
       res.header('Access-Control-Allow-Origin', origin);
       res.header('Access-Control-Allow-Credentials', 'true');
     }
