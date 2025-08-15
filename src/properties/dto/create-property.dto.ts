@@ -11,12 +11,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePropertyDto {
   @ApiProperty({
-    description: 'Account ID that owns this property',
-    example: 1
+    description: 'Account ID that owns this property (auto-generated from authenticated user)',
+    example: 1,
+    required: false
   })
   @IsNumber()
-  @IsNotEmpty()
-  account_id: number;
+  @IsOptional()
+  account_id?: number;
 
   @ApiProperty({
     description: 'Property name',
@@ -93,7 +94,7 @@ export class CreatePropertyDto {
     description: 'Latitude coordinate',
     example: 40.7128
   })
-  @IsDecimal()
+  @IsNumber()
   @IsNotEmpty()
   latitude: number;
 
@@ -101,7 +102,7 @@ export class CreatePropertyDto {
     description: 'Longitude coordinate',
     example: -74.0060
   })
-  @IsDecimal()
+  @IsNumber()
   @IsNotEmpty()
   longitude: number;
 

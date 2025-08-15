@@ -7,24 +7,45 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './property.entity';
+import { AuthGuard } from '../guards/auth.guard';
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 
 @ApiTags('properties')
 @Controller('properties')
 export class PropertiesController {
-  constructor(private readonly propertiesService: PropertiesService) {}
+  constructor(
+    private readonly propertiesService: PropertiesService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @ApiOperation({ summary: 'Create a new property' })
   @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - authentication required' })
+  @ApiCookieAuth()
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createPropertyDto: CreatePropertyDto) {
-    return this.propertiesService.create(createPropertyDto);
+  async create(@Body() createPropertyDto: CreatePropertyDto, @Request() req) {
+    // Extract user ID from JWT token payload
+    const accessToken = req.cookies?.access_token || req.signedCookies?.access_token;
+    
+    const payload = jwt.verify(
+      accessToken,
+      this.configService.get<string>('JWT_ACCESS_SECRET')
+    ) as { sub: number; exp: number };
+    
+    const userId = payload.sub;
+    
+    return await this.propertiesService.create(createPropertyDto, userId);
   }
 
   @ApiOperation({ summary: 'Get all properties' })
