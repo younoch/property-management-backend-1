@@ -9,13 +9,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 8000
       - key: DB_SYNC
         value: false
       - key: DB_SSL
         value: true
       - key: ALLOWED_ORIGINS
-        value: https://your-frontend-domain.onrender.com
+        value: "https://property-manegment-frontend.vercel.app,https://property-manegment-frontend.vercel.app/"
       - key: COOKIE_KEY
         generateValue: true
       - key: ENABLE_SWAGGER
@@ -36,7 +36,7 @@ services:
         value: "24"
       # Cookie Configuration
       - key: COOKIE_DOMAIN
-        value: ".onrender.com"
+        value: ".vercel.app"
       - key: COOKIE_SECURE
         value: true
       - key: COOKIE_SAME_SITE
@@ -45,7 +45,7 @@ services:
         value: true
       # Frontend/Backend domains
       - key: FRONTEND_DOMAIN
-        value: "your-frontend-domain.onrender.com"
+        value: "property-manegment-frontend.vercel.app"
       - key: BACKEND_DOMAIN
         value: "property-management-api.onrender.com"
       # Database Configuration

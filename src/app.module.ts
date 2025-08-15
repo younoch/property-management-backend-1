@@ -30,7 +30,7 @@ import * as cookieParser from 'cookie-parser';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV}`,
+      envFilePath: process.env.NODE_ENV === 'production' ? undefined : `.env.${process.env.NODE_ENV}`,
       validate,
     }),
     ThrottlerModule.forRoot([
