@@ -15,7 +15,7 @@ services:
       - key: DB_SSL
         value: true
       - key: ALLOWED_ORIGINS
-        value: "https://property-manegment-frontend.vercel.app,https://property-manegment-frontend.vercel.app/"
+        value: "https://property-management-frontend.vercel.app"
       - key: COOKIE_KEY
         generateValue: true
       - key: ENABLE_SWAGGER
@@ -45,7 +45,7 @@ services:
         value: true
       # Frontend/Backend domains
       - key: FRONTEND_DOMAIN
-        value: "property-manegment-frontend.vercel.app"
+        value: "property-management-frontend.vercel.app"
       - key: BACKEND_DOMAIN
         value: "property-management-api.onrender.com"
       # Database Configuration
