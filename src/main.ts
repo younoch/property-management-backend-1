@@ -1,21 +1,73 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   
   // CORS configuration for production
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   
+  // Enhanced CORS configuration for JWT cookies
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      
+      // For development, allow localhost variations
+      if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+        return callback(null, true);
+      }
+      
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With',
+      'Cookie',
+      'Accept',
+      'Origin',
+      'X-CSRF-Token',
+    ],
+    exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials', 'X-CSRF-Token'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+  
+  // CORS preflight middleware for better cookie handling
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin, X-CSRF-Token');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Max-Age', '86400'); // 24 hours
+      res.status(204).end();
+      return;
+    }
+    
+    // Set CORS headers for all responses
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    next();
   });
   
   // Security headers
@@ -23,6 +75,12 @@ async function bootstrap() {
   app.use((req, res, next) => {
     res.removeHeader('x-powered-by');
     res.removeHeader('date');
+    
+    // Additional security headers for cookies
+    res.header('X-Content-Type-Options', 'nosniff');
+    res.header('X-Frame-Options', 'DENY');
+    res.header('X-XSS-Protection', '1; mode=block');
+    
     next();
   });
 
@@ -41,7 +99,7 @@ async function bootstrap() {
       .addTag('properties', 'Property management endpoints')
       .addTag('notifications', 'Notification management endpoints')
       .addTag('reports', 'Reporting endpoints')
-      .addCookieAuth('session')
+      .addCookieAuth('access_token')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
@@ -55,5 +113,7 @@ async function bootstrap() {
   console.log(`Application is running on port: ${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
+  console.log(`CORS Credentials: enabled`);
+  console.log(`Cookie Security: ${process.env.NODE_ENV === 'production' ? 'Secure + SameSite=None' : 'SameSite=Lax (dev)'}`);
 }
 bootstrap();

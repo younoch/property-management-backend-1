@@ -25,7 +25,7 @@ This guide will help you deploy the Property Management Backend to production wi
    **Required configurations:**
    - `ALLOWED_ORIGINS`: Your frontend domain(s) separated by commas
    - `DB_PASSWORD`: A secure database password
-   - `COOKIE_KEY`: A strong secret key for session cookies
+- `JWT_ACCESS_SECRET`: Strong secret used to sign JWT access tokens
    - `DB_HOST`: Your database host (use `postgres` if using Docker)
 
    **Example:**

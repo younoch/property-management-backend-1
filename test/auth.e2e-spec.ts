@@ -7,6 +7,7 @@ describe('Authentication System', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
+    process.env.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'test-jwt-secret';
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -20,12 +21,12 @@ describe('Authentication System', () => {
 
     return request(app.getHttpServer())
       .post('/auth/signup')
-      .send({ email, password: 'alskdfjl' })
+      .send({ email, password: 'alskdfjl', name: 'Test', phone: '123', role: 'tenant' })
       .expect(201)
       .then((res) => {
-        const { id, email } = res.body;
+        const { id, email: returnedEmail } = res.body;
         expect(id).toBeDefined();
-        expect(email).toEqual(email);
+        expect(returnedEmail).toEqual(email);
       });
   });
 
@@ -34,7 +35,7 @@ describe('Authentication System', () => {
 
     const res = await request(app.getHttpServer())
       .post('/auth/signup')
-      .send({ email, password: 'asdf' })
+      .send({ email, password: 'asdf', name: 'User', phone: '123', role: 'tenant' })
       .expect(201);
 
     const cookie = res.get('Set-Cookie');

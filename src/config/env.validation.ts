@@ -29,7 +29,11 @@ class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  COOKIE_KEY: string;
+  JWT_ACCESS_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_ACCESS_EXPIRES_IN?: string;
 
   @IsOptional()
   @IsString()
@@ -43,9 +47,51 @@ class EnvironmentVariables {
   @IsString()
   ALLOWED_ORIGINS?: string;
 
+  // Cookie and domain configuration (development convenience)
+  @IsOptional()
+  @IsString()
+  FRONTEND_DOMAIN?: string;
+
+  @IsOptional()
+  @IsString()
+  BACKEND_DOMAIN?: string;
+
+  @IsOptional()
+  @IsString()
+  COOKIE_DOMAIN?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  COOKIE_SECURE?: boolean;
+
+  @IsOptional()
+  @IsString()
+  COOKIE_SAME_SITE?: string; // 'lax' | 'none' | 'strict'
+
+  @IsOptional()
+  @IsBoolean()
+  COOKIE_HTTP_ONLY?: boolean;
+
+  // Refresh token support
+  @IsOptional()
+  @IsString()
+  JWT_REFRESH_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_REFRESH_EXPIRES_IN?: string; // e.g., '7d'
+
   @IsOptional()
   @IsString()
   TEST_PASSWORD?: string;
+
+  @IsOptional()
+  @IsString()
+  CSRF_SECRET?: string;
+
+  @IsOptional()
+  @IsNumber()
+  CSRF_TOKEN_EXPIRY_HOURS?: number;
 }
 
 export function validate(config: Record<string, unknown>) {

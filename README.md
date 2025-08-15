@@ -18,186 +18,20 @@
   <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
 </p>
 
-## Description
-
-A comprehensive [Nest](https://github.com/nestjs/nest) framework TypeScript application with PostgreSQL database, built specifically for property management with user roles, account management, and property tracking capabilities.
+A comprehensive NestJS application for managing properties, tenants, and rental operations with secure authentication and modern security features.
 
 ## 🚀 Features
 
-### 🏠 Property Management
-- **🏢 Property Management**: Complete property lifecycle management with location tracking
-- **👥 User Management**: Multi-role system (Super Admin, Landlord, Manager, Tenant)
-- **💼 Account Management**: Subscription-based account management for landlords
-- **📍 Location Services**: GPS coordinates for property mapping
-- **📊 Reporting**: Comprehensive property and tenant reporting
-
-### 🔐 Security & Authentication
-- **🔐 Authentication & Authorization**: Session-based auth with bcrypt password hashing
-- **👤 Role-Based Access**: Different permissions for different user types
-
-### 🛠️ Technical Features
-- **📊 API Documentation**: Swagger/OpenAPI documentation
-- **📝 Logging**: Structured logging with Winston
-- **🏥 Health Checks**: Application and database health monitoring
-- **🛡️ Security**: Rate limiting, input validation, CORS support
-- **🐳 Docker Support**: Containerized development and deployment
-- **📈 Monitoring**: Application metrics and performance monitoring
-
-## 🏗️ Architecture
-
-### Database Schema
-- **PostgreSQL**: Production-ready relational database
-- **TypeORM**: Object-Relational Mapping with migrations
-- **Entities**: User, Account, Property, Report with proper relationships
-
-### Module Structure
-- **Users Module**: Authentication and user management
-- **Accounts Module**: Property management accounts
-- **Properties Module**: Property information and location tracking
-- **Reports Module**: Business reporting and analytics
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js (v18 or higher)
-- PostgreSQL (v15 or higher)
-- Docker (optional, for containerized setup)
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd property-rental-management
-```
-
-2. **Install dependencies**
-```bash
-pnpm install
-```
-
-3. **Environment Setup**
-```bash
-# Generate secure environment configuration
-pnpm run generate:env
-
-# OR manually copy and configure environment files
-cp env.example .env.development
-cp env.production.example .env.production
-cp env.test.example .env.test
-
-# ⚠️ IMPORTANT: Update the generated credentials in your database
-```
-
-### Database Setup
-
-#### Option 1: Docker (Recommended)
-```bash
-# Start PostgreSQL container
-docker compose up -d
-
-# Run migrations
-pnpm run migration:run
-
-# Start the application
-pnpm run start:dev
-```
-
-## 🔐 Environment Configuration
-
-### Security Best Practices
-This application requires several environment variables for secure operation. **Never commit sensitive information to version control.**
-
-### Required Environment Variables
-
-#### Database Configuration
-- `DB_HOST`: PostgreSQL host (default: localhost)
-- `DB_PORT`: PostgreSQL port (default: 5432)
-- `DB_USERNAME`: Database username (required)
-- `DB_PASSWORD`: Database password (required)
-- `DB_NAME`: Database name (required)
-- `DB_SYNC`: Enable auto-synchronization (default: false in production)
-- `DB_SSL`: Enable SSL connection (default: true in production)
-
-#### Security Configuration
-- `COOKIE_KEY`: Secret key for session encryption (required)
-- `NODE_ENV`: Environment mode (development/production/test)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
-
-### Quick Environment Setup
-
-#### 1. Generate Secure Environment (Recommended)
-```bash
-# Generate secure environment with random credentials
-pnpm run generate:env
-```
-
-This will create a `.env.development` file with:
-- Random secure database password
-- Random secure cookie key
-- Proper configuration for development
-
-#### 2. Manual Setup
-```bash
-# Copy example files
-cp env.example .env.development
-cp env.production.example .env.production
-
-# Edit the files with your actual values
-# ⚠️ IMPORTANT: Change default passwords and keys
-```
-
-### Environment File Structure
-```
-.env.development    # Development environment
-.env.production     # Production environment  
-.env.test          # Test environment
-```
-
-### Production Security Checklist
-- [ ] Use strong, unique passwords for database
-- [ ] Generate a cryptographically secure cookie key
-- [ ] Enable SSL for database connections
-- [ ] Set `DB_SYNC=false` in production
-- [ ] Configure proper CORS origins
-- [ ] Use environment-specific configuration files
-
-#### Option 2: Local PostgreSQL Installation
-1. Install PostgreSQL on your system
-2. Create databases:
-```sql
-CREATE DATABASE property_rental_management_dev;
-CREATE DATABASE property_rental_management_test;
-```
-3. Copy and configure environment files as shown above.
-
-### Running the Application
-
-```bash
-# Development mode
-pnpm run start:dev
-
-# Production mode
-pnpm run start:prod
-
-# Test mode
-pnpm run test
-
-# Reset database (removes all data)
-pnpm run db:reset
-```
-
-## 🏠 Property Management Features
+### Authentication & Security
+- **JWT Authentication**: Secure JWT tokens with HttpOnly, Secure cookies
+- **CSRF Protection**: Comprehensive CSRF protection for all state-changing operations
+- **Password Security**: Bcrypt hashing with configurable salt rounds
+- **CORS Configuration**: Properly configured for cross-origin requests with credentials
 
 ### User Management
 - **Multi-Role System**: Support for Super Admin, Landlord, Manager, and Tenant roles
 - **Profile Management**: Complete user profiles with contact information
-- **Authentication**: Secure session-based authentication with password hashing
-
-### Account Management
-- **Landlord Accounts**: Subscription-based account management
-- **Property Groups**: Organize properties under different accounts
-- **Status Tracking**: Monitor account status and subscription plans
+- **Secure Sessions**: JWT-based authentication with automatic token management
 
 ### Property Management
 - **Property Details**: Complete property information including address, type, and units
@@ -205,132 +39,168 @@ pnpm run db:reset
 - **Property Types**: Support for apartments, houses, commercial properties
 - **Unit Management**: Track number of units per property
 
-### API Endpoints
+### Account Management
+- **Landlord Accounts**: Subscription-based account management
+- **Property Groups**: Organize properties under different accounts
+- **Status Tracking**: Monitor account status and subscription plans
 
-#### Authentication
+## 🔐 Security Features
+
+### CSRF Protection
+The application implements comprehensive CSRF (Cross-Site Request Forgery) protection:
+
+- **Double Submit Cookie Pattern**: CSRF tokens stored in HttpOnly cookies and sent via headers
+- **Automatic Token Generation**: Tokens generated after authentication
+- **State-Changing Operation Protection**: All POST, PUT, DELETE, PATCH operations require CSRF tokens
+- **Timing-Safe Validation**: Prevents timing attacks during token comparison
+
+#### CSRF Endpoints
+- `GET /csrf/token` - Generate CSRF token (requires authentication)
+- `POST /csrf/refresh` - Refresh CSRF token
+- `POST /csrf/validate` - Validate CSRF token
+
+#### Frontend Integration
+```javascript
+// Include CSRF token in all state-changing requests
+fetch('/auth/signout', {
+  method: 'POST',
+  credentials: 'include',
+  headers: {
+    'X-CSRF-Token': csrfToken
+  }
+});
+```
+
+### JWT Authentication
+- **HttpOnly Cookies**: Prevents XSS attacks
+- **Secure Flag**: Enforced in production for HTTPS-only transmission
+- **SameSite Policy**: Properly configured for cross-origin requests
+- **Automatic Expiry**: Configurable token lifetime
+
+## 🛠️ Installation
+
+### Prerequisites
+- Node.js >= 18.0.0
+- PostgreSQL >= 12.0
+- pnpm >= 8.0.0
+
+### Quick Start
+```bash
+# Clone the repository
+git clone <repository-url>
+cd property-management-backend
+
+# Install dependencies
+pnpm install
+
+# Generate environment configuration
+pnpm run generate:env
+
+# Start development server
+pnpm run start:dev
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+#### Required
+- `JWT_ACCESS_SECRET`: Secret for signing access JWTs
+- `CSRF_SECRET`: Secret for CSRF token generation
+- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`: Database configuration
+
+#### Optional
+- `JWT_ACCESS_EXPIRES_IN`: Access token TTL (default: 15m)
+- `CSRF_TOKEN_EXPIRY_HOURS`: CSRF token expiry (default: 24h)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed frontend domains
+- `NODE_ENV`: Environment (development/production)
+
+### Example Configuration
+```bash
+# .env.development
+NODE_ENV=development
+JWT_ACCESS_SECRET=your-dev-secret
+CSRF_SECRET=your-csrf-secret
+CSRF_TOKEN_EXPIRY_HOURS=24
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=password
+DB_NAME=property_management_dev
+```
+
+## 📚 API Documentation
+
+### Authentication Endpoints
 - `POST /auth/signup` - Register new user
 - `POST /auth/signin` - User login
+- `POST /auth/signout` - User logout (requires CSRF token)
 - `GET /auth/whoami` - Get current user info
 
-#### User Management
+### CSRF Protection Endpoints
+- `GET /csrf/token` - Generate CSRF token
+- `POST /csrf/refresh` - Refresh CSRF token
+- `POST /csrf/validate` - Validate CSRF token
+
+### User Management Endpoints
+- `GET /auth` - Get all users
 - `GET /auth/:id` - Get user by ID
-- `PATCH /auth/:id` - Update user
-- `DELETE /auth/:id` - Delete user
+- `PATCH /auth/:id` - Update user (requires CSRF token)
+- `DELETE /auth/:id` - Delete user (requires CSRF token)
 
-#### Account Management
-- `POST /accounts` - Create new account
-- `GET /accounts` - List all accounts
-- `GET /accounts/:id` - Get account details
-- `GET /accounts/landlord/:landlordId` - Get accounts by landlord
-- `PATCH /accounts/:id` - Update account
-- `DELETE /accounts/:id` - Delete account
+## 🔒 Security Best Practices
 
-#### Property Management
-- `POST /properties` - Create new property
-- `GET /properties` - List all properties
-- `GET /properties/:id` - Get property details
-- `GET /properties/account/:accountId` - Get properties by account
-- `GET /properties/location/search` - Search properties by location
-- `PATCH /properties/:id` - Update property
-- `DELETE /properties/:id` - Delete property
-
-## 📊 API Documentation
-
-Once the application is running, visit:
-- **Swagger UI**: http://localhost:8000/api
-- **Health Check**: http://localhost:8000/health
-- **Metrics**: http://localhost:8000/metrics
-
-## 🐳 Docker Deployment
-
-### Quick Start (Local Testing)
-```bash
-# Start with default configuration
-./quick-start.sh
-```
+### Frontend Implementation
+1. **Always include CSRF tokens** in state-changing requests
+2. **Handle token refresh** automatically
+3. **Store tokens securely** (don't expose in localStorage)
+4. **Implement retry logic** for expired tokens
 
 ### Production Deployment
-```bash
-# 1. Configure environment
-cp env.production.example .env
-# Edit .env with your production values
-
-# 2. Deploy
-./deploy.sh
-```
-
-📖 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
-
-### Development
-```bash
-# Start services
-docker compose -f docker-compose.dev.yml up -d
-
-# Run migrations
-docker compose -f docker-compose.dev.yml exec app pnpm run migration:run
-
-# View logs
-docker compose -f docker-compose.dev.yml logs -f app
-```
-
-### Production
-```bash
-# Build and start production services
-docker compose -f docker-compose.prod.yml up -d
-
-# Run migrations
-docker compose -f docker-compose.prod.yml exec app pnpm run migration:run
-```
+1. **Use HTTPS** - Required for Secure cookies
+2. **Strong secrets** - Generate cryptographically secure secrets
+3. **Environment isolation** - Separate dev/staging/production configs
+4. **Regular updates** - Keep dependencies updated
 
 ## 🧪 Testing
 
+### Run Tests
 ```bash
 # Unit tests
-pnpm run test
+pnpm test
 
-# e2e tests
-pnpm run test:e2e
+# E2E tests
+pnpm test:e2e
 
-# Test coverage
-pnpm run test:cov
+# CSRF tests
+pnpm test:e2e --testNamePattern="CSRF Protection"
+
+# CORS tests
+pnpm test:e2e --testNamePattern="CORS Configuration"
 ```
 
-## 📝 Database Migrations
+## 📖 Documentation
 
+- [CSRF Implementation Guide](./CSRF_IMPLEMENTATION.md) - Complete CSRF documentation
+- [CORS Setup Guide](./CORS_SETUP.md) - CORS configuration and troubleshooting
+- [API Documentation](./PROPERTY_MANAGEMENT_MODULES.md) - Detailed API reference
+
+## 🚀 Deployment
+
+### Docker
 ```bash
-# Generate new migration
-pnpm run migration:generate -- src/database/migrations/MigrationName
+# Build and run with Docker Compose
+docker-compose up -d
 
-# Run migrations
-pnpm run migration:run
-
-# Revert last migration
-pnpm run migration:revert
+# Production deployment
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🔧 Development
-
-### Project Structure
-```
-src/
-├── accounts/          # Account management module
-├── properties/        # Property management module
-├── users/            # User management module
-├── reports/          # Reporting module
-├── health/           # Health checks
-├── monitoring/       # Application monitoring
-├── database/         # Database configuration and migrations
-└── main.ts          # Application entry point
-```
-
-### Environment Variables
-- `DB_HOST`: Database host (required)
-- `DB_PORT`: Database port (required)
-- `DB_USERNAME`: Database username (required)
-- `DB_PASSWORD`: Database password (required)
-- `DB_NAME`: Database name (required)
-- `DB_SYNC`: Auto-sync database schema (default: false for production)
-- `DB_SSL`: Enable SSL for database connection (default: true for production)
+### Environment-Specific Configs
+- `.env.development` - Development environment
+- `.env.production` - Production environment
+- `.env.test` - Test environment
 
 ## 🤝 Contributing
 
@@ -347,13 +217,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: Check the `/api` endpoint for detailed API documentation
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Discussions**: Join the community discussions for questions and ideas
+For support and questions:
+- Check the [documentation](./docs/)
+- Review [troubleshooting guides](./docs/troubleshooting.md)
+- Open an [issue](../../issues) on GitHub
 
-## 🏆 Acknowledgments
+## 🔄 Changelog
 
-- Built with [NestJS](https://nestjs.com/) framework
-- Database powered by [PostgreSQL](https://www.postgresql.org/)
-- ORM provided by [TypeORM](https://typeorm.io/)
-- API documentation with [Swagger](https://swagger.io/)
+### v1.0.0
+- Initial release with JWT authentication
+- CSRF protection implementation
+- Comprehensive CORS configuration
+- Multi-role user management system
+- Property and account management features

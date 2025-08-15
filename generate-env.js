@@ -7,9 +7,9 @@ const path = require('path');
 console.log('🔐 Property Management Backend - Environment Generator');
 console.log('=====================================================\n');
 
-// Generate a secure random cookie key
-const generateCookieKey = () => {
-  return crypto.randomBytes(32).toString('hex');
+// Generate a secure random secret
+const generateSecret = () => {
+  return crypto.randomBytes(48).toString('hex');
 };
 
 // Generate a secure random password
@@ -42,8 +42,9 @@ DB_NAME=${generateDatabaseName()}
 DB_SYNC=true
 DB_SSL=false
 
-# Cookie Configuration - REQUIRED
-COOKIE_KEY=${generateCookieKey()}
+# JWT Configuration - REQUIRED
+JWT_ACCESS_SECRET=${generateSecret()}
+JWT_ACCESS_EXPIRES_IN=15m
 
 # Application Configuration
 NODE_ENV=development
@@ -63,7 +64,7 @@ try {
   console.log('\n🔑 Generated secure credentials:');
 console.log(`   - Database Name: ${envContent.match(/DB_NAME=(.+)/)[1]}`);
 console.log(`   - Database Password: ${envContent.match(/DB_PASSWORD=(.+)/)[1]}`);
-console.log(`   - Cookie Key: ${envContent.match(/COOKIE_KEY=(.+)/)[1]}`);
+  console.log(`   - JWT Access Secret: ${envContent.match(/JWT_ACCESS_SECRET=(.+)/)[1]}`);
   console.log('\n⚠️  IMPORTANT:');
   console.log('   - Keep this file secure and never commit it to version control');
   console.log('   - Update the database password in your PostgreSQL instance');

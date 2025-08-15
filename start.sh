@@ -26,15 +26,21 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if environment file exists
-if [ ! -f .env.development ]; then
+# Load environment variables
+if [ -f .env.development ]; then
+    source .env.development
+else
     print_error "Environment file .env.development not found!"
     print_status "Please run 'pnpm run generate:env' to create a secure environment configuration"
     exit 1
 fi
 
-# Load environment variables
-source .env.development
+# Set default values if not loaded from .env.development
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+DB_USERNAME=${DB_USERNAME:-postgres}
+DB_PASSWORD=${DB_PASSWORD:-postgres123}
+DB_NAME=${DB_NAME:-property_rental_management_db}
 
 # Validate required environment variables
 required_vars=("DB_HOST" "DB_USERNAME" "DB_PASSWORD" "DB_NAME")
@@ -72,20 +78,21 @@ sleep 5
 
 # Test database connection using environment variables
 print_status "Testing database connection..."
-if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_NAME" -c "SELECT 1;" > /dev/null 2>&1; then
-    print_success "Database connection successful!"
-else
-    print_warning "Database connection failed. Waiting a bit more..."
-    sleep 10
+for i in {1..5}; do
     if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_NAME" -c "SELECT 1;" > /dev/null 2>&1; then
         print_success "Database connection successful!"
+        break
     else
-        print_error "Database connection failed. Please check PostgreSQL container and environment variables."
-        print_status "You can check container logs with: sudo docker logs property_rental_management_postgres_dev"
-        print_status "Verify your .env.development file has correct database credentials"
-        exit 1
+        if [ $i -eq 5 ]; then
+            print_error "Database connection failed after 5 attempts."
+            print_status "You can check container logs with: sudo docker logs property_rental_management_postgres_dev"
+            print_status "Verify your .env.development file has correct database credentials"
+            exit 1
+        fi
+        print_warning "Database connection failed. Waiting a bit more... (Attempt $i/5)"
+        sleep 5
     fi
-fi
+done
 
 # Check if application is already running
 if curl -s http://localhost:8000/health > /dev/null 2>&1; then
