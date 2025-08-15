@@ -32,6 +32,7 @@ import { Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ErrorResponseDto, SuccessResponseDto } from '../common/dtos/api-response.dto';
 import { TokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
+import { CookieOptions } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -115,33 +116,19 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized - User not authenticated' })
   @Post('/signout')
   @UseGuards(AuthGuard)
-  signOut(@Res({ passthrough: true }) res: Response) {
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
-    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
-    const cookieHttpOnly = this.configService.get<string>('COOKIE_HTTP_ONLY') !== 'false';
-    const cookieSameSite = (this.configService.get<string>('COOKIE_SAME_SITE') || (isProduction ? 'none' : 'lax')) as any;
-    const cookieSecure = this.configService.get<string>('COOKIE_SECURE') === 'true' || isProduction;
-
-    const clearOpts: any = {
-      httpOnly: cookieHttpOnly,
-      secure: cookieSecure,
-      sameSite: cookieSameSite,
-      expires: new Date(0),
+  async signout(@Res({ passthrough: true }) res: Response): Promise<any> {
+    const clearOpts: CookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.COOKIE_DOMAIN || undefined,
       path: '/',
+      expires: new Date(0),
     };
-    if (cookieDomain) clearOpts.domain = cookieDomain;
 
-    // Clear access, refresh and CSRF cookies
     res.cookie('access_token', '', clearOpts);
     res.cookie('refresh_token', '', clearOpts);
     res.cookie('csrf_token', '', clearOpts);
-
-    const frontendDomain = this.configService.get<string>('FRONTEND_DOMAIN');
-    if (frontendDomain) {
-      const origin = frontendDomain.startsWith('http') ? frontendDomain : `http://${frontendDomain}`;
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    }
 
     return { success: true, message: 'Signed out successfully' };
   }
@@ -183,13 +170,6 @@ export class UsersController {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
     res.setHeader('Set-Cookie', login.setCookie);
-    // Option C: explicitly reflect frontend origin for credentials in dev
-    const frontendDomain = this.configService.get<string>('FRONTEND_DOMAIN');
-    if (frontendDomain) {
-      const origin = frontendDomain.startsWith('http') ? frontendDomain : `http://${frontendDomain}`;
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    }
     return login;
   }
 
