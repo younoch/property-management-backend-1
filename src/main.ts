@@ -12,22 +12,35 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   
+  console.log('CORS Debug - ALLOWED_ORIGINS env var:', process.env.ALLOWED_ORIGINS);
+  console.log('CORS Debug - Parsed allowedOrigins array:', allowedOrigins);
+  
   // Enhanced CORS configuration for JWT cookies
   app.enableCors({
     origin: (origin, callback) => {
+      console.log('CORS Debug - Request origin:', origin);
+      console.log('CORS Debug - Allowed origins:', allowedOrigins);
+      console.log('CORS Debug - NODE_ENV:', process.env.NODE_ENV);
+      
       // Allow requests with no origin (like mobile apps or Postman)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log('CORS Debug - No origin, allowing request');
+        return callback(null, true);
+      }
       
       // Check if origin is in allowed list
       if (allowedOrigins.indexOf(origin) !== -1) {
+        console.log('CORS Debug - Origin allowed:', origin);
         return callback(null, true);
       }
       
       // For development, allow localhost variations
       if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+        console.log('CORS Debug - Localhost allowed in dev:', origin);
         return callback(null, true);
       }
       
+      console.log('CORS Debug - Origin rejected:', origin);
       return callback(new Error('Not allowed by CORS'), false);
     },
     credentials: true,
