@@ -5,21 +5,20 @@ export class UserFactory {
   static async create(overrides: Partial<User> = {}): Promise<User> {
     const user = new User();
     user.id = 1;
+    user.name = 'Test User';
     user.email = 'test@example.com';
     // Use a test password that gets hashed dynamically
     const testPassword = process.env.TEST_PASSWORD || 'testpassword123';
     user.password_hash = await bcrypt.hash(testPassword, 12);
-    user.admin = false;
+    user.is_active = true;
+    user.role = 'landlord' as any;
     
     Object.assign(user, overrides);
     return user;
   }
 
   static async createAdmin(overrides: Partial<User> = {}): Promise<User> {
-    return this.create({
-      admin: true,
-      ...overrides,
-    });
+    return this.create({ role: 'super_admin' as any, ...overrides });
   }
 
   static async createMany(count: number, overrides: Partial<User> = {}): Promise<User[]> {
