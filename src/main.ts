@@ -99,9 +99,16 @@ async function bootstrap() {
       .addTag('users', 'User management endpoints')
       .addTag('accounts', 'Account management endpoints')
       .addTag('properties', 'Property management endpoints')
+      .addTag('units', 'Unit management endpoints')
+      .addTag('tenants', 'Tenant management endpoints')
+      .addTag('leases', 'Lease management endpoints')
+      .addTag('billing-invoices', 'Invoice management endpoints')
+      .addTag('billing-payments', 'Payment management endpoints')
+      .addTag('maintenance', 'Maintenance requests and work orders endpoints')
+      .addTag('documents', 'Document management endpoints')
       .addTag('notifications', 'Notification management endpoints')
-      .addTag('reports', 'Reporting endpoints')
       .addCookieAuth('access_token')
+      .addApiKey({ type: 'apiKey', name: 'X-CSRF-Token', in: 'header' }, 'X-CSRF-Token')
       .build();
     
     const document = SwaggerModule.createDocument(app, config);

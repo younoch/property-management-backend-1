@@ -1,0 +1,124 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class MegaSchemaUpgrade1755360197786 implements MigrationInterface {
+    name = 'MegaSchemaUpgrade1755360197786'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE TABLE "account_member" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "user_id" integer NOT NULL, "role" character varying NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_637952ef3cc27923bc455d5e066" UNIQUE ("account_id", "user_id"), CONSTRAINT "PK_982244edcfcee80f14f2bef945a" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_ece668055bc284d72ac37f7325" ON "account_member" ("user_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_798edece4554ae98edf3693dd8" ON "account_member" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "unit" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "property_id" integer NOT NULL, "label" character varying NOT NULL, "bedrooms" integer, "bathrooms" numeric(3,1), "sqft" integer, "market_rent" numeric(12,2), "status" character varying NOT NULL DEFAULT 'vacant', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_62f6aa79f9e2a9f0de33da6568a" UNIQUE ("account_id", "property_id", "label"), CONSTRAINT "PK_4252c4be609041e559f0c80f58a" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_ffd1df4d8c19a8bd49fcd8af71" ON "unit" ("property_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_a270db28cb2784992dcf7c4a9a" ON "unit" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "tenant" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "first_name" character varying NOT NULL, "last_name" character varying NOT NULL, "email" character varying, "phone" character varying, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_da8c6efd67bb301e810e56ac139" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_d2a3ef4033097b91c9097e8413" ON "tenant" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "lease" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "unit_id" integer NOT NULL, "start_date" date NOT NULL, "end_date" date NOT NULL, "rent" numeric(12,2) NOT NULL, "deposit" numeric(12,2) NOT NULL DEFAULT '0', "status" character varying NOT NULL DEFAULT 'draft', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_954811694773f24986695203663" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_ca091675febe801029d4db0f64" ON "lease" ("unit_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_80bf2a18b0559a7e37552a935f" ON "lease" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "lease_tenant" ("lease_id" integer NOT NULL, "tenant_id" integer NOT NULL, CONSTRAINT "PK_b5f56ce129b079a8b45f3250081" PRIMARY KEY ("lease_id", "tenant_id"))`);
+        await queryRunner.query(`CREATE TABLE "lease_charge" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "lease_id" integer NOT NULL, "name" character varying NOT NULL, "amount" numeric(12,2) NOT NULL, "cadence" character varying NOT NULL DEFAULT 'monthly', "start_date" date NOT NULL, "end_date" date, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_09772a7297c9b7a7e1300be76ba" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_4ecd198da30e9be7ae2c8ffe9d" ON "lease_charge" ("lease_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_924912cfdf1b1c94268f338eab" ON "lease_charge" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "invoice_item" ("id" SERIAL NOT NULL, "invoice_id" integer NOT NULL, "name" character varying NOT NULL, "qty" numeric(10,2) NOT NULL DEFAULT '1', "unit_price" numeric(12,2) NOT NULL, "amount" numeric(12,2) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_621317346abdf61295516f3cb76" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_9830c1881dd701d440c2164c3c" ON "invoice_item" ("invoice_id") `);
+        await queryRunner.query(`CREATE TABLE "invoice" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "lease_id" integer, "issue_date" date NOT NULL, "due_date" date NOT NULL, "status" character varying NOT NULL DEFAULT 'open', "subtotal" numeric(12,2) NOT NULL, "tax" numeric(12,2) NOT NULL DEFAULT '0', "total" numeric(12,2) NOT NULL, "balance" numeric(12,2) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_15d25c200d9bcd8a33f698daf18" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_fc80c537671ddc29aab503e8fd" ON "invoice" ("due_date") `);
+        await queryRunner.query(`CREATE INDEX "IDX_978738e43651936fd1b60c7e84" ON "invoice" ("lease_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_7743b783da4d0b74b7bfdfd481" ON "invoice" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "payment" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "invoice_id" integer, "received_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "method" character varying, "amount" numeric(12,2) NOT NULL, "reference" character varying, "status" character varying NOT NULL DEFAULT 'succeeded', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_fcaec7df5adf9cac408c686b2ab" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_2c5c19ef08665dd1d123aebe50" ON "payment" ("received_at") `);
+        await queryRunner.query(`CREATE INDEX "IDX_20cc84d8a2274ae86f551360c1" ON "payment" ("invoice_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_bb95477ae48c741a9c1445babf" ON "payment" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "maintenance_request" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "property_id" integer NOT NULL, "unit_id" integer, "tenant_id" integer, "title" character varying NOT NULL, "description" text, "priority" character varying NOT NULL DEFAULT 'medium', "status" character varying NOT NULL DEFAULT 'open', "requested_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "completed_at" TIMESTAMP WITH TIME ZONE, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_d12252413b60c63b57fc4c0d0c9" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_c4eaf0a99dece1b96c9a30185b" ON "maintenance_request" ("status") `);
+        await queryRunner.query(`CREATE INDEX "IDX_639068731753024a99582b75e8" ON "maintenance_request" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "work_order" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "request_id" integer NOT NULL, "vendor_id" bigint, "scheduled_for" TIMESTAMP WITH TIME ZONE, "cost_estimate" numeric(12,2), "cost_actual" numeric(12,2), "status" character varying NOT NULL DEFAULT 'scheduled', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_0730e63dd523d397530859cb6d1" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_b914b1dc56df2b1a245269f2a0" ON "work_order" ("account_id") `);
+        await queryRunner.query(`CREATE TABLE "document" ("id" SERIAL NOT NULL, "account_id" integer NOT NULL, "subject_type" character varying NOT NULL, "subject_id" bigint NOT NULL, "filename" character varying NOT NULL, "storage_key" character varying NOT NULL, "mime_type" character varying, "size_bytes" bigint, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_e57d3357f83f3cdc0acffc3d777" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_e56984b82e77d9ec67652cc27a" ON "document" ("subject_type", "subject_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_a05e62b6b25192e8ff52fd197e" ON "document" ("account_id") `);
+        await queryRunner.query(`ALTER TABLE "account_member" ADD CONSTRAINT "FK_798edece4554ae98edf3693dd84" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "account_member" ADD CONSTRAINT "FK_ece668055bc284d72ac37f73257" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "unit" ADD CONSTRAINT "FK_a270db28cb2784992dcf7c4a9ab" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "unit" ADD CONSTRAINT "FK_ffd1df4d8c19a8bd49fcd8af71b" FOREIGN KEY ("property_id") REFERENCES "property"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "tenant" ADD CONSTRAINT "FK_d2a3ef4033097b91c9097e8413a" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease" ADD CONSTRAINT "FK_80bf2a18b0559a7e37552a935f1" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease" ADD CONSTRAINT "FK_ca091675febe801029d4db0f642" FOREIGN KEY ("unit_id") REFERENCES "unit"("id") ON DELETE RESTRICT ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease_tenant" ADD CONSTRAINT "FK_1002d49fc6e6a01abf5308403c8" FOREIGN KEY ("lease_id") REFERENCES "lease"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease_tenant" ADD CONSTRAINT "FK_64b69371ab43b1453ba3e1229de" FOREIGN KEY ("tenant_id") REFERENCES "tenant"("id") ON DELETE RESTRICT ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease_charge" ADD CONSTRAINT "FK_924912cfdf1b1c94268f338eab4" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "lease_charge" ADD CONSTRAINT "FK_4ecd198da30e9be7ae2c8ffe9db" FOREIGN KEY ("lease_id") REFERENCES "lease"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "invoice_item" ADD CONSTRAINT "FK_9830c1881dd701d440c2164c3cd" FOREIGN KEY ("invoice_id") REFERENCES "invoice"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "invoice" ADD CONSTRAINT "FK_7743b783da4d0b74b7bfdfd4818" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "invoice" ADD CONSTRAINT "FK_978738e43651936fd1b60c7e840" FOREIGN KEY ("lease_id") REFERENCES "lease"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payment" ADD CONSTRAINT "FK_bb95477ae48c741a9c1445babfd" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "payment" ADD CONSTRAINT "FK_20cc84d8a2274ae86f551360c11" FOREIGN KEY ("invoice_id") REFERENCES "invoice"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" ADD CONSTRAINT "FK_639068731753024a99582b75e86" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" ADD CONSTRAINT "FK_7f5323bd769efb8011ca69035e7" FOREIGN KEY ("property_id") REFERENCES "property"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" ADD CONSTRAINT "FK_7990604abb047d1e163e437fc6a" FOREIGN KEY ("unit_id") REFERENCES "unit"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" ADD CONSTRAINT "FK_2bbd65a93cee313afc30fd7e407" FOREIGN KEY ("tenant_id") REFERENCES "tenant"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "work_order" ADD CONSTRAINT "FK_b914b1dc56df2b1a245269f2a0c" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "work_order" ADD CONSTRAINT "FK_8772bfa57c07975ab527b9e6740" FOREIGN KEY ("request_id") REFERENCES "maintenance_request"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "document" ADD CONSTRAINT "FK_a05e62b6b25192e8ff52fd197ed" FOREIGN KEY ("account_id") REFERENCES "account"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "document" DROP CONSTRAINT "FK_a05e62b6b25192e8ff52fd197ed"`);
+        await queryRunner.query(`ALTER TABLE "work_order" DROP CONSTRAINT "FK_8772bfa57c07975ab527b9e6740"`);
+        await queryRunner.query(`ALTER TABLE "work_order" DROP CONSTRAINT "FK_b914b1dc56df2b1a245269f2a0c"`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_2bbd65a93cee313afc30fd7e407"`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_7990604abb047d1e163e437fc6a"`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_7f5323bd769efb8011ca69035e7"`);
+        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_639068731753024a99582b75e86"`);
+        await queryRunner.query(`ALTER TABLE "payment" DROP CONSTRAINT "FK_20cc84d8a2274ae86f551360c11"`);
+        await queryRunner.query(`ALTER TABLE "payment" DROP CONSTRAINT "FK_bb95477ae48c741a9c1445babfd"`);
+        await queryRunner.query(`ALTER TABLE "invoice" DROP CONSTRAINT "FK_978738e43651936fd1b60c7e840"`);
+        await queryRunner.query(`ALTER TABLE "invoice" DROP CONSTRAINT "FK_7743b783da4d0b74b7bfdfd4818"`);
+        await queryRunner.query(`ALTER TABLE "invoice_item" DROP CONSTRAINT "FK_9830c1881dd701d440c2164c3cd"`);
+        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_4ecd198da30e9be7ae2c8ffe9db"`);
+        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_924912cfdf1b1c94268f338eab4"`);
+        await queryRunner.query(`ALTER TABLE "lease_tenant" DROP CONSTRAINT "FK_64b69371ab43b1453ba3e1229de"`);
+        await queryRunner.query(`ALTER TABLE "lease_tenant" DROP CONSTRAINT "FK_1002d49fc6e6a01abf5308403c8"`);
+        await queryRunner.query(`ALTER TABLE "lease" DROP CONSTRAINT "FK_ca091675febe801029d4db0f642"`);
+        await queryRunner.query(`ALTER TABLE "lease" DROP CONSTRAINT "FK_80bf2a18b0559a7e37552a935f1"`);
+        await queryRunner.query(`ALTER TABLE "tenant" DROP CONSTRAINT "FK_d2a3ef4033097b91c9097e8413a"`);
+        await queryRunner.query(`ALTER TABLE "unit" DROP CONSTRAINT "FK_ffd1df4d8c19a8bd49fcd8af71b"`);
+        await queryRunner.query(`ALTER TABLE "unit" DROP CONSTRAINT "FK_a270db28cb2784992dcf7c4a9ab"`);
+        await queryRunner.query(`ALTER TABLE "account_member" DROP CONSTRAINT "FK_ece668055bc284d72ac37f73257"`);
+        await queryRunner.query(`ALTER TABLE "account_member" DROP CONSTRAINT "FK_798edece4554ae98edf3693dd84"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_a05e62b6b25192e8ff52fd197e"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_e56984b82e77d9ec67652cc27a"`);
+        await queryRunner.query(`DROP TABLE "document"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_b914b1dc56df2b1a245269f2a0"`);
+        await queryRunner.query(`DROP TABLE "work_order"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_639068731753024a99582b75e8"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_c4eaf0a99dece1b96c9a30185b"`);
+        await queryRunner.query(`DROP TABLE "maintenance_request"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_bb95477ae48c741a9c1445babf"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_20cc84d8a2274ae86f551360c1"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_2c5c19ef08665dd1d123aebe50"`);
+        await queryRunner.query(`DROP TABLE "payment"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_7743b783da4d0b74b7bfdfd481"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_978738e43651936fd1b60c7e84"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_fc80c537671ddc29aab503e8fd"`);
+        await queryRunner.query(`DROP TABLE "invoice"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_9830c1881dd701d440c2164c3c"`);
+        await queryRunner.query(`DROP TABLE "invoice_item"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_924912cfdf1b1c94268f338eab"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_4ecd198da30e9be7ae2c8ffe9d"`);
+        await queryRunner.query(`DROP TABLE "lease_charge"`);
+        await queryRunner.query(`DROP TABLE "lease_tenant"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_80bf2a18b0559a7e37552a935f"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_ca091675febe801029d4db0f64"`);
+        await queryRunner.query(`DROP TABLE "lease"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_d2a3ef4033097b91c9097e8413"`);
+        await queryRunner.query(`DROP TABLE "tenant"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_a270db28cb2784992dcf7c4a9a"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_ffd1df4d8c19a8bd49fcd8af71"`);
+        await queryRunner.query(`DROP TABLE "unit"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_798edece4554ae98edf3693dd8"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_ece668055bc284d72ac37f7325"`);
+        await queryRunner.query(`DROP TABLE "account_member"`);
+    }
+
+}

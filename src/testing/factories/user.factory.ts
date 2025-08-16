@@ -10,7 +10,6 @@ export class UserFactory {
     const testPassword = process.env.TEST_PASSWORD || 'testpassword123';
     user.password_hash = await bcrypt.hash(testPassword, 12);
     user.admin = false;
-    user.reports = [];
     
     Object.assign(user, overrides);
     return user;

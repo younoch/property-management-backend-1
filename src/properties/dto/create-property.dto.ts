@@ -78,7 +78,7 @@ export class CreatePropertyDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
-  zip_code: string;
+  zip_code: string; // stored as postal_code in DB
 
   @ApiProperty({
     description: 'Country',
@@ -116,15 +116,7 @@ export class CreatePropertyDto {
   @MaxLength(100)
   property_type: string;
 
-  @ApiProperty({
-    description: 'Number of units in the property',
-    example: 24,
-    minimum: 1
-  })
-  @IsNumber()
-  @IsNotEmpty()
-  @Min(1)
-  number_of_units: number;
+  // number_of_units removed from DB; unit count derived from Unit table
 
   @ApiProperty({
     description: 'Property description (optional)',

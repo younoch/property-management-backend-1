@@ -10,7 +10,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Report } from '../reports/report.entity';
 import { Account } from '../accounts/account.entity';
 import { Notification } from '../notifications/notification.entity';
 
@@ -26,13 +25,14 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
-  @Column()
+  @Column({ nullable: true })
   password_hash: string;
 
-  @Column()
+  // Keep role for auth payload compatibility, but optional in new model
+  @Column({ nullable: true })
   role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 
   @Column({ nullable: true })
@@ -53,9 +53,6 @@ export class User {
 
   @Column({ default: true })
   admin: boolean;
-
-  @OneToMany(() => Report, (report) => report.user)
-  reports: Report[];
 
   @OneToMany(() => Account, (account) => account.landlord)
   owned_accounts: Account[];

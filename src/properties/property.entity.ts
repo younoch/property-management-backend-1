@@ -40,7 +40,7 @@ export class Property {
     @Column()
     state: string;
 
-    @Column()
+    @Column({ name: 'postal_code' })
     zip_code: string;
 
     @Column()
@@ -55,8 +55,7 @@ export class Property {
     @Column()
     property_type: string;
 
-    @Column()
-    number_of_units: number;
+    // number_of_units removed; derive by counting units
 
     @Column({ nullable: true, type: "text" })
     description: string;
