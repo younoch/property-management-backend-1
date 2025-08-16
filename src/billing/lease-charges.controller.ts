@@ -9,22 +9,14 @@ import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('lease-charges')
 @Controller('lease-charges')
-export class LeaseChargesController {
-  constructor(private readonly svc: LeaseChargesService) {}
-
-  @ApiOperation({ summary: 'Create a recurring lease charge template' })
-  @ApiResponse({ status: 201, description: 'Lease charge created successfully', type: LeaseCharge })
-  @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  create(@Body() dto: CreateLeaseChargeDto) {
-    return this.svc.create(dto);
-  }
+export class LeaseChargesGlobalController {
+  constructor(private readonly leaseChargesService: LeaseChargesService) {}
 
   @ApiOperation({ summary: 'Get all lease charges' })
   @ApiResponse({ status: 200, description: 'Lease charges retrieved successfully', type: [LeaseCharge] })
   @Get()
   findAll() {
-    return this.svc.findAll();
+    return this.leaseChargesService.findAll();
   }
 
   @ApiOperation({ summary: 'Get lease charge by ID' })
@@ -32,25 +24,46 @@ export class LeaseChargesController {
   @ApiResponse({ status: 200, description: 'Lease charge found successfully', type: LeaseCharge })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.svc.findOne(id);
+    return this.leaseChargesService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Update lease charge' })
+  @ApiOperation({ summary: 'Update lease charge by ID' })
   @ApiParam({ name: 'id', description: 'Lease charge ID' })
   @ApiResponse({ status: 200, description: 'Lease charge updated successfully', type: LeaseCharge })
   @Patch(':id')
   @UseGuards(AuthGuard, AccountScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLeaseChargeDto) {
-    return this.svc.update(id, dto);
+    return this.leaseChargesService.update(id, dto);
   }
 
-  @ApiOperation({ summary: 'Delete lease charge' })
+  @ApiOperation({ summary: 'Delete lease charge by ID' })
   @ApiParam({ name: 'id', description: 'Lease charge ID' })
   @ApiResponse({ status: 200, description: 'Lease charge deleted successfully' })
   @Delete(':id')
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.svc.remove(id);
+    return this.leaseChargesService.remove(id);
+  }
+}
+
+@ApiTags('lease-charges')
+@Controller('leases/:leaseId/charges')
+export class LeaseChargesController {
+  constructor(private readonly leaseChargesService: LeaseChargesService) {}
+
+  @ApiOperation({ summary: 'Create a new lease charge for a lease' })
+  @ApiResponse({ status: 201, description: 'Lease charge created successfully', type: LeaseCharge })
+  @Post()
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  create(@Param('leaseId', ParseIntPipe) leaseId: number, @Body() dto: CreateLeaseChargeDto) {
+    return this.leaseChargesService.create({ ...dto, lease_id: leaseId });
+  }
+
+  @ApiOperation({ summary: 'Get all charges for a lease' })
+  @ApiResponse({ status: 200, description: 'Lease charges retrieved successfully', type: [LeaseCharge] })
+  @Get()
+  findByLease(@Param('leaseId', ParseIntPipe) leaseId: number) {
+    return this.leaseChargesService.findByLease(leaseId);
   }
 }
 

@@ -3,6 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateNotificationDto {
   @ApiProperty({
+    description: 'Account ID for the notification',
+    example: 1,
+  })
+  @IsNumber()
+  account_id: number;
+
+  @ApiProperty({
     description: 'User ID who will receive the notification',
     example: 1,
   })

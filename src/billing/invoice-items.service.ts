@@ -21,6 +21,10 @@ export class InvoiceItemsService {
     return this.repo.find();
   }
 
+  findByInvoice(invoiceId: number) {
+    return this.repo.find({ where: { invoice_id: invoiceId } });
+  }
+
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('Invoice item not found');

@@ -26,6 +26,14 @@ export class NotificationsService {
     });
   }
 
+  async findByAccount(accountId: number): Promise<Notification[]> {
+    return this.notificationsRepository.find({
+      where: { account_id: accountId },
+      relations: ['user'],
+      order: { sent_at: 'DESC' },
+    });
+  }
+
   async findOne(id: number): Promise<Notification> {
     const notification = await this.notificationsRepository.findOne({
       where: { id },

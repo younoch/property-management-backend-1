@@ -21,6 +21,10 @@ export class LeaseChargesService {
     return this.repo.find();
   }
 
+  findByLease(leaseId: number) {
+    return this.repo.find({ where: { lease_id: leaseId } });
+  }
+
   async findOne(id: number) {
     const charge = await this.repo.findOne({ where: { id } });
     if (!charge) throw new NotFoundException('Lease charge not found');

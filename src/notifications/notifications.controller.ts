@@ -9,25 +9,20 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './notification.entity';
+import { AuthGuard } from '../guards/auth.guard';
+import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('notifications')
 @Controller('notifications')
-export class NotificationsController {
+export class NotificationsGlobalController {
   constructor(private readonly notificationsService: NotificationsService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create a new notification' })
-  @ApiResponse({ status: 201, description: 'Notification created successfully', type: Notification })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
-  async create(@Body() createNotificationDto: CreateNotificationDto): Promise<Notification> {
-    return this.notificationsService.create(createNotificationDto);
-  }
 
   @Get()
   @ApiOperation({ summary: 'Get all notifications' })
@@ -91,6 +86,7 @@ export class NotificationsController {
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({ status: 200, description: 'Notification updated successfully', type: Notification })
   @ApiResponse({ status: 404, description: 'Notification not found' })
+  @UseGuards(AuthGuard, AccountScopeGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNotificationDto: UpdateNotificationDto,
@@ -123,7 +119,33 @@ export class NotificationsController {
   @ApiResponse({ status: 204, description: 'Notification deleted successfully' })
   @ApiResponse({ status: 404, description: 'Notification not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.notificationsService.remove(id);
+  }
+}
+
+@ApiTags('notifications')
+@Controller('accounts/:accountId/notifications')
+export class NotificationsController {
+  constructor(private readonly notificationsService: NotificationsService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new notification for an account' })
+  @ApiResponse({ status: 201, description: 'Notification created successfully', type: Notification })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  async create(
+    @Param('accountId', ParseIntPipe) accountId: number,
+    @Body() createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification> {
+    return this.notificationsService.create({ ...createNotificationDto, account_id: accountId });
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all notifications for an account' })
+  @ApiResponse({ status: 200, description: 'List of account notifications', type: [Notification] })
+  async findByAccount(@Param('accountId', ParseIntPipe) accountId: number): Promise<Notification[]> {
+    return this.notificationsService.findByAccount(accountId);
   }
 } 

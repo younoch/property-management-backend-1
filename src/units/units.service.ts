@@ -21,6 +21,10 @@ export class UnitsService {
     return this.unitsRepo.find();
   }
 
+  findByAccount(accountId: number) {
+    return this.unitsRepo.find({ where: { account_id: accountId } });
+  }
+
   async findOne(id: number) {
     const unit = await this.unitsRepo.findOne({ where: { id } });
     if (!unit) throw new NotFoundException('Unit not found');

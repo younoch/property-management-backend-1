@@ -21,6 +21,10 @@ export class TenantsService {
     return this.repo.find();
   }
 
+  findByAccount(accountId: number) {
+    return this.repo.find({ where: { account_id: accountId } });
+  }
+
   async findOne(id: number) {
     const tenant = await this.repo.findOne({ where: { id } });
     if (!tenant) throw new NotFoundException('Tenant not found');

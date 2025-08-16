@@ -9,16 +9,8 @@ import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('billing-payments')
 @Controller('payments')
-export class PaymentsController {
+export class PaymentsGlobalController {
   constructor(private readonly paymentsService: PaymentsService) {}
-
-  @ApiOperation({ summary: 'Record a new payment' })
-  @ApiResponse({ status: 201, description: 'Payment recorded successfully', type: Payment })
-  @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  create(@Body() dto: CreatePaymentDto) {
-    return this.paymentsService.create(dto);
-  }
 
   @ApiOperation({ summary: 'Get all payments' })
   @ApiResponse({ status: 200, description: 'Payments retrieved successfully', type: [Payment] })
@@ -51,6 +43,27 @@ export class PaymentsController {
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.remove(id);
+  }
+}
+
+@ApiTags('billing-payments')
+@Controller('accounts/:accountId/payments')
+export class PaymentsController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  @ApiOperation({ summary: 'Record a new payment for an account' })
+  @ApiResponse({ status: 201, description: 'Payment recorded successfully', type: Payment })
+  @Post()
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreatePaymentDto) {
+    return this.paymentsService.create({ ...dto, account_id: accountId });
+  }
+
+  @ApiOperation({ summary: 'Get all payments for an account' })
+  @ApiResponse({ status: 200, description: 'Payments retrieved successfully', type: [Payment] })
+  @Get()
+  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.paymentsService.findByAccount(accountId);
   }
 }
 

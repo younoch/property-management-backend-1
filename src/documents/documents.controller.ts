@@ -9,18 +9,10 @@ import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('documents')
 @Controller('documents')
-export class DocumentsController {
+export class DocumentsGlobalController {
   constructor(private readonly svc: DocumentsService) {}
 
-  @ApiOperation({ summary: 'Create document record (metadata only)' })
-  @ApiResponse({ status: 201, description: 'Document created', type: Doc })
-  @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  create(@Body() dto: CreateDocumentDto) {
-    return this.svc.create(dto);
-  }
-
-  @ApiOperation({ summary: 'List documents' })
+  @ApiOperation({ summary: 'List all documents' })
   @ApiResponse({ status: 200, description: 'Documents list', type: [Doc] })
   @Get()
   findAll() {
@@ -51,6 +43,27 @@ export class DocumentsController {
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.svc.remove(id);
+  }
+}
+
+@ApiTags('documents')
+@Controller('accounts/:accountId/documents')
+export class AccountDocumentsController {
+  constructor(private readonly svc: DocumentsService) {}
+
+  @ApiOperation({ summary: 'Create document record for an account (metadata only)' })
+  @ApiResponse({ status: 201, description: 'Document created', type: Doc })
+  @Post()
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateDocumentDto) {
+    return this.svc.create({ ...dto, account_id: accountId });
+  }
+
+  @ApiOperation({ summary: 'List documents for an account' })
+  @ApiResponse({ status: 200, description: 'Documents list', type: [Doc] })
+  @Get()
+  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.svc.findByAccount(accountId);
   }
 }
 

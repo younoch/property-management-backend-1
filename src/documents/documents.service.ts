@@ -20,6 +20,10 @@ export class DocumentsService {
     return this.repo.find();
   }
 
+  findByAccount(accountId: number) {
+    return this.repo.find({ where: { account_id: accountId } });
+  }
+
   async findOne(id: number) {
     const d = await this.repo.findOne({ where: { id } });
     if (!d) throw new NotFoundException('Document not found');

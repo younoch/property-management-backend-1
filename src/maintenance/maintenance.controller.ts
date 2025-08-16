@@ -12,19 +12,11 @@ import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('maintenance')
 @Controller('maintenance')
-export class MaintenanceController {
+export class MaintenanceGlobalController {
   constructor(private readonly svc: MaintenanceService) {}
 
   // Requests
-  @ApiOperation({ summary: 'Create maintenance request' })
-  @ApiResponse({ status: 201, description: 'Request created', type: MaintenanceRequest })
-  @Post('requests')
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  createRequest(@Body() dto: CreateMaintenanceRequestDto) {
-    return this.svc.createRequest(dto);
-  }
-
-  @ApiOperation({ summary: 'List maintenance requests' })
+  @ApiOperation({ summary: 'List all maintenance requests' })
   @ApiResponse({ status: 200, description: 'Requests list', type: [MaintenanceRequest] })
   @Get('requests')
   listRequests() {
@@ -58,15 +50,7 @@ export class MaintenanceController {
   }
 
   // Work Orders
-  @ApiOperation({ summary: 'Create work order' })
-  @ApiResponse({ status: 201, description: 'Work order created', type: WorkOrder })
-  @Post('work-orders')
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  createWorkOrder(@Body() dto: CreateWorkOrderDto) {
-    return this.svc.createWorkOrder(dto);
-  }
-
-  @ApiOperation({ summary: 'List work orders' })
+  @ApiOperation({ summary: 'List all work orders' })
   @ApiResponse({ status: 200, description: 'Work orders list', type: [WorkOrder] })
   @Get('work-orders')
   listWorkOrders() {
@@ -97,6 +81,44 @@ export class MaintenanceController {
   @UseGuards(AuthGuard)
   removeWorkOrder(@Param('id', ParseIntPipe) id: number) {
     return this.svc.removeWorkOrder(id);
+  }
+}
+
+@ApiTags('maintenance')
+@Controller('accounts/:accountId/maintenance')
+export class MaintenanceController {
+  constructor(private readonly svc: MaintenanceService) {}
+
+  // Requests
+  @ApiOperation({ summary: 'Create maintenance request for an account' })
+  @ApiResponse({ status: 201, description: 'Request created', type: MaintenanceRequest })
+  @Post('requests')
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  createRequest(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateMaintenanceRequestDto) {
+    return this.svc.createRequest({ ...dto, account_id: accountId });
+  }
+
+  @ApiOperation({ summary: 'List maintenance requests for an account' })
+  @ApiResponse({ status: 200, description: 'Requests list', type: [MaintenanceRequest] })
+  @Get('requests')
+  listRequests(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.svc.findRequestsByAccount(accountId);
+  }
+
+  // Work Orders
+  @ApiOperation({ summary: 'Create work order for an account' })
+  @ApiResponse({ status: 201, description: 'Work order created', type: WorkOrder })
+  @Post('work-orders')
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  createWorkOrder(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateWorkOrderDto) {
+    return this.svc.createWorkOrder({ ...dto, account_id: accountId });
+  }
+
+  @ApiOperation({ summary: 'List work orders for an account' })
+  @ApiResponse({ status: 200, description: 'Work orders list', type: [WorkOrder] })
+  @Get('work-orders')
+  listWorkOrders(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.svc.findWorkOrdersByAccount(accountId);
   }
 }
 

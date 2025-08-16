@@ -24,6 +24,10 @@ export class MaintenanceService {
     return this.reqRepo.find();
   }
 
+  findRequestsByAccount(accountId: number) {
+    return this.reqRepo.find({ where: { account_id: accountId } });
+  }
+
   async findRequest(id: number) {
     const r = await this.reqRepo.findOne({ where: { id } });
     if (!r) throw new NotFoundException('Maintenance request not found');
@@ -49,6 +53,10 @@ export class MaintenanceService {
 
   findAllWorkOrders() {
     return this.woRepo.find();
+  }
+
+  findWorkOrdersByAccount(accountId: number) {
+    return this.woRepo.find({ where: { account_id: accountId } });
   }
 
   async findWorkOrder(id: number) {

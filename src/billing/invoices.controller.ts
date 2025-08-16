@@ -9,16 +9,8 @@ import { AccountScopeGuard } from '../guards/account.guard';
 
 @ApiTags('billing-invoices')
 @Controller('invoices')
-export class InvoicesController {
+export class InvoicesGlobalController {
   constructor(private readonly invoicesService: InvoicesService) {}
-
-  @ApiOperation({ summary: 'Create a new invoice' })
-  @ApiResponse({ status: 201, description: 'Invoice created successfully', type: Invoice })
-  @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
-  create(@Body() dto: CreateInvoiceDto) {
-    return this.invoicesService.create(dto);
-  }
 
   @ApiOperation({ summary: 'Get all invoices' })
   @ApiResponse({ status: 200, description: 'Invoices retrieved successfully', type: [Invoice] })
@@ -51,6 +43,27 @@ export class InvoicesController {
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.invoicesService.remove(id);
+  }
+}
+
+@ApiTags('billing-invoices')
+@Controller('accounts/:accountId/invoices')
+export class InvoicesController {
+  constructor(private readonly invoicesService: InvoicesService) {}
+
+  @ApiOperation({ summary: 'Create a new invoice for an account' })
+  @ApiResponse({ status: 201, description: 'Invoice created successfully', type: Invoice })
+  @Post()
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateInvoiceDto) {
+    return this.invoicesService.create({ ...dto, account_id: accountId });
+  }
+
+  @ApiOperation({ summary: 'Get all invoices for an account' })
+  @ApiResponse({ status: 200, description: 'Invoices retrieved successfully', type: [Invoice] })
+  @Get()
+  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.invoicesService.findByAccount(accountId);
   }
 }
 

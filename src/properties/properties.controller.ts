@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
@@ -16,37 +17,17 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './property.entity';
 import { AuthGuard } from '../guards/auth.guard';
+import { AccountScopeGuard } from '../guards/account.guard';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 
 @ApiTags('properties')
 @Controller('properties')
-export class PropertiesController {
+export class PropertiesGlobalController {
   constructor(
     private readonly propertiesService: PropertiesService,
     private readonly configService: ConfigService,
   ) {}
-
-  @ApiOperation({ summary: 'Create a new property' })
-  @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - authentication required' })
-  @ApiCookieAuth()
-  @UseGuards(AuthGuard)
-  @Post()
-  async create(@Body() createPropertyDto: CreatePropertyDto, @Request() req) {
-    // Extract user ID from JWT token payload
-    const accessToken = req.cookies?.access_token || req.signedCookies?.access_token;
-    
-    const payload = jwt.verify(
-      accessToken,
-      this.configService.get<string>('JWT_ACCESS_SECRET')
-    ) as { sub: number; exp: number };
-    
-    const userId = payload.sub;
-    
-    return await this.propertiesService.create(createPropertyDto, userId);
-  }
 
   @ApiOperation({ summary: 'Get all properties' })
   @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: [Property] })
@@ -60,16 +41,8 @@ export class PropertiesController {
   @ApiResponse({ status: 200, description: 'Property found successfully', type: Property })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.propertiesService.findOne(+id);
-  }
-
-  @ApiOperation({ summary: 'Get properties by account ID' })
-  @ApiParam({ name: 'accountId', description: 'Account ID' })
-  @ApiResponse({ status: 200, description: 'Account properties retrieved successfully', type: [Property] })
-  @Get('account/:accountId')
-  findByAccount(@Param('accountId') accountId: string) {
-    return this.propertiesService.findByAccount(+accountId);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.propertiesService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Search properties by location' })
@@ -90,8 +63,9 @@ export class PropertiesController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
-    return this.propertiesService.update(+id, updatePropertyDto);
+  @UseGuards(AuthGuard, AccountScopeGuard)
+  update(@Param('id', ParseIntPipe) id: number, @Body() updatePropertyDto: UpdatePropertyDto) {
+    return this.propertiesService.update(id, updatePropertyDto);
   }
 
   @ApiOperation({ summary: 'Delete property by ID' })
@@ -99,7 +73,49 @@ export class PropertiesController {
   @ApiResponse({ status: 200, description: 'Property deleted successfully' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.propertiesService.remove(+id);
+  @UseGuards(AuthGuard)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.propertiesService.remove(id);
+  }
+}
+
+@ApiTags('properties')
+@Controller('accounts/:accountId/properties')
+export class PropertiesController {
+  constructor(
+    private readonly propertiesService: PropertiesService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @ApiOperation({ summary: 'Create a new property for an account' })
+  @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - authentication required' })
+  @ApiCookieAuth()
+  @UseGuards(AuthGuard)
+  @Post()
+  async create(
+    @Param('accountId', ParseIntPipe) accountId: number,
+    @Body() createPropertyDto: CreatePropertyDto,
+    @Request() req,
+  ) {
+    // Extract user ID from JWT token payload
+    const accessToken = req.cookies?.access_token || req.signedCookies?.access_token;
+    
+    const payload = jwt.verify(
+      accessToken,
+      this.configService.get<string>('JWT_ACCESS_SECRET')
+    ) as { sub: number; exp: number };
+    
+    const userId = payload.sub;
+    
+    return await this.propertiesService.create({ ...createPropertyDto, account_id: accountId }, userId);
+  }
+
+  @ApiOperation({ summary: 'Get all properties for an account' })
+  @ApiResponse({ status: 200, description: 'Account properties retrieved successfully', type: [Property] })
+  @Get()
+  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
+    return this.propertiesService.findByAccount(accountId);
   }
 } 
