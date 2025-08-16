@@ -35,6 +35,11 @@ export class UsersService {
     return this.repo.find({ where: { email } });
   }
 
+  // Backward-compatible alias used by existing controllers/services
+  find(email: string) {
+    return this.findByEmail(email);
+  }
+
   async findByAccount(accountId: number) {
     // Simplified: return all users owning accounts with this id would need a join.
     // Placeholder: return all users for now (can be replaced with proper query if needed).
