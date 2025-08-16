@@ -34,13 +34,13 @@ services:
         generateValue: true
       - key: CSRF_TOKEN_EXPIRY_HOURS
         value: "24"
-      # Cookie Configuration (works with both localhost and production)
+      # Cookie Configuration for cross-domain production
       - key: COOKIE_DOMAIN
         value: ""
       - key: COOKIE_SECURE
-        value: false
+        value: true
       - key: COOKIE_SAME_SITE
-        value: "lax"
+        value: "none"
       - key: COOKIE_HTTP_ONLY
         value: true
       # Frontend/Backend domains (will update for custom domain later)

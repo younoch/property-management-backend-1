@@ -59,48 +59,10 @@ export class AuthService {
       expiresIn: refreshExpiresIn,
     });
 
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
-    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
-    const cookieHttpOnly = this.configService.get<string>('COOKIE_HTTP_ONLY') !== 'false';
-    const cookieSameSite = (this.configService.get<string>('COOKIE_SAME_SITE') || (isProduction ? 'none' : 'lax')) as 'lax' | 'none' | 'strict';
-    const cookieSecure = this.configService.get<string>('COOKIE_SECURE') === 'true' || isProduction;
-
-    // Build cookies with attributes
-    const accessCookieParts = [
-      `access_token=${accessToken}`,
-      `Path=/`,
-      `Max-Age=${15 * 60}`,
-    ];
-    const refreshCookieParts = [
-      `refresh_token=${refreshToken}`,
-      `Path=/`,
-    ];
-
-    if (cookieHttpOnly) {
-      accessCookieParts.push('HttpOnly');
-      refreshCookieParts.push('HttpOnly');
-    }
-    if (cookieSecure) {
-      accessCookieParts.push('Secure');
-      refreshCookieParts.push('Secure');
-    }
-    if (cookieSameSite) {
-      const normalized = cookieSameSite.charAt(0).toUpperCase() + cookieSameSite.slice(1).toLowerCase();
-      accessCookieParts.push(`SameSite=${normalized}`);
-      refreshCookieParts.push(`SameSite=${normalized}`);
-    }
-    if (cookieDomain) {
-      accessCookieParts.push(`Domain=${cookieDomain}`);
-      refreshCookieParts.push(`Domain=${cookieDomain}`);
-    }
-
-    const setCookie = [accessCookieParts.join('; '), refreshCookieParts.join('; ')];
-
     return {
       ...user,
       accessToken,
       refreshToken,
-      setCookie,
     };
   }
 

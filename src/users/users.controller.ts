@@ -150,7 +150,34 @@ export class UsersController {
       body.role || 'tenant'
     );
     const login = this.authService.issueLoginResponse(user);
-    res.setHeader('Set-Cookie', login.setCookie);
+    
+    // Set cookies with proper configuration
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN;
+    const cookieHttpOnly = process.env.COOKIE_HTTP_ONLY !== 'false';
+    const cookieSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax')) as 'lax' | 'none' | 'strict';
+    const cookieSecure = process.env.COOKIE_SECURE === 'true' || isProduction;
+    
+    const cookieOpts: any = {
+      httpOnly: cookieHttpOnly,
+      secure: cookieSecure,
+      sameSite: cookieSameSite,
+      path: '/',
+    };
+    if (cookieDomain) cookieOpts.domain = cookieDomain;
+    
+    // Set access token cookie (15 minutes)
+    res.cookie('access_token', login.accessToken, {
+      ...cookieOpts,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    
+    // Set refresh token cookie (7 days)
+    res.cookie('refresh_token', login.refreshToken, {
+      ...cookieOpts,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    
     return login;
   }
 
@@ -169,7 +196,34 @@ export class UsersController {
   async signin(@Body() body: SigninDto, @Res({ passthrough: true }) res: Response): Promise<any> {
     const user = await this.authService.signin(body.email, body.password);
     const login = this.authService.issueLoginResponse(user);
-    res.setHeader('Set-Cookie', login.setCookie);
+    
+    // Set cookies with proper configuration
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN;
+    const cookieHttpOnly = process.env.COOKIE_HTTP_ONLY !== 'false';
+    const cookieSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax')) as 'lax' | 'none' | 'strict';
+    const cookieSecure = process.env.COOKIE_SECURE === 'true' || isProduction;
+    
+    const cookieOpts: any = {
+      httpOnly: cookieHttpOnly,
+      secure: cookieSecure,
+      sameSite: cookieSameSite,
+      path: '/',
+    };
+    if (cookieDomain) cookieOpts.domain = cookieDomain;
+    
+    // Set access token cookie (15 minutes)
+    res.cookie('access_token', login.accessToken, {
+      ...cookieOpts,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    
+    // Set refresh token cookie (7 days)
+    res.cookie('refresh_token', login.refreshToken, {
+      ...cookieOpts,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    
     return login;
   }
 
