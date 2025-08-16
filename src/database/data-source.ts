@@ -51,5 +51,7 @@ export const AppDataSource = new DataSource({
   ],
   migrations: ['src/database/migrations/*.ts'],
   subscribers: [],
-  ssl: (configService.get<string>('DB_SSL') === 'true') ? { rejectUnauthorized: false } : false,
+  ssl: ((process.env.NODE_ENV === 'production') && (configService.get<string>('DB_SSL') === 'true'))
+    ? { rejectUnauthorized: false }
+    : false,
 }); 

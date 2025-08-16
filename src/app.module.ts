@@ -59,7 +59,8 @@ import * as cookieParser from 'cookie-parser';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const sslEnabled = config.get<boolean>('DB_SSL', false);
+        const isProduction = (config.get<string>('NODE_ENV') || process.env.NODE_ENV) === 'production';
+        const sslEnabled = isProduction && (config.get<string>('DB_SSL') === 'true');
         return {
           type: 'postgres',
           host: config.get<string>('DB_HOST'),
