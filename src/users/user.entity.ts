@@ -1,7 +1,4 @@
 import {
-  AfterInsert,
-  AfterRemove,
-  AfterUpdate,
   Entity,
   Column,
   PrimaryGeneratedColumn,
@@ -47,12 +44,7 @@ export class User {
   @UpdateDateColumn()
   updated_at: Date;
 
-  // Legacy fields for backward compatibility
-  @Column({ nullable: true })
-  password: string;
-
-  @Column({ default: true })
-  admin: boolean;
+  // Legacy fields removed for production readiness
 
   @OneToMany(() => Account, (account) => account.landlord)
   owned_accounts: Account[];
@@ -60,18 +52,4 @@ export class User {
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 
-  @AfterInsert()
-  logInsert() {
-    console.log('Inserted User with id', this.id);
-  }
-
-  @AfterUpdate()
-  logUpdate() {
-    console.log('Updated User with id', this.id);
-  }
-
-  @AfterRemove()
-  logRemove() {
-    console.log('Removed User with id', this.id);
-  }
 }

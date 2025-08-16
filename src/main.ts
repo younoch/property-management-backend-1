@@ -12,35 +12,24 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   
-  console.log('CORS Debug - ALLOWED_ORIGINS env var:', process.env.ALLOWED_ORIGINS);
-  console.log('CORS Debug - Parsed allowedOrigins array:', allowedOrigins);
-  
   // Enhanced CORS configuration for JWT cookies
   app.enableCors({
     origin: (origin, callback) => {
-      console.log('CORS Debug - Request origin:', origin);
-      console.log('CORS Debug - Allowed origins:', allowedOrigins);
-      console.log('CORS Debug - NODE_ENV:', process.env.NODE_ENV);
-      
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) {
-        console.log('CORS Debug - No origin, allowing request');
         return callback(null, true);
       }
       
       // Check if origin is in allowed list
       if (allowedOrigins.indexOf(origin) !== -1) {
-        console.log('CORS Debug - Origin allowed:', origin);
         return callback(null, true);
       }
       
       // For development, allow localhost variations
       if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
-        console.log('CORS Debug - Localhost allowed in dev:', origin);
         return callback(null, true);
       }
       
-      console.log('CORS Debug - Origin rejected:', origin);
       return callback(new Error('Not allowed by CORS'), false);
     },
     credentials: true,
@@ -73,18 +62,7 @@ async function bootstrap() {
     next();
   });
 
-  // Debug middleware to log cookies and headers
-  app.use((req, res, next) => {
-    console.log('=== Request Debug ===');
-    console.log('URL:', req.url);
-    console.log('Method:', req.method);
-    console.log('Origin:', req.headers.origin);
-    console.log('Cookies:', req.cookies);
-    console.log('Signed Cookies:', req.signedCookies);
-    console.log('Authorization Header:', req.headers.authorization);
-    console.log('====================');
-    next();
-  });
+  // Remove noisy request debug middleware for production readiness
 
   // Optional: Set global prefix for all APIs (uncomment if you want /api prefix)
   // app.setGlobalPrefix('api');

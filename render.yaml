@@ -20,6 +20,8 @@ services:
         generateValue: true
       - key: ENABLE_SWAGGER
         value: true
+      - key: RUN_MIGRATIONS_ON_BOOT
+        value: true
       # JWT Configuration - REQUIRED
       - key: JWT_ACCESS_SECRET
         generateValue: true

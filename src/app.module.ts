@@ -23,10 +23,6 @@ import { InvoiceItemsModule } from './billing/invoice-items.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { InvoiceGenerationScheduler } from './billing/invoice-generation.scheduler';
 import { BillingModule } from './billing/billing.module';
-import { LeaseCharge } from './billing/lease-charge.entity';
-import { Invoice } from './billing/invoice.entity';
-import { InvoiceItem } from './billing/invoice-item.entity';
-import { CurrentUserMiddleware } from './users/middlewares/current-user.middleware';
 import { HealthModule } from './health/health.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
 import { CsrfModule } from './modules/csrf.module';
@@ -64,10 +60,6 @@ import * as cookieParser from 'cookie-parser';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const sslEnabled = config.get<boolean>('DB_SSL', false);
-        console.log('Database SSL setting:', sslEnabled);
-        console.log('Database host:', config.get<string>('DB_HOST'));
-        console.log('Database port:', config.get<number>('DB_PORT'));
-        
         return {
           type: 'postgres',
           host: config.get<string>('DB_HOST'),
@@ -76,11 +68,8 @@ import * as cookieParser from 'cookie-parser';
           password: config.get<string>('DB_PASSWORD'),
           database: config.get<string>('DB_NAME'),
           synchronize: config.get<boolean>('DB_SYNC', true),
-          entities: [User, Account, Property, Notification],
-          ssl: false, // Force SSL to false for local development
-          extra: {
-            ssl: false, // Force SSL to false for local development
-          },
+          autoLoadEntities: true,
+          ssl: sslEnabled ? { rejectUnauthorized: false } : false,
         };
       },
     }),
