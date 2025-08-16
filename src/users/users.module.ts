@@ -2,6 +2,7 @@ import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './users.controller';
+import { UsersManagementController } from './users.management.controller';
 import { UsersService } from './users.service';
 import { AuthService } from './auth.service';
 import { User } from './user.entity';
@@ -10,7 +11,7 @@ import { TokenRefreshInterceptor } from './interceptors/token-refresh.intercepto
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), ConfigModule],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersManagementController],
   providers: [UsersService, AuthService, TokenRefreshInterceptor],
 })
 export class UsersModule {

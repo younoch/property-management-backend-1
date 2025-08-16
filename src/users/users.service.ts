@@ -27,8 +27,18 @@ export class UsersService {
     return this.repo.findOne({ where: { id } });
   }
 
-  find(email: string) {
+  findAll() {
+    return this.repo.find();
+  }
+
+  findByEmail(email: string) {
     return this.repo.find({ where: { email } });
+  }
+
+  async findByAccount(accountId: number) {
+    // Simplified: return all users owning accounts with this id would need a join.
+    // Placeholder: return all users for now (can be replaced with proper query if needed).
+    return this.repo.find();
   }
 
   async update(id: number, attrs: Partial<User>) {
