@@ -15,7 +15,7 @@ services:
       - key: DB_SSL
         value: true
       - key: ALLOWED_ORIGINS
-        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000"
+        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000,https://property-management-api-7yk4.onrender.com"
       - key: COOKIE_KEY
         generateValue: true
       - key: ENABLE_SWAGGER
