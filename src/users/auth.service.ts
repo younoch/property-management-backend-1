@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
 export class AuthService {
   constructor(private usersService: UsersService, private configService: ConfigService) {}
 
-  async signup(email: string, password: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant' = 'tenant') {
+  async signup(email: string, password: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
     // See if email is in use
     const users = await this.usersService.find(email);
     if (users.length) {
@@ -59,8 +59,17 @@ export class AuthService {
       expiresIn: refreshExpiresIn,
     });
 
+    // Return only the fields that should be exposed, excluding password_hash
     return {
-      ...user,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
+      profile_image_url: user.profile_image_url,
+      is_active: user.is_active,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
       accessToken,
       refreshToken,
     };

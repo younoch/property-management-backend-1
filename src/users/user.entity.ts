@@ -25,11 +25,11 @@ export class User {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ nullable: true })
+  @Column()
   password_hash: string;
 
-  // Keep role for auth payload compatibility, but optional in new model
-  @Column({ nullable: true })
+  // Role is required for proper access control
+  @Column()
   role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 
   @Column({ nullable: true })

@@ -21,7 +21,7 @@ import { SigninDto } from './dtos/signin.dto';
 import { SigninResponseDto, SigninDataDto } from './dtos/signin-response.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
-import { UserDto } from './dtos/user.dto';
+import { UserDto, UserResponseDto } from './dtos/user.dto';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './user.entity';
@@ -75,6 +75,7 @@ export class UsersController {
   @Get('/whoami')
   @UseGuards(AuthGuard)
   @UseInterceptors(TokenRefreshInterceptor)
+  @Serialize(UserResponseDto)
   async whoAmI(@CurrentUser() user: User): Promise<User> {
     try {
       // Check if user exists and is active
@@ -178,6 +179,7 @@ export class UsersController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     
+    // Return just the user data with tokens
     return login;
   }
 
@@ -224,6 +226,7 @@ export class UsersController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     
+    // Return just the user data with tokens
     return login;
   }
 
@@ -231,6 +234,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User found successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get('/:id')
+  @Serialize(UserResponseDto)
   async findUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(parseInt(id));
     if (!user) {
@@ -242,6 +246,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all users or search by email' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   @Get()
+  @Serialize(UserResponseDto)
   findAllUsers(@Query('email') email: string) {
     return this.usersService.find(email);
   }

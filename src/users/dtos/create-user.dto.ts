@@ -33,11 +33,10 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    description: 'User role',
+    description: 'User role (required)',
     example: 'tenant',
     enum: ['super_admin', 'landlord', 'manager', 'tenant'],
   })
-  @IsOptional()
   @IsString()
-  role?: 'super_admin' | 'landlord' | 'manager' | 'tenant';
+  role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 }

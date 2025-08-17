@@ -7,6 +7,7 @@ export class AdminGuard implements CanActivate {
       return false;
     }
 
-    return request.currentUser.admin;
+    // Check for super_admin role instead of legacy admin boolean
+    return request.currentUser.role === 'super_admin';
   }
 }

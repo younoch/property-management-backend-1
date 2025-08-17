@@ -16,6 +16,8 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { User } from './user.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { CsrfGuard } from '../guards/csrf.guard';
+import { Serialize } from '../interceptors/serialize.interceptor';
+import { UserDto, UserResponseDto } from './dtos/user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -28,6 +30,7 @@ export class UsersManagementController {
   @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Get()
+  @Serialize(UserResponseDto)
   async findAllUsers(@Query('email') email?: string) {
     if (email) {
       return this.usersService.findByEmail(email);
@@ -42,6 +45,7 @@ export class UsersManagementController {
   @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Get(':id')
+  @Serialize(UserResponseDto)
   async findUser(@Param('id', ParseIntPipe) id: number) {
     const user = await this.usersService.findOne(id);
     if (!user) {
@@ -56,6 +60,7 @@ export class UsersManagementController {
   @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Get('account/:accountId')
+  @Serialize(UserResponseDto)
   async findUsersByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
     return this.usersService.findByAccount(accountId);
   }

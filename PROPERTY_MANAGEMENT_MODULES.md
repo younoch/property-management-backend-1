@@ -266,9 +266,8 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 
-  @IsOptional()
   @IsString()
-  role?: 'super_admin' | 'landlord' | 'manager' | 'tenant';
+  role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 }
 ```
 
