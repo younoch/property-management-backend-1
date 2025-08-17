@@ -13,12 +13,14 @@ import {
   InternalServerErrorException,
   HttpException,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { SigninDto } from './dtos/signin.dto';
 import { SigninResponseDto, SigninDataDto } from './dtos/signin-response.dto';
+import { RefreshTokenDto, RefreshTokenResponseDto } from './dtos/refresh-token.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDto, UserResponseDto } from './dtos/user.dto';
@@ -228,6 +230,80 @@ export class UsersController {
     
     // Return just the user data with tokens
     return login;
+  }
+
+  @ApiOperation({ 
+    summary: 'Refresh access token',
+    description: 'Get a new access token using a valid refresh token'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Access token refreshed successfully',
+    type: RefreshTokenResponseDto
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid or expired refresh token',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - Invalid refresh token',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    type: ErrorResponseDto
+  })
+  @Post('/refresh')
+  async refreshToken(@Body() body: RefreshTokenDto, @Res({ passthrough: true }) res: Response): Promise<any> {
+    // Get refresh token from request body or cookies
+    let refreshToken = body.refresh_token;
+    
+    // If not in body, try to get from cookies
+    if (!refreshToken) {
+      refreshToken = res.req.cookies?.refresh_token;
+    }
+    
+    if (!refreshToken) {
+      throw new BadRequestException({
+        message: 'Refresh token is required',
+        errorType: 'REFRESH_TOKEN_REQUIRED'
+      });
+    }
+
+    try {
+      // Refresh the access token
+      const result = await this.authService.refreshAccessToken(refreshToken);
+      
+      // Set new access token cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieDomain = process.env.COOKIE_DOMAIN;
+      const cookieHttpOnly = process.env.COOKIE_HTTP_ONLY !== 'false';
+      const cookieSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax')) as 'lax' | 'none' | 'strict';
+      const cookieSecure = process.env.COOKIE_SECURE === 'true' || isProduction;
+      
+      const cookieOpts: any = {
+        httpOnly: cookieHttpOnly,
+        secure: cookieSecure,
+        sameSite: cookieSameSite,
+        path: '/',
+      };
+      if (cookieDomain) cookieOpts.domain = cookieDomain;
+      
+      // Set new access token cookie (15 minutes)
+      res.cookie('access_token', result.access_token, {
+        ...cookieOpts,
+        maxAge: 15 * 60 * 1000, // 15 minutes
+      });
+      
+      return result;
+    } catch (error) {
+      // Clear invalid refresh token cookie
+      res.clearCookie('refresh_token', { path: '/' });
+      throw error;
+    }
   }
 
   @ApiOperation({ summary: 'Get user by ID' })

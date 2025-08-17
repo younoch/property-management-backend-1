@@ -1,14 +1,35 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
-export class RefreshTokenDataDto {
+export class RefreshTokenDto {
   @ApiProperty({
-    description: 'New access token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    description: 'Refresh token (optional if sent via cookies)',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  refresh_token?: string;
+}
+
+export class RefreshTokenResponseDto {
+  @ApiProperty({
+    description: 'New JWT access token',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   access_token: string;
 
   @ApiProperty({
-    description: 'User information'
+    description: 'User information',
+    type: 'object',
+    properties: {
+      id: { type: 'number', example: 1 },
+      email: { type: 'string', example: 'user@example.com' },
+      name: { type: 'string', example: 'John Doe' },
+      phone: { type: 'string', example: '+1234567890' },
+      role: { type: 'string', example: 'tenant' },
+      is_active: { type: 'boolean', example: true },
+    },
   })
   user: {
     id: number;
@@ -18,36 +39,4 @@ export class RefreshTokenDataDto {
     role: string;
     is_active: boolean;
   };
-}
-
-export class RefreshTokenResponseDto {
-  @ApiProperty({
-    description: 'Indicates if the request was successful',
-    example: true
-  })
-  success: boolean;
-
-  @ApiProperty({
-    description: 'Success message',
-    example: 'Tokens refreshed successfully'
-  })
-  message: string;
-
-  @ApiProperty({
-    description: 'Token refresh data',
-    type: RefreshTokenDataDto
-  })
-  data: RefreshTokenDataDto;
-
-  @ApiProperty({
-    description: 'Timestamp when the response was generated',
-    example: '2024-01-01T00:00:00.000Z'
-  })
-  timestamp: string;
-
-  @ApiProperty({
-    description: 'API endpoint path',
-    example: '/auth/refresh'
-  })
-  path: string;
 }
