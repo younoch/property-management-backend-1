@@ -80,7 +80,7 @@ export class PropertiesGlobalController {
 }
 
 @ApiTags('properties')
-@Controller('portfolios/:accountId/properties')
+@Controller('portfolios/:portfolioId/properties')
 export class PropertiesController {
   constructor(
     private readonly propertiesService: PropertiesService,
@@ -95,7 +95,7 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   @Post()
   async create(
-    @Param('accountId', ParseIntPipe) accountId: number,
+    @Param('portfolioId', ParseIntPipe) portfolioId: number,
     @Body() createPropertyDto: CreatePropertyDto,
     @Request() req,
   ) {
@@ -109,13 +109,13 @@ export class PropertiesController {
     
     const userId = payload.sub;
     
-    return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: accountId }, userId);
+    return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: portfolioId }, userId);
   }
 
   @ApiOperation({ summary: 'Get all properties for an account' })
   @ApiResponse({ status: 200, description: 'Account properties retrieved successfully', type: [Property] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.propertiesService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.propertiesService.findByPortfolio(portfolioId);
   }
 } 

@@ -47,7 +47,7 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Get current user information',
-    description: 'Retrieve complete information about the currently authenticated user including owned accounts and notifications. Returns full user data excluding sensitive information like password hash.'
+    description: 'Retrieve complete information about the currently authenticated user including owned portfolios and notifications. Returns full user data excluding sensitive information like password hash.'
   })
   @ApiResponse({ 
     status: 200, 
@@ -64,10 +64,10 @@ export class UsersController {
         is_active: true,
         created_at: '2024-01-15T10:30:00.000Z',
         updated_at: '2024-01-20T14:45:00.000Z',
-        owned_accounts: [
+        owned_portfolios: [
           {
             id: 1,
-            name: 'Main Property Account',
+            name: 'Rental Portfolio A',
             status: 'active',
             created_at: '2024-01-01T00:00:00.000Z'
           }
@@ -177,7 +177,7 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Register a new user',
-    description: 'Create a new user account and automatically sign them in. Returns full user data including owned accounts and notifications, along with access and refresh tokens.'
+    description: 'Create a new user account and automatically sign them in. Returns full user data including owned portfolios and notifications, along with access and refresh tokens.'
   })
   @ApiResponse({ 
     status: 201, 
@@ -194,7 +194,7 @@ export class UsersController {
         is_active: true,
         created_at: '2024-01-15T10:30:00.000Z',
         updated_at: '2024-01-15T10:30:00.000Z',
-        owned_accounts: [],
+        owned_portfolios: [],
         notifications: [],
         accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
         refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
@@ -246,7 +246,7 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Sign in user',
-    description: 'Sign in with user credentials. Only email and password are required. Returns full user data including owned accounts and notifications, along with access and refresh tokens.'
+    description: 'Sign in with user credentials. Only email and password are required. Returns full user data including owned portfolios and notifications, along with access and refresh tokens.'
   })
   @ApiResponse({ 
     status: 200, 
@@ -263,10 +263,10 @@ export class UsersController {
         is_active: true,
         created_at: '2024-01-15T10:30:00.000Z',
         updated_at: '2024-01-20T14:45:00.000Z',
-        owned_accounts: [
+        owned_portfolios: [
           {
             id: 1,
-            name: 'Main Property Account',
+            name: 'Rental Portfolio A',
             status: 'active',
             created_at: '2024-01-01T00:00:00.000Z'
           }
@@ -325,7 +325,7 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Refresh access token',
-    description: 'Get a new access token using a valid refresh token. Returns full user data including owned accounts and notifications, along with the new access token.'
+    description: 'Get a new access token using a valid refresh token. Returns full user data including owned portfolios and notifications, along with the new access token.'
   })
   @ApiResponse({ 
     status: 200, 
@@ -344,10 +344,10 @@ export class UsersController {
           is_active: true,
           created_at: '2024-01-15T10:30:00.000Z',
           updated_at: '2024-01-20T14:45:00.000Z',
-          owned_accounts: [
+          owned_portfolios: [
             {
               id: 1,
-              name: 'Main Property Account',
+              name: 'Rental Portfolio A',
               status: 'active',
               created_at: '2024-01-01T00:00:00.000Z'
             }

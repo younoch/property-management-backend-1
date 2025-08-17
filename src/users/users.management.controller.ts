@@ -173,18 +173,18 @@ export class UsersManagementController {
   }
 
   @ApiOperation({ 
-    summary: 'Get users by account ID',
-    description: 'Retrieve all users associated with a specific account. This is useful for finding tenants, managers, and other users related to a property account.'
+    summary: 'Get users by portfolio ID',
+    description: 'Retrieve all users associated with a specific portfolio. This is useful for finding tenants, managers, and other users related to a rental portfolio.'
   })
   @ApiParam({ 
-    name: 'accountId', 
-    description: 'Unique identifier of the account to find users for',
+    name: 'portfolioId', 
+    description: 'Unique identifier of the portfolio to find users for',
     example: 1,
     type: 'integer'
   })
   @ApiResponse({ 
     status: 200, 
-    description: 'Account users retrieved successfully',
+    description: 'Portfolio users retrieved successfully',
     type: [UserResponseDto],
     schema: {
       example: [
@@ -237,10 +237,10 @@ export class UsersManagementController {
   })
   @ApiCookieAuth('access_token')
   @UseGuards(AuthGuard)
-  @Get('account/:accountId')
+  @Get('portfolio/:portfolioId')
   @Serialize(UserResponseDto)
-  async findUsersByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.usersService.findByAccount(accountId);
+  async findUsersByAccount(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.usersService.findByPortfolio(portfolioId);
   }
 
   @ApiOperation({ 

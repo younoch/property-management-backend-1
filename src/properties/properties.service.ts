@@ -61,9 +61,9 @@ export class PropertiesService {
     return property;
   }
 
-  async findByAccount(accountId: number): Promise<Property[]> {
+  async findByPortfolio(portfolioId: number): Promise<Property[]> {
     return await this.propertiesRepository.find({
-      where: { portfolio_id: accountId },
+      where: { portfolio_id: portfolioId },
       relations: ['portfolio'],
     });
   }

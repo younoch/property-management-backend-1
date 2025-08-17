@@ -47,7 +47,7 @@ export class UnitsGlobalController {
 }
 
 @ApiTags('units')
-@Controller('portfolios/:accountId/units')
+@Controller('portfolios/:portfolioId/units')
 export class UnitsController {
   constructor(private readonly unitsService: UnitsService) {}
 
@@ -55,15 +55,15 @@ export class UnitsController {
   @ApiResponse({ status: 201, description: 'Unit created successfully', type: Unit })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() createUnitDto: CreateUnitDto) {
-    return this.unitsService.create({ ...createUnitDto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() createUnitDto: CreateUnitDto) {
+    return this.unitsService.create({ ...createUnitDto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all units for an account' })
   @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.unitsService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.unitsService.findByPortfolio(portfolioId);
   }
 }
 

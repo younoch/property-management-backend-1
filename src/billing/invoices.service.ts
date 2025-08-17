@@ -21,8 +21,8 @@ export class InvoicesService {
     return this.repo.find({ relations: ['items'] });
   }
 
-  findByAccount(accountId: number) {
-    return this.repo.find({ where: { portfolio_id: accountId }, relations: ['items'] });
+  findByPortfolio(portfolioId: number) {
+    return this.repo.find({ where: { portfolio_id: portfolioId }, relations: ['items'] });
   }
 
   async findOne(id: number) {

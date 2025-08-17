@@ -126,7 +126,7 @@ export class NotificationsGlobalController {
 }
 
 @ApiTags('notifications')
-@Controller('portfolios/:accountId/notifications')
+@Controller('portfolios/:portfolioId/notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -136,16 +136,16 @@ export class NotificationsController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @UseGuards(AuthGuard, PortfolioScopeGuard)
   async create(
-    @Param('accountId', ParseIntPipe) accountId: number,
+    @Param('portfolioId', ParseIntPipe) portfolioId: number,
     @Body() createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
-    return this.notificationsService.create({ ...createNotificationDto, portfolio_id: accountId });
+    return this.notificationsService.create({ ...createNotificationDto, portfolio_id: portfolioId });
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all notifications for an account' })
   @ApiResponse({ status: 200, description: 'List of account notifications', type: [Notification] })
-  async findByAccount(@Param('accountId', ParseIntPipe) accountId: number): Promise<Notification[]> {
-    return this.notificationsService.findByAccount(accountId);
+  async findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number): Promise<Notification[]> {
+    return this.notificationsService.findByPortfolio(portfolioId);
   }
 } 

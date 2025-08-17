@@ -11,7 +11,6 @@ import {
 import { Portfolio } from "../portfolios/portfolio.entity";
 
 @Entity()
-@Index(['account'])
 @Index(['city', 'state'])
 @Index(['property_type'])
 export class Property {

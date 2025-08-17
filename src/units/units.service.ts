@@ -21,8 +21,8 @@ export class UnitsService {
     return this.unitsRepo.find();
   }
 
-  findByAccount(accountId: number) {
-    return this.unitsRepo.find({ where: { portfolio_id: accountId } });
+  findByPortfolio(portfolioId: number) {
+    return this.unitsRepo.find({ where: { portfolio_id: portfolioId } });
   }
 
   async findOne(id: number) {

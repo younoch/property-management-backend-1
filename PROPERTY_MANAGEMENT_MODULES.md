@@ -8,13 +8,13 @@ The system is organized into the following modules:
 
 ### 1. Users Module (`src/users/`)
 - **Entity**: `User`
-- **Purpose**: Manages user accounts with different roles
+- **Purpose**: Manages user identities with different roles
 - **Key Features**: Role-based access, profile management, authentication
 
-### 2. Accounts Module (`src/accounts/`)
-- **Entity**: `Account`
-- **Purpose**: Manages property management accounts
-- **Key Features**: Subscription plans, landlord associations
+### 2. Portfolios Module (`src/portfolios/`)
+- **Entity**: `Portfolio`
+- **Purpose**: Manages rental portfolios (containers) owned by landlords
+- **Key Features**: Subscription plans, landlord associations, portfolio-scoped data
 
 ### 3. Properties Module (`src/properties/`)
 - **Entity**: `Property`
@@ -29,17 +29,17 @@ The system is organized into the following modules:
 ## 📊 Entity Relationships
 
 ```
-User (1) ──── (Many) Account
+User (1) ──── (Many) Portfolio
   │
   └─── (Many) Report
 
-Account (1) ──── (Many) Property
+Portfolio (1) ──── (Many) Property
 ```
 
 ### Relationship Details:
-- **User → Account**: One-to-Many (A user can have multiple property management accounts)
+- **User → Portfolio**: One-to-Many (A user can have multiple rental portfolios)
 - **User → Report**: One-to-Many (A user can generate multiple reports)
-- **Account → Property**: One-to-Many (An account can have multiple properties)
+- **Portfolio → Property**: One-to-Many (A portfolio can have multiple properties)
 
 ## 🗄️ Database Schema
 
@@ -77,26 +77,19 @@ export class User {
   @UpdateDateColumn()
   updated_at: Date;
 
-  // Legacy fields for backward compatibility
-  @Column({ nullable: true })
-  password: string;
-
-  @Column({ default: true })
-  admin: boolean;
-
   // Relationships
-  @OneToMany(() => Account, (account) => account.landlord)
-  accounts: Account[];
+  @OneToMany(() => Portfolio, (portfolio) => portfolio.landlord)
+  owned_portfolios: Portfolio[];
 
   @OneToMany(() => Report, (report) => report.user)
   reports: Report[];
 }
 ```
 
-### Account Entity
+### Portfolio Entity
 ```typescript
 @Entity()
-export class Account {
+export class Portfolio {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -123,7 +116,7 @@ export class Account {
   updated_at: Date;
 
   // Relationships
-  @OneToMany(() => Property, (property) => property.account)
+  @OneToMany(() => Property, (property) => property.portfolio)
   properties: Property[];
 }
 ```
@@ -135,12 +128,12 @@ export class Property {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'account_id' })
-  account: Account;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
   @Column()
-  account_id: number;
+  portfolio_id: number;
 
   @Column()
   name: string;
@@ -163,19 +156,16 @@ export class Property {
   @Column()
   country: string;
 
-  @Column("decimal", { precision: 10, scale: 6 })
+  @Column('decimal', { precision: 10, scale: 6 })
   latitude: number;
 
-  @Column("decimal", { precision: 10, scale: 6 })
+  @Column('decimal', { precision: 10, scale: 6 })
   longitude: number;
 
   @Column()
   property_type: string;
 
-  @Column()
-  number_of_units: number;
-
-  @Column({ nullable: true, type: "text" })
+  @Column({ nullable: true, type: 'text' })
   description: string;
 
   @CreateDateColumn()
@@ -204,45 +194,38 @@ export class Property {
 | PATCH | `/auth/:id` | Update user |
 | DELETE | `/auth/:id` | Delete user |
 
-### Account Management Endpoints
+### Portfolio Management Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/accounts` | Create new account |
-| GET | `/accounts` | Get all accounts |
-| GET | `/accounts/:id` | Get account by ID |
-| GET | `/accounts/landlord/:landlordId` | Get accounts by landlord |
-| PATCH | `/accounts/:id` | Update account |
-| DELETE | `/accounts/:id` | Delete account |
+| POST | `/portfolios` | Create new portfolio |
+| GET | `/portfolios` | Get all portfolios |
+| GET | `/portfolios/:id` | Get portfolio by ID |
+| GET | `/portfolios/landlord/:landlordId` | Get portfolios by landlord |
+| PATCH | `/portfolios/:id` | Update portfolio |
+| DELETE | `/portfolios/:id` | Delete portfolio |
 
 ### Property Management Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/properties` | Create new property |
+| POST | `/portfolios/:portfolioId/properties` | Create new property under a portfolio |
 | GET | `/properties` | Get all properties |
 | GET | `/properties/:id` | Get property by ID |
-| GET | `/properties/account/:accountId` | Get properties by account |
+| GET | `/portfolios/:portfolioId/properties` | Get properties by portfolio |
 | GET | `/properties/location/search` | Search properties by location |
 | PATCH | `/properties/:id` | Update property |
 | DELETE | `/properties/:id` | Delete property |
-
-### Reporting Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/reports` | Get all reports |
-| POST | `/reports` | Create new report |
-| PATCH | `/reports/:id` | Update report |
 
 ## 🔐 Role-Based Access Control
 
 ### User Roles
 1. **Super Admin**: Full system access
-2. **Landlord**: Can manage their own accounts and properties
-3. **Manager**: Can manage properties under assigned accounts
+2. **Landlord**: Can manage their own portfolios and properties
+3. **Manager**: Can manage properties under assigned portfolios
 4. **Tenant**: Limited access to view assigned properties
 
 ### Permission Matrix
-| Role | Users | Accounts | Properties | Reports |
-|------|-------|----------|------------|---------|
+| Role | Users | Portfolios | Properties | Reports |
+|------|-------|------------|------------|---------|
 | Super Admin | Full | Full | Full | Full |
 | Landlord | Own | Own | Own | Own |
 | Manager | View | View | Manage | Create |
@@ -271,9 +254,9 @@ export class CreateUserDto {
 }
 ```
 
-### CreateAccountDto
+### CreatePortfolioDto
 ```typescript
-export class CreateAccountDto {
+export class CreatePortfolioDto {
   @IsString()
   name: string;
 
@@ -292,7 +275,7 @@ export class CreateAccountDto {
 ```typescript
 export class CreatePropertyDto {
   @IsNumber()
-  account_id: number;
+  portfolio_id: number;
 
   @IsString()
   name: string;
@@ -325,9 +308,6 @@ export class CreatePropertyDto {
   @IsString()
   property_type: string;
 
-  @IsNumber()
-  number_of_units: number;
-
   @IsOptional()
   @IsString()
   description?: string;
@@ -349,7 +329,7 @@ pnpm run test
 
 # Run specific module tests
 pnpm run test src/users/
-pnpm run test src/accounts/
+pnpm run test src/portfolios/
 pnpm run test src/properties/
 
 # Run with coverage

@@ -85,7 +85,7 @@ export class MaintenanceGlobalController {
 }
 
 @ApiTags('maintenance')
-@Controller('portfolios/:accountId/maintenance')
+@Controller('portfolios/:portfolioId/maintenance')
 export class MaintenanceController {
   constructor(private readonly svc: MaintenanceService) {}
 
@@ -94,15 +94,15 @@ export class MaintenanceController {
   @ApiResponse({ status: 201, description: 'Request created', type: MaintenanceRequest })
   @Post('requests')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  createRequest(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateMaintenanceRequestDto) {
-    return this.svc.createRequest({ ...dto, portfolio_id: accountId });
+  createRequest(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateMaintenanceRequestDto) {
+    return this.svc.createRequest({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'List maintenance requests for an account' })
   @ApiResponse({ status: 200, description: 'Requests list', type: [MaintenanceRequest] })
   @Get('requests')
-  listRequests(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.svc.findRequestsByAccount(accountId);
+  listRequests(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.svc.findRequestsByPortfolio(portfolioId);
   }
 
   // Work Orders
@@ -110,15 +110,15 @@ export class MaintenanceController {
   @ApiResponse({ status: 201, description: 'Work order created', type: WorkOrder })
   @Post('work-orders')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  createWorkOrder(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateWorkOrderDto) {
-    return this.svc.createWorkOrder({ ...dto, portfolio_id: accountId });
+  createWorkOrder(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateWorkOrderDto) {
+    return this.svc.createWorkOrder({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'List work orders for an account' })
   @ApiResponse({ status: 200, description: 'Work orders list', type: [WorkOrder] })
   @Get('work-orders')
-  listWorkOrders(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.svc.findWorkOrdersByAccount(accountId);
+  listWorkOrders(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.svc.findWorkOrdersByPortfolio(portfolioId);
   }
 }
 

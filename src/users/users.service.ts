@@ -48,9 +48,8 @@ export class UsersService {
     return this.findByEmail(email);
   }
 
-  async findByAccount(accountId: number) {
-    // Simplified: return all users owning accounts with this id would need a join.
-    // Placeholder: return all users for now (can be replaced with proper query if needed).
+  async findByPortfolio(portfolioId: number) {
+    // TODO: implement proper join to fetch users associated with a given portfolio
     return this.repo.find();
   }
 

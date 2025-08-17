@@ -47,7 +47,7 @@ export class LeasesGlobalController {
 }
 
 @ApiTags('leases')
-@Controller('portfolios/:accountId/leases')
+@Controller('portfolios/:portfolioId/leases')
 export class LeasesController {
   constructor(private readonly leasesService: LeasesService) {}
 
@@ -55,15 +55,15 @@ export class LeasesController {
   @ApiResponse({ status: 201, description: 'Lease created successfully', type: Lease })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateLeaseDto) {
-    return this.leasesService.create({ ...dto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateLeaseDto) {
+    return this.leasesService.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all leases for an account' })
   @ApiResponse({ status: 200, description: 'Leases retrieved successfully', type: [Lease] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.leasesService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.leasesService.findByPortfolio(portfolioId);
   }
 }
 

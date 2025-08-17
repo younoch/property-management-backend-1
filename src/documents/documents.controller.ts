@@ -47,7 +47,7 @@ export class DocumentsGlobalController {
 }
 
 @ApiTags('documents')
-@Controller('portfolios/:accountId/documents')
+@Controller('portfolios/:portfolioId/documents')
 export class AccountDocumentsController {
   constructor(private readonly svc: DocumentsService) {}
 
@@ -55,15 +55,15 @@ export class AccountDocumentsController {
   @ApiResponse({ status: 201, description: 'Document created', type: Doc })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateDocumentDto) {
-    return this.svc.create({ ...dto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateDocumentDto) {
+    return this.svc.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'List documents for an account' })
   @ApiResponse({ status: 200, description: 'Documents list', type: [Doc] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.svc.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.svc.findByPortfolio(portfolioId);
   }
 }
 

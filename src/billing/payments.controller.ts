@@ -47,7 +47,7 @@ export class PaymentsGlobalController {
 }
 
 @ApiTags('billing-payments')
-@Controller('portfolios/:accountId/payments')
+@Controller('portfolios/:portfolioId/payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
@@ -55,15 +55,15 @@ export class PaymentsController {
   @ApiResponse({ status: 201, description: 'Payment recorded successfully', type: Payment })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreatePaymentDto) {
-    return this.paymentsService.create({ ...dto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreatePaymentDto) {
+    return this.paymentsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all payments for an account' })
   @ApiResponse({ status: 200, description: 'Payments retrieved successfully', type: [Payment] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.paymentsService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.paymentsService.findByPortfolio(portfolioId);
   }
 }
 

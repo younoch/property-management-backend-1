@@ -47,7 +47,7 @@ export class InvoicesGlobalController {
 }
 
 @ApiTags('billing-invoices')
-@Controller('portfolios/:accountId/invoices')
+@Controller('portfolios/:portfolioId/invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
@@ -55,15 +55,15 @@ export class InvoicesController {
   @ApiResponse({ status: 201, description: 'Invoice created successfully', type: Invoice })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateInvoiceDto) {
-    return this.invoicesService.create({ ...dto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateInvoiceDto) {
+    return this.invoicesService.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all invoices for an account' })
   @ApiResponse({ status: 200, description: 'Invoices retrieved successfully', type: [Invoice] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.invoicesService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.invoicesService.findByPortfolio(portfolioId);
   }
 }
 

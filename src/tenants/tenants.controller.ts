@@ -47,7 +47,7 @@ export class TenantsGlobalController {
 }
 
 @ApiTags('tenants')
-@Controller('portfolios/:accountId/tenants')
+@Controller('portfolios/:portfolioId/tenants')
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
@@ -55,15 +55,15 @@ export class TenantsController {
   @ApiResponse({ status: 201, description: 'Tenant created successfully', type: Tenant })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateTenantDto) {
-    return this.tenantsService.create({ ...dto, portfolio_id: accountId });
+  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateTenantDto) {
+    return this.tenantsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all tenants for an account' })
   @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: [Tenant] })
   @Get()
-  findByAccount(@Param('accountId', ParseIntPipe) accountId: number) {
-    return this.tenantsService.findByAccount(accountId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+    return this.tenantsService.findByPortfolio(portfolioId);
   }
 }
 
