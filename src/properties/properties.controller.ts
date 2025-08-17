@@ -17,7 +17,7 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './property.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 
@@ -87,7 +87,7 @@ export class PropertiesController {
     private readonly configService: ConfigService,
   ) {}
 
-  @ApiOperation({ summary: 'Create a new property for an account' })
+  @ApiOperation({ summary: 'Create a new property for a portfolio' })
   @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @ApiResponse({ status: 401, description: 'Unauthorized - authentication required' })
@@ -112,8 +112,8 @@ export class PropertiesController {
     return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: portfolioId }, userId);
   }
 
-  @ApiOperation({ summary: 'Get all properties for an account' })
-  @ApiResponse({ status: 200, description: 'Account properties retrieved successfully', type: [Property] })
+  @ApiOperation({ summary: 'Get all properties for a portfolio' })
+  @ApiResponse({ status: 200, description: 'Portfolio properties retrieved successfully', type: [Property] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
     return this.propertiesService.findByPortfolio(portfolioId);

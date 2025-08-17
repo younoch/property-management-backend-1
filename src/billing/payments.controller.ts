@@ -5,7 +5,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Payment } from './payment.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('billing-payments')
 @Controller('payments')
@@ -51,7 +51,7 @@ export class PaymentsGlobalController {
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @ApiOperation({ summary: 'Record a new payment for an account' })
+  @ApiOperation({ summary: 'Record a new payment for a portfolio' })
   @ApiResponse({ status: 201, description: 'Payment recorded successfully', type: Payment })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class PaymentsController {
     return this.paymentsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all payments for an account' })
+  @ApiOperation({ summary: 'Get all payments for a portfolio' })
   @ApiResponse({ status: 200, description: 'Payments retrieved successfully', type: [Payment] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

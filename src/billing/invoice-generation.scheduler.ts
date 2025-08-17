@@ -40,7 +40,7 @@ export class InvoiceGenerationScheduler {
 
       // Check if invoice already exists for lease+month to avoid duplicates
       const existing = await this.invoiceRepo.createQueryBuilder('i')
-        .where('i.portfolio_id = :account', { account: charge.portfolio_id })
+        .where('i.portfolio_id = :portfolio', { portfolio: charge.portfolio_id })
         .andWhere('i.lease_id = :lease', { lease: charge.lease_id })
         .andWhere('i.issue_date = :issueDate', { issueDate })
         .getOne();

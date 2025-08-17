@@ -5,7 +5,7 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 import { Unit } from '../properties/unit.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('units')
 @Controller('units')
@@ -51,7 +51,7 @@ export class UnitsGlobalController {
 export class UnitsController {
   constructor(private readonly unitsService: UnitsService) {}
 
-  @ApiOperation({ summary: 'Create a new unit for an account' })
+  @ApiOperation({ summary: 'Create a new unit for a portfolio' })
   @ApiResponse({ status: 201, description: 'Unit created successfully', type: Unit })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class UnitsController {
     return this.unitsService.create({ ...createUnitDto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all units for an account' })
+  @ApiOperation({ summary: 'Get all units for a portfolio' })
   @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

@@ -39,10 +39,10 @@ A comprehensive NestJS application for managing properties, tenants, and rental 
 - **Property Types**: Support for apartments, houses, commercial properties
 - **Unit Management**: Track number of units per property
 
-### Account Management
-- **Landlord Accounts**: Subscription-based account management
-- **Property Groups**: Organize properties under different accounts
-- **Status Tracking**: Monitor account status and subscription plans
+### Portfolio Management
+- **Landlord Portfolios**: Subscription-based portfolio management
+- **Property Groups**: Organize properties under different portfolios
+- **Status Tracking**: Monitor portfolio status and subscription plans
 
 ## 🔐 Security Features
 
@@ -229,4 +229,4 @@ For support and questions:
 - CSRF protection implementation
 - Comprehensive CORS configuration
 - Multi-role user management system
-- Property and account management features
+- Property and portfolio management features

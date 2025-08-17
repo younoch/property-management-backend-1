@@ -5,7 +5,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { Document as Doc } from './document.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('documents')
 @Controller('documents')
@@ -48,10 +48,10 @@ export class DocumentsGlobalController {
 
 @ApiTags('documents')
 @Controller('portfolios/:portfolioId/documents')
-export class AccountDocumentsController {
+export class PortfolioDocumentsController {
   constructor(private readonly svc: DocumentsService) {}
 
-  @ApiOperation({ summary: 'Create document record for an account (metadata only)' })
+  @ApiOperation({ summary: 'Create document record for a portfolio (metadata only)' })
   @ApiResponse({ status: 201, description: 'Document created', type: Doc })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class AccountDocumentsController {
     return this.svc.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'List documents for an account' })
+  @ApiOperation({ summary: 'List documents for a portfolio' })
   @ApiResponse({ status: 200, description: 'Documents list', type: [Doc] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

@@ -5,7 +5,7 @@ import { CreateLeaseDto } from './dto/create-lease.dto';
 import { UpdateLeaseDto } from './dto/update-lease.dto';
 import { Lease } from '../tenancy/lease.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('leases')
 @Controller('leases')
@@ -51,7 +51,7 @@ export class LeasesGlobalController {
 export class LeasesController {
   constructor(private readonly leasesService: LeasesService) {}
 
-  @ApiOperation({ summary: 'Create a new lease for an account' })
+  @ApiOperation({ summary: 'Create a new lease for a portfolio' })
   @ApiResponse({ status: 201, description: 'Lease created successfully', type: Lease })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class LeasesController {
     return this.leasesService.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all leases for an account' })
+  @ApiOperation({ summary: 'Get all leases for a portfolio' })
   @ApiResponse({ status: 200, description: 'Leases retrieved successfully', type: [Lease] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

@@ -17,7 +17,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './notification.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('notifications')
 @Controller('notifications')
@@ -131,7 +131,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new notification for an account' })
+  @ApiOperation({ summary: 'Create a new notification for a portfolio' })
   @ApiResponse({ status: 201, description: 'Notification created successfully', type: Notification })
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -143,8 +143,8 @@ export class NotificationsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all notifications for an account' })
-  @ApiResponse({ status: 200, description: 'List of account notifications', type: [Notification] })
+  @ApiOperation({ summary: 'Get all notifications for a portfolio' })
+  @ApiResponse({ status: 200, description: 'List of portfolio notifications', type: [Notification] })
   async findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number): Promise<Notification[]> {
     return this.notificationsService.findByPortfolio(portfolioId);
   }

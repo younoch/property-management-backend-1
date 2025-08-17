@@ -5,7 +5,7 @@ import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { Tenant } from '../tenancy/tenant.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('tenants')
 @Controller('tenants')
@@ -51,7 +51,7 @@ export class TenantsGlobalController {
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
-  @ApiOperation({ summary: 'Create a new tenant for an account' })
+  @ApiOperation({ summary: 'Create a new tenant for a portfolio' })
   @ApiResponse({ status: 201, description: 'Tenant created successfully', type: Tenant })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class TenantsController {
     return this.tenantsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all tenants for an account' })
+  @ApiOperation({ summary: 'Get all tenants for a portfolio' })
   @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: [Tenant] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

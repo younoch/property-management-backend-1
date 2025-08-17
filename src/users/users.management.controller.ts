@@ -239,7 +239,7 @@ export class UsersManagementController {
   @UseGuards(AuthGuard)
   @Get('portfolio/:portfolioId')
   @Serialize(UserResponseDto)
-  async findUsersByAccount(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+  async findUsersByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
     return this.usersService.findByPortfolio(portfolioId);
   }
 

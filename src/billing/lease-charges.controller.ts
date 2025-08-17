@@ -5,7 +5,7 @@ import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
 import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
 import { LeaseCharge } from './lease-charge.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('lease-charges')
 @Controller('lease-charges')

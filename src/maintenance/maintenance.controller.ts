@@ -8,7 +8,7 @@ import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 import { MaintenanceRequest } from './maintenance-request.entity';
 import { WorkOrder } from './work-order.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('maintenance')
 @Controller('maintenance')
@@ -90,7 +90,7 @@ export class MaintenanceController {
   constructor(private readonly svc: MaintenanceService) {}
 
   // Requests
-  @ApiOperation({ summary: 'Create maintenance request for an account' })
+  @ApiOperation({ summary: 'Create maintenance request for a portfolio' })
   @ApiResponse({ status: 201, description: 'Request created', type: MaintenanceRequest })
   @Post('requests')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -98,7 +98,7 @@ export class MaintenanceController {
     return this.svc.createRequest({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'List maintenance requests for an account' })
+  @ApiOperation({ summary: 'List maintenance requests for a portfolio' })
   @ApiResponse({ status: 200, description: 'Requests list', type: [MaintenanceRequest] })
   @Get('requests')
   listRequests(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
@@ -106,7 +106,7 @@ export class MaintenanceController {
   }
 
   // Work Orders
-  @ApiOperation({ summary: 'Create work order for an account' })
+  @ApiOperation({ summary: 'Create work order for a portfolio' })
   @ApiResponse({ status: 201, description: 'Work order created', type: WorkOrder })
   @Post('work-orders')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -114,7 +114,7 @@ export class MaintenanceController {
     return this.svc.createWorkOrder({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'List work orders for an account' })
+  @ApiOperation({ summary: 'List work orders for a portfolio' })
   @ApiResponse({ status: 200, description: 'Work orders list', type: [WorkOrder] })
   @Get('work-orders')
   listWorkOrders(@Param('portfolioId', ParseIntPipe) portfolioId: number) {

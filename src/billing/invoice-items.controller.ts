@@ -5,7 +5,7 @@ import { CreateInvoiceItemDto } from './dto/create-invoice-item.dto';
 import { UpdateInvoiceItemDto } from './dto/update-invoice-item.dto';
 import { InvoiceItem } from './invoice-item.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('invoice-items')
 @Controller('invoice-items')

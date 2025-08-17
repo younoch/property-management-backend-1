@@ -5,7 +5,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { Invoice } from './invoice.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('billing-invoices')
 @Controller('invoices')
@@ -51,7 +51,7 @@ export class InvoicesGlobalController {
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
-  @ApiOperation({ summary: 'Create a new invoice for an account' })
+  @ApiOperation({ summary: 'Create a new invoice for a portfolio' })
   @ApiResponse({ status: 201, description: 'Invoice created successfully', type: Invoice })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
@@ -59,7 +59,7 @@ export class InvoicesController {
     return this.invoicesService.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all invoices for an account' })
+  @ApiOperation({ summary: 'Get all invoices for a portfolio' })
   @ApiResponse({ status: 200, description: 'Invoices retrieved successfully', type: [Invoice] })
   @Get()
   findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
