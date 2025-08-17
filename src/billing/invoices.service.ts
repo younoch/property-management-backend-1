@@ -22,7 +22,7 @@ export class InvoicesService {
   }
 
   findByAccount(accountId: number) {
-    return this.repo.find({ where: { account_id: accountId }, relations: ['items'] });
+    return this.repo.find({ where: { portfolio_id: accountId }, relations: ['items'] });
   }
 
   async findOne(id: number) {

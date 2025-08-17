@@ -1,21 +1,21 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Unique, CreateDateColumn, UpdateDateColumn, Index, JoinColumn } from 'typeorm';
-import { Account } from './account.entity';
+import { Portfolio } from './portfolio.entity';
 import { User } from '../users/user.entity';
 
 @Entity()
-@Unique(['account_id', 'user_id'])
-@Index(['account_id'])
+@Unique(['portfolio_id', 'user_id'])
+@Index(['portfolio_id'])
 @Index(['user_id'])
-export class AccountMember {
+export class PortfolioMember {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'account_id' })
-  account: Account;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
   @Column()
-  account_id: number;
+  portfolio_id: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

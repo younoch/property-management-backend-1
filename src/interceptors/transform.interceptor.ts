@@ -30,7 +30,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
         message = 'User information retrieved successfully';
       } else if (url.includes('/properties')) {
         message = 'Properties retrieved successfully';
-      } else if (url.includes('/accounts')) {
+      } else if (url.includes('/portfolios')) {
         message = 'Accounts retrieved successfully';
       } else if (url.includes('/users')) {
         message = 'Users retrieved successfully';
@@ -54,7 +54,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
         message = 'User signed out successfully';
       } else if (url.includes('/properties')) {
         message = 'Property created successfully';
-      } else if (url.includes('/accounts')) {
+      } else if (url.includes('/portfolios')) {
         message = 'Account created successfully';
       } else if (url.includes('/users')) {
         message = 'User created successfully';
@@ -68,7 +68,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
     } else if (method === 'PATCH') {
       if (url.includes('/properties')) {
         message = 'Property updated successfully';
-      } else if (url.includes('/accounts')) {
+      } else if (url.includes('/portfolios')) {
         message = 'Account updated successfully';
       } else if (url.includes('/users')) {
         message = 'User updated successfully';
@@ -82,7 +82,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
     } else if (method === 'DELETE') {
       if (url.includes('/properties')) {
         message = 'Property deleted successfully';
-      } else if (url.includes('/accounts')) {
+      } else if (url.includes('/portfolios')) {
         message = 'Account deleted successfully';
       } else if (url.includes('/users')) {
         message = 'User deleted successfully';

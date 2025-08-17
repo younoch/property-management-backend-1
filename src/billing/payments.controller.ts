@@ -5,7 +5,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Payment } from './payment.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('billing-payments')
 @Controller('payments')
@@ -31,7 +31,7 @@ export class PaymentsGlobalController {
   @ApiParam({ name: 'id', description: 'Payment ID' })
   @ApiResponse({ status: 200, description: 'Payment updated successfully', type: Payment })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
     return this.paymentsService.update(id, dto);
   }
@@ -47,16 +47,16 @@ export class PaymentsGlobalController {
 }
 
 @ApiTags('billing-payments')
-@Controller('accounts/:accountId/payments')
+@Controller('portfolios/:accountId/payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @ApiOperation({ summary: 'Record a new payment for an account' })
   @ApiResponse({ status: 201, description: 'Payment recorded successfully', type: Payment })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreatePaymentDto) {
-    return this.paymentsService.create({ ...dto, account_id: accountId });
+    return this.paymentsService.create({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'Get all payments for an account' })

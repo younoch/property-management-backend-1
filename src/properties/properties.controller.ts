@@ -17,7 +17,7 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './property.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 
@@ -63,7 +63,7 @@ export class PropertiesGlobalController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() updatePropertyDto: UpdatePropertyDto) {
     return this.propertiesService.update(id, updatePropertyDto);
   }
@@ -80,7 +80,7 @@ export class PropertiesGlobalController {
 }
 
 @ApiTags('properties')
-@Controller('accounts/:accountId/properties')
+@Controller('portfolios/:accountId/properties')
 export class PropertiesController {
   constructor(
     private readonly propertiesService: PropertiesService,
@@ -109,7 +109,7 @@ export class PropertiesController {
     
     const userId = payload.sub;
     
-    return await this.propertiesService.create({ ...createPropertyDto, account_id: accountId }, userId);
+    return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: accountId }, userId);
   }
 
   @ApiOperation({ summary: 'Get all properties for an account' })

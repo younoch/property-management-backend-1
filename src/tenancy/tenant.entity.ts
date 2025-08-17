@@ -1,18 +1,18 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn } from 'typeorm';
-import { Account } from '../accounts/account.entity';
+import { Portfolio } from '../portfolios/portfolio.entity';
 
 @Entity()
-@Index(['account_id'])
+@Index(['portfolio_id'])
 export class Tenant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'account_id' })
-  account: Account;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
   @Column()
-  account_id: number;
+  portfolio_id: number;
 
   @Column()
   first_name: string;

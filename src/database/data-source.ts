@@ -2,10 +2,10 @@ import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { User } from '../users/user.entity';
-import { Account } from '../accounts/account.entity';
+import { Portfolio } from '../portfolios/portfolio.entity';
 import { Property } from '../properties/property.entity';
 import { Notification } from '../notifications/notification.entity';
-import { AccountMember } from '../accounts/account-member.entity';
+import { PortfolioMember } from '../portfolios/portfolio-member.entity';
 import { Unit } from '../properties/unit.entity';
 import { Tenant } from '../tenancy/tenant.entity';
 import { Lease } from '../tenancy/lease.entity';
@@ -33,8 +33,8 @@ export const AppDataSource = new DataSource({
   logging: true,
   entities: [
     User,
-    Account,
-    AccountMember,
+    Portfolio,
+    PortfolioMember,
     Property,
     Unit,
     Tenant,

@@ -5,7 +5,7 @@ import { CreateLeaseDto } from './dto/create-lease.dto';
 import { UpdateLeaseDto } from './dto/update-lease.dto';
 import { Lease } from '../tenancy/lease.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('leases')
 @Controller('leases')
@@ -31,7 +31,7 @@ export class LeasesGlobalController {
   @ApiParam({ name: 'id', description: 'Lease ID' })
   @ApiResponse({ status: 200, description: 'Lease updated successfully', type: Lease })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLeaseDto) {
     return this.leasesService.update(id, dto);
   }
@@ -47,16 +47,16 @@ export class LeasesGlobalController {
 }
 
 @ApiTags('leases')
-@Controller('accounts/:accountId/leases')
+@Controller('portfolios/:accountId/leases')
 export class LeasesController {
   constructor(private readonly leasesService: LeasesService) {}
 
   @ApiOperation({ summary: 'Create a new lease for an account' })
   @ApiResponse({ status: 201, description: 'Lease created successfully', type: Lease })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateLeaseDto) {
-    return this.leasesService.create({ ...dto, account_id: accountId });
+    return this.leasesService.create({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'Get all leases for an account' })

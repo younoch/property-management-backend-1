@@ -8,7 +8,7 @@ import { UpdateWorkOrderDto } from './dto/update-work-order.dto';
 import { MaintenanceRequest } from './maintenance-request.entity';
 import { WorkOrder } from './work-order.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('maintenance')
 @Controller('maintenance')
@@ -35,7 +35,7 @@ export class MaintenanceGlobalController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request updated', type: MaintenanceRequest })
   @Patch('requests/:id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   updateRequest(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMaintenanceRequestDto) {
     return this.svc.updateRequest(id, dto);
   }
@@ -69,7 +69,7 @@ export class MaintenanceGlobalController {
   @ApiParam({ name: 'id', description: 'Work order ID' })
   @ApiResponse({ status: 200, description: 'Work order updated', type: WorkOrder })
   @Patch('work-orders/:id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   updateWorkOrder(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateWorkOrderDto) {
     return this.svc.updateWorkOrder(id, dto);
   }
@@ -85,7 +85,7 @@ export class MaintenanceGlobalController {
 }
 
 @ApiTags('maintenance')
-@Controller('accounts/:accountId/maintenance')
+@Controller('portfolios/:accountId/maintenance')
 export class MaintenanceController {
   constructor(private readonly svc: MaintenanceService) {}
 
@@ -93,9 +93,9 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Create maintenance request for an account' })
   @ApiResponse({ status: 201, description: 'Request created', type: MaintenanceRequest })
   @Post('requests')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   createRequest(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateMaintenanceRequestDto) {
-    return this.svc.createRequest({ ...dto, account_id: accountId });
+    return this.svc.createRequest({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'List maintenance requests for an account' })
@@ -109,9 +109,9 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Create work order for an account' })
   @ApiResponse({ status: 201, description: 'Work order created', type: WorkOrder })
   @Post('work-orders')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   createWorkOrder(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateWorkOrderDto) {
-    return this.svc.createWorkOrder({ ...dto, account_id: accountId });
+    return this.svc.createWorkOrder({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'List work orders for an account' })

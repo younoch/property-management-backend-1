@@ -47,8 +47,8 @@ export class AuthService {
 
   issueLoginResponse(user: any) {
     const payload = { sub: user.id, role: user.role };
-    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
-    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
+    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m'; // 15 minutes default
+    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d'; // 7 days default
 
     const accessToken = jwt.sign(payload, this.configService.get<string>('JWT_ACCESS_SECRET') as string, {
       expiresIn: accessExpiresIn,
@@ -59,7 +59,7 @@ export class AuthService {
       expiresIn: refreshExpiresIn,
     });
 
-    // Return only the fields that should be exposed, excluding password_hash
+    // Return full user data excluding password_hash, including relationships
     return {
       id: user.id,
       email: user.email,
@@ -70,6 +70,8 @@ export class AuthService {
       is_active: user.is_active,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      owned_portfolios: user.owned_portfolios || [],
+      notifications: user.notifications || [],
       accessToken,
       refreshToken,
     };
@@ -98,7 +100,7 @@ export class AuthService {
       }
 
       // Generate new access token
-      const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
+      const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m'; // 15 minutes default
       const newAccessToken = jwt.sign(
         { sub: user.id, role: user.role },
         this.configService.get<string>('JWT_ACCESS_SECRET') as string,
@@ -113,7 +115,12 @@ export class AuthService {
           name: user.name,
           phone: user.phone,
           role: user.role,
+          profile_image_url: user.profile_image_url,
           is_active: user.is_active,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+          owned_portfolios: user.owned_portfolios || [],
+          notifications: user.notifications || [],
         }
       };
     } catch (error) {

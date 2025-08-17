@@ -1,22 +1,22 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, Index, JoinColumn } from 'typeorm';
-import { Account } from '../accounts/account.entity';
+import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { InvoiceItem } from './invoice-item.entity';
 
 @Entity()
-@Index(['account_id'])
+@Index(['portfolio_id'])
 @Index(['lease_id'])
 @Index(['due_date'])
 export class Invoice {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'account_id' })
-  account: Account;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
   @Column()
-  account_id: number;
+  portfolio_id: number;
 
   @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'lease_id' })

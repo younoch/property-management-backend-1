@@ -28,7 +28,7 @@ export class NotificationsService {
 
   async findByAccount(accountId: number): Promise<Notification[]> {
     return this.notificationsRepository.find({
-      where: { account_id: accountId },
+      where: { portfolio_id: accountId },
       relations: ['user'],
       order: { sent_at: 'DESC' },
     });

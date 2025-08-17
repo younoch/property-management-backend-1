@@ -11,13 +11,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePropertyDto {
   @ApiProperty({
-    description: 'Account ID that owns this property (auto-generated from authenticated user)',
+    description: 'Portfolio ID that owns this property (auto-generated from authenticated user)',
     example: 1,
     required: false
   })
   @IsNumber()
   @IsOptional()
-  account_id?: number;
+  portfolio_id?: number;
 
   @ApiProperty({
     description: 'Property name',

@@ -5,7 +5,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { Invoice } from './invoice.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('billing-invoices')
 @Controller('invoices')
@@ -31,7 +31,7 @@ export class InvoicesGlobalController {
   @ApiParam({ name: 'id', description: 'Invoice ID' })
   @ApiResponse({ status: 200, description: 'Invoice updated successfully', type: Invoice })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateInvoiceDto) {
     return this.invoicesService.update(id, dto);
   }
@@ -47,16 +47,16 @@ export class InvoicesGlobalController {
 }
 
 @ApiTags('billing-invoices')
-@Controller('accounts/:accountId/invoices')
+@Controller('portfolios/:accountId/invoices')
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
   @ApiOperation({ summary: 'Create a new invoice for an account' })
   @ApiResponse({ status: 201, description: 'Invoice created successfully', type: Invoice })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateInvoiceDto) {
-    return this.invoicesService.create({ ...dto, account_id: accountId });
+    return this.invoicesService.create({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'Get all invoices for an account' })

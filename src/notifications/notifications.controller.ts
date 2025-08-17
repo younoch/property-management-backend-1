@@ -17,7 +17,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './notification.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('notifications')
 @Controller('notifications')
@@ -86,7 +86,7 @@ export class NotificationsGlobalController {
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({ status: 200, description: 'Notification updated successfully', type: Notification })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNotificationDto: UpdateNotificationDto,
@@ -126,7 +126,7 @@ export class NotificationsGlobalController {
 }
 
 @ApiTags('notifications')
-@Controller('accounts/:accountId/notifications')
+@Controller('portfolios/:accountId/notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
@@ -134,12 +134,12 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Create a new notification for an account' })
   @ApiResponse({ status: 201, description: 'Notification created successfully', type: Notification })
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   async create(
     @Param('accountId', ParseIntPipe) accountId: number,
     @Body() createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
-    return this.notificationsService.create({ ...createNotificationDto, account_id: accountId });
+    return this.notificationsService.create({ ...createNotificationDto, portfolio_id: accountId });
   }
 
   @Get()

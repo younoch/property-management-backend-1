@@ -4,7 +4,7 @@ import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'cl
 export class CreateUnitDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  account_id: number;
+  portfolio_id: number;
 
   @ApiProperty({ example: 1 })
   @IsInt()

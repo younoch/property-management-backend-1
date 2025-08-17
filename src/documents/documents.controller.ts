@@ -5,7 +5,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { Document as Doc } from './document.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('documents')
 @Controller('documents')
@@ -31,7 +31,7 @@ export class DocumentsGlobalController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document updated', type: Doc })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDocumentDto) {
     return this.svc.update(id, dto);
   }
@@ -47,16 +47,16 @@ export class DocumentsGlobalController {
 }
 
 @ApiTags('documents')
-@Controller('accounts/:accountId/documents')
+@Controller('portfolios/:accountId/documents')
 export class AccountDocumentsController {
   constructor(private readonly svc: DocumentsService) {}
 
   @ApiOperation({ summary: 'Create document record for an account (metadata only)' })
   @ApiResponse({ status: 201, description: 'Document created', type: Doc })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateDocumentDto) {
-    return this.svc.create({ ...dto, account_id: accountId });
+    return this.svc.create({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'List documents for an account' })

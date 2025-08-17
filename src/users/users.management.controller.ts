@@ -24,10 +24,71 @@ import { UserDto, UserResponseDto } from './dtos/user.dto';
 export class UsersManagementController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Get all users or search by email' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully', type: [User] })
-  @ApiQuery({ name: 'email', description: 'Email to search for', required: false })
-  @ApiCookieAuth()
+  @ApiOperation({ 
+    summary: 'Get all users or search by email',
+    description: 'Retrieve a list of all users in the system or search for users by email address. Returns user data excluding sensitive information.'
+  })
+  @ApiQuery({ 
+    name: 'email', 
+    description: 'Email address to search for (optional). If provided, returns only users matching this email.',
+    required: false,
+    example: 'john.doe@example.com',
+    type: 'string'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Users retrieved successfully',
+    type: [UserResponseDto],
+    schema: {
+      example: [
+        {
+          id: 1,
+          email: 'john.doe@example.com',
+          name: 'John Doe',
+          phone: '+1-555-123-4567',
+          role: 'tenant',
+          profile_image_url: 'https://example.com/images/profile1.jpg',
+          is_active: true,
+          created_at: '2024-01-15T10:30:00.000Z',
+          updated_at: '2024-01-20T14:45:00.000Z'
+        },
+        {
+          id: 2,
+          email: 'jane.smith@example.com',
+          name: 'Jane Smith',
+          phone: '+1-555-987-6543',
+          role: 'landlord',
+          profile_image_url: 'https://example.com/images/profile2.jpg',
+          is_active: true,
+          created_at: '2024-01-10T09:15:00.000Z',
+          updated_at: '2024-01-18T11:20:00.000Z'
+        }
+      ]
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    schema: {
+      example: {
+        message: 'Internal server error',
+        errorType: 'INTERNAL_ERROR',
+        statusCode: 500
+      }
+    }
+  })
+  @ApiCookieAuth('access_token')
   @UseGuards(AuthGuard)
   @Get()
   @Serialize(UserResponseDto)
@@ -38,11 +99,68 @@ export class UsersManagementController {
     return this.usersService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'User found successfully', type: User })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiCookieAuth()
+  @ApiOperation({ 
+    summary: 'Get user by ID',
+    description: 'Retrieve detailed information about a specific user by their ID. Returns user data excluding sensitive information like password hash.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User found successfully',
+    type: UserResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    schema: {
+      example: {
+        message: 'Internal server error',
+        errorType: 'INTERNAL_ERROR',
+        statusCode: 500
+      }
+    }
+  })
+  @ApiCookieAuth('access_token')
   @UseGuards(AuthGuard)
   @Get(':id')
   @Serialize(UserResponseDto)
@@ -54,10 +172,70 @@ export class UsersManagementController {
     return user;
   }
 
-  @ApiOperation({ summary: 'Get users by account ID' })
-  @ApiParam({ name: 'accountId', description: 'Account ID' })
-  @ApiResponse({ status: 200, description: 'Account users retrieved successfully', type: [User] })
-  @ApiCookieAuth()
+  @ApiOperation({ 
+    summary: 'Get users by account ID',
+    description: 'Retrieve all users associated with a specific account. This is useful for finding tenants, managers, and other users related to a property account.'
+  })
+  @ApiParam({ 
+    name: 'accountId', 
+    description: 'Unique identifier of the account to find users for',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Account users retrieved successfully',
+    type: [UserResponseDto],
+    schema: {
+      example: [
+        {
+          id: 1,
+          email: 'tenant@example.com',
+          name: 'John Tenant',
+          phone: '+1-555-123-4567',
+          role: 'tenant',
+          profile_image_url: 'https://example.com/images/tenant.jpg',
+          is_active: true,
+          created_at: '2024-01-15T10:30:00.000Z',
+          updated_at: '2024-01-20T14:45:00.000Z'
+        },
+        {
+          id: 2,
+          email: 'manager@example.com',
+          name: 'Sarah Manager',
+          phone: '+1-555-987-6543',
+          role: 'manager',
+          profile_image_url: 'https://example.com/images/manager.jpg',
+          is_active: true,
+          created_at: '2024-01-10T09:15:00.000Z',
+          updated_at: '2024-01-18T11:20:00.000Z'
+        }
+      ]
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    schema: {
+      example: {
+        message: 'Internal server error',
+        errorType: 'INTERNAL_ERROR',
+        statusCode: 500
+      }
+    }
+  })
+  @ApiCookieAuth('access_token')
   @UseGuards(AuthGuard)
   @Get('account/:accountId')
   @Serialize(UserResponseDto)
@@ -65,24 +243,168 @@ export class UsersManagementController {
     return this.usersService.findByAccount(accountId);
   }
 
-  @ApiOperation({ summary: 'Update user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'User updated successfully', type: User })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiCookieAuth()
+  @ApiOperation({ 
+    summary: 'Update user by ID',
+    description: 'Update specific user information. Only provided fields will be updated. Password updates will be automatically hashed.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user to update',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User updated successfully',
+    type: UserResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Smith',
+        phone: '+1-555-987-6543',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/new-profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T16:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad Request - Invalid data provided',
+    schema: {
+      example: {
+        message: ['email must be an email', 'role must be one of the following values: super_admin, landlord, manager, tenant'],
+        errorType: 'VALIDATION_ERROR',
+        statusCode: 400
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - CSRF token missing or invalid',
+    schema: {
+      example: {
+        message: 'CSRF token missing or invalid',
+        errorType: 'CSRF_ERROR',
+        statusCode: 403
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    schema: {
+      example: {
+        message: 'Internal server error',
+        errorType: 'INTERNAL_ERROR',
+        statusCode: 500
+      }
+    }
+  })
+  @ApiCookieAuth('access_token')
   @Patch(':id')
   @UseGuards(AuthGuard, CsrfGuard)
   updateUser(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateUserDto) {
     return this.usersService.update(id, body);
   }
 
-  @ApiOperation({ summary: 'Delete user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiCookieAuth()
+  @ApiOperation({ 
+    summary: 'Delete user by ID',
+    description: 'Permanently remove a user from the system. This action cannot be undone and will also remove associated data.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user to delete',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User deleted successfully',
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - CSRF token missing or invalid',
+    schema: {
+      example: {
+        message: 'CSRF token missing or invalid',
+        errorType: 'CSRF_ERROR',
+        statusCode: 403
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal Server Error - Database or system error',
+    schema: {
+      example: {
+        message: 'Internal server error',
+        errorType: 'INTERNAL_ERROR',
+        statusCode: 500
+      }
+    }
+  })
+  @ApiCookieAuth('access_token')
   @Delete(':id')
   @UseGuards(AuthGuard, CsrfGuard)
   removeUser(@Param('id', ParseIntPipe) id: number) {

@@ -5,7 +5,7 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 import { Unit } from '../properties/unit.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('units')
 @Controller('units')
@@ -31,7 +31,7 @@ export class UnitsGlobalController {
   @ApiParam({ name: 'id', description: 'Unit ID' })
   @ApiResponse({ status: 200, description: 'Unit updated successfully', type: Unit })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateUnitDto: UpdateUnitDto) {
     return this.unitsService.update(id, updateUnitDto);
   }
@@ -47,16 +47,16 @@ export class UnitsGlobalController {
 }
 
 @ApiTags('units')
-@Controller('accounts/:accountId/units')
+@Controller('portfolios/:accountId/units')
 export class UnitsController {
   constructor(private readonly unitsService: UnitsService) {}
 
   @ApiOperation({ summary: 'Create a new unit for an account' })
   @ApiResponse({ status: 201, description: 'Unit created successfully', type: Unit })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() createUnitDto: CreateUnitDto) {
-    return this.unitsService.create({ ...createUnitDto, account_id: accountId });
+    return this.unitsService.create({ ...createUnitDto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'Get all units for an account' })

@@ -75,7 +75,7 @@ async function bootstrap() {
       .setVersion('1.0')
       .addTag('auth', 'Authentication endpoints')
       .addTag('users', 'User management endpoints')
-      .addTag('accounts', 'Account management endpoints')
+      .addTag('portfolios', 'Portfolio management endpoints')
       .addTag('properties', 'Property management endpoints')
       .addTag('units', 'Unit management endpoints')
       .addTag('tenants', 'Tenant management endpoints')

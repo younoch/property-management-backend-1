@@ -4,7 +4,7 @@ import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateDocumentDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  account_id: number;
+  portfolio_id: number;
 
   @ApiProperty({ example: 'invoice' })
   @IsString()

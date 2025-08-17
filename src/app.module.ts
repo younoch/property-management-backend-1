@@ -8,7 +8,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { AccountsModule } from './accounts/accounts.module';
+import { PortfoliosModule } from './portfolios/portfolios.module';
 import { PropertiesModule } from './properties/properties.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UnitsModule } from './units/units.module';
@@ -28,7 +28,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
 import { CsrfModule } from './modules/csrf.module';
 import { User } from './users/user.entity';
 // Report module/entities removed in new schema
-import { Account } from './accounts/account.entity';
+import { Portfolio } from './portfolios/portfolio.entity';
 import { Property } from './properties/property.entity';
 import { Notification } from './notifications/notification.entity';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
@@ -41,7 +41,11 @@ import * as cookieParser from 'cookie-parser';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production' ? undefined : `.env.${process.env.NODE_ENV}`,
+      envFilePath: process.env.NODE_ENV === 'production' 
+        ? '.env.production' 
+        : process.env.NODE_ENV 
+          ? `.env.${process.env.NODE_ENV}` 
+          : '.env.development',
       validate,
     }),
     ScheduleModule.forRoot(),
@@ -75,7 +79,7 @@ import * as cookieParser from 'cookie-parser';
       },
     }),
     UsersModule,
-    AccountsModule,
+    PortfoliosModule,
     PropertiesModule,
     UnitsModule,
     TenantsModule,

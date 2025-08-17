@@ -52,7 +52,7 @@ export class CsrfService {
    * Get CSRF token expiry time (default: 24 hours)
    */
   getTokenExpiry(): Date {
-    const expiryHours = this.configService.get<number>('CSRF_TOKEN_EXPIRY_HOURS') || 24;
+    const expiryHours = this.configService.get<number>('CSRF_TOKEN_EXPIRY_HOURS') || 24; // 24 hours default
     const expiry = new Date();
     expiry.setHours(expiry.getHours() + expiryHours);
     return expiry;

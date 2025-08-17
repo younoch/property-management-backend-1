@@ -1,5 +1,74 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+
+// Portfolio DTO for owned portfolios
+export class PortfolioDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Portfolio ID',
+    example: 1,
+  })
+  id: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Portfolio name',
+    example: 'Rental Portfolio A',
+  })
+  name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Portfolio creation timestamp',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  created_at: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Portfolio last update timestamp',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  updated_at: Date;
+}
+
+// Notification DTO for user notifications
+export class NotificationDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Notification ID',
+    example: 1,
+  })
+  id: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Notification title',
+    example: 'Maintenance Request Update',
+  })
+  title: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Notification message',
+    example: 'Your maintenance request has been updated',
+  })
+  message: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Whether the notification has been read',
+    example: false,
+  })
+  is_read: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Notification creation timestamp',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  created_at: Date;
+}
 
 export class SigninDataDto {
   @Expose()
@@ -66,6 +135,39 @@ export class SigninDataDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   updated_at: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Portfolios owned by the user (for landlords)',
+    type: [PortfolioDto],
+    example: [
+      {
+        id: 1,
+        name: 'Rental Portfolio A',
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-01T00:00:00.000Z'
+      }
+    ]
+  })
+  @Type(() => PortfolioDto)
+  owned_portfolios: PortfolioDto[];
+
+  @Expose()
+  @ApiProperty({
+    description: 'User notifications',
+    type: [NotificationDto],
+    example: [
+      {
+        id: 1,
+        title: 'Maintenance Request Update',
+        message: 'Your maintenance request has been updated',
+        is_read: false,
+        created_at: '2024-01-01T00:00:00.000Z'
+      }
+    ]
+  })
+  @Type(() => NotificationDto)
+  notifications: NotificationDto[];
 
   @Expose()
   @ApiProperty({

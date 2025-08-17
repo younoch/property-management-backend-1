@@ -25,7 +25,7 @@ export class MaintenanceService {
   }
 
   findRequestsByAccount(accountId: number) {
-    return this.reqRepo.find({ where: { account_id: accountId } });
+    return this.reqRepo.find({ where: { portfolio_id: accountId } });
   }
 
   async findRequest(id: number) {
@@ -56,7 +56,7 @@ export class MaintenanceService {
   }
 
   findWorkOrdersByAccount(accountId: number) {
-    return this.woRepo.find({ where: { account_id: accountId } });
+    return this.woRepo.find({ where: { portfolio_id: accountId } });
   }
 
   async findWorkOrder(id: number) {

@@ -16,27 +16,27 @@ export class PropertiesService {
   ) {}
 
   async create(createPropertyDto: CreatePropertyDto, userId: number): Promise<Property> {
-    // Find the user and their account
+    // Find the user and their portfolio
     const user = await this.usersRepository.findOne({
       where: { id: userId },
-      relations: ['owned_accounts'],
+      relations: ['owned_portfolios'],
     });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    if (!user.owned_accounts || user.owned_accounts.length === 0) {
-      throw new UnauthorizedException('User has no accounts. Please create an account first.');
+    if (!user.owned_portfolios || user.owned_portfolios.length === 0) {
+      throw new UnauthorizedException('User has no portfolios. Please create a portfolio first.');
     }
 
-    // Use the first account (or you could implement logic to choose which account)
-    const account = user.owned_accounts[0];
+    // Use the first portfolio (or implement selection logic)
+    const portfolio = user.owned_portfolios[0];
     
-    // Create property with the user's account_id
+    // Create property with the user's portfolio_id
     const property = this.propertiesRepository.create({
       ...createPropertyDto,
-      account_id: account.id,
+      portfolio_id: portfolio.id,
     });
     
     return await this.propertiesRepository.save(property);
@@ -44,14 +44,14 @@ export class PropertiesService {
 
   async findAll(): Promise<Property[]> {
     return await this.propertiesRepository.find({
-      relations: ['account'],
+      relations: ['portfolio'],
     });
   }
 
   async findOne(id: number): Promise<Property> {
     const property = await this.propertiesRepository.findOne({
       where: { id },
-      relations: ['account'],
+      relations: ['portfolio'],
     });
     
     if (!property) {
@@ -63,15 +63,15 @@ export class PropertiesService {
 
   async findByAccount(accountId: number): Promise<Property[]> {
     return await this.propertiesRepository.find({
-      where: { account_id: accountId },
-      relations: ['account'],
+      where: { portfolio_id: accountId },
+      relations: ['portfolio'],
     });
   }
 
   async findByLocation(city: string, state: string): Promise<Property[]> {
     return await this.propertiesRepository.find({
       where: { city, state },
-      relations: ['account'],
+      relations: ['portfolio'],
     });
   }
 

@@ -24,15 +24,23 @@ export class UsersService {
     if (!id) {
       return null;
     }
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({ 
+      where: { id },
+      relations: ['owned_portfolios', 'notifications']
+    });
   }
 
   findAll() {
-    return this.repo.find();
+    return this.repo.find({
+      relations: ['owned_portfolios', 'notifications']
+    });
   }
 
   findByEmail(email: string) {
-    return this.repo.find({ where: { email } });
+    return this.repo.find({ 
+      where: { email },
+      relations: ['owned_portfolios', 'notifications']
+    });
   }
 
   // Backward-compatible alias used by existing controllers/services

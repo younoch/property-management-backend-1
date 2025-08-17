@@ -5,7 +5,7 @@ import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
 import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
 import { LeaseCharge } from './lease-charge.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('lease-charges')
 @Controller('lease-charges')
@@ -31,7 +31,7 @@ export class LeaseChargesGlobalController {
   @ApiParam({ name: 'id', description: 'Lease charge ID' })
   @ApiResponse({ status: 200, description: 'Lease charge updated successfully', type: LeaseCharge })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLeaseChargeDto) {
     return this.leaseChargesService.update(id, dto);
   }
@@ -54,7 +54,7 @@ export class LeaseChargesController {
   @ApiOperation({ summary: 'Create a new lease charge for a lease' })
   @ApiResponse({ status: 201, description: 'Lease charge created successfully', type: LeaseCharge })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('leaseId', ParseIntPipe) leaseId: number, @Body() dto: CreateLeaseChargeDto) {
     return this.leaseChargesService.create({ ...dto, lease_id: leaseId });
   }

@@ -9,23 +9,23 @@ import {
   Index
 } from "typeorm";
 import { User } from "../users/user.entity";
-import { Account } from "../accounts/account.entity";
+import { Portfolio } from "../portfolios/portfolio.entity";
 
 @Entity()
 @Index(['user'])
 @Index(['is_read'])
 @Index(['sent_at'])
-@Index(['account_id'])
+@Index(['portfolio_id'])
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Account, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'account_id' })
-  account: Account;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
   @Column()
-  account_id: number;
+  portfolio_id: number;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })

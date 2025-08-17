@@ -5,7 +5,7 @@ import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { Tenant } from '../tenancy/tenant.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('tenants')
 @Controller('tenants')
@@ -31,7 +31,7 @@ export class TenantsGlobalController {
   @ApiParam({ name: 'id', description: 'Tenant ID' })
   @ApiResponse({ status: 200, description: 'Tenant updated successfully', type: Tenant })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTenantDto) {
     return this.tenantsService.update(id, dto);
   }
@@ -47,16 +47,16 @@ export class TenantsGlobalController {
 }
 
 @ApiTags('tenants')
-@Controller('accounts/:accountId/tenants')
+@Controller('portfolios/:accountId/tenants')
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @ApiOperation({ summary: 'Create a new tenant for an account' })
   @ApiResponse({ status: 201, description: 'Tenant created successfully', type: Tenant })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('accountId', ParseIntPipe) accountId: number, @Body() dto: CreateTenantDto) {
-    return this.tenantsService.create({ ...dto, account_id: accountId });
+    return this.tenantsService.create({ ...dto, portfolio_id: accountId });
   }
 
   @ApiOperation({ summary: 'Get all tenants for an account' })

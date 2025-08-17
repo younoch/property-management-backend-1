@@ -22,7 +22,7 @@ export class PaymentsService {
   }
 
   findByAccount(accountId: number) {
-    return this.repo.find({ where: { account_id: accountId } });
+    return this.repo.find({ where: { portfolio_id: accountId } });
   }
 
   async findOne(id: number) {

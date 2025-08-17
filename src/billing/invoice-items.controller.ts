@@ -5,7 +5,7 @@ import { CreateInvoiceItemDto } from './dto/create-invoice-item.dto';
 import { UpdateInvoiceItemDto } from './dto/update-invoice-item.dto';
 import { InvoiceItem } from './invoice-item.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { AccountScopeGuard } from '../guards/account.guard';
+import { PortfolioScopeGuard } from '../guards/account.guard';
 
 @ApiTags('invoice-items')
 @Controller('invoice-items')
@@ -31,7 +31,7 @@ export class InvoiceItemsGlobalController {
   @ApiParam({ name: 'id', description: 'Invoice item ID' })
   @ApiResponse({ status: 200, description: 'Invoice item updated successfully', type: InvoiceItem })
   @Patch(':id')
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateInvoiceItemDto) {
     return this.invoiceItemsService.update(id, dto);
   }
@@ -54,7 +54,7 @@ export class InvoiceItemsController {
   @ApiOperation({ summary: 'Create a new invoice item for an invoice' })
   @ApiResponse({ status: 201, description: 'Invoice item created successfully', type: InvoiceItem })
   @Post()
-  @UseGuards(AuthGuard, AccountScopeGuard)
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
   create(@Param('invoiceId', ParseIntPipe) invoiceId: number, @Body() dto: CreateInvoiceItemDto) {
     return this.invoiceItemsService.create({ ...dto, invoice_id: invoiceId });
   }

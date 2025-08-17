@@ -4,7 +4,7 @@ import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator
 export class CreateMaintenanceRequestDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  account_id: number;
+  portfolio_id: number;
 
   @ApiProperty({ example: 1 })
   @IsInt()

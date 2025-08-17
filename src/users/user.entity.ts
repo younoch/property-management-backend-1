@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Account } from '../accounts/account.entity';
+import { Portfolio } from '../portfolios/portfolio.entity';
 import { Notification } from '../notifications/notification.entity';
 
 @Entity()
@@ -46,8 +46,8 @@ export class User {
 
   // Legacy fields removed for production readiness
 
-  @OneToMany(() => Account, (account) => account.landlord)
-  owned_accounts: Account[];
+  @OneToMany(() => Portfolio, (portfolio) => portfolio.landlord)
+  owned_portfolios: Portfolio[];
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];

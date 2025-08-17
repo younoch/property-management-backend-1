@@ -47,12 +47,42 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Get current user information',
-    description: 'Retrieve complete information about the currently authenticated user'
+    description: 'Retrieve complete information about the currently authenticated user including owned accounts and notifications. Returns full user data excluding sensitive information like password hash.'
   })
   @ApiResponse({ 
     status: 200, 
     description: 'Current user information retrieved successfully',
-    type: SigninDataDto
+    type: UserResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'landlord',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z',
+        owned_accounts: [
+          {
+            id: 1,
+            name: 'Main Property Account',
+            status: 'active',
+            created_at: '2024-01-01T00:00:00.000Z'
+          }
+        ],
+        notifications: [
+          {
+            id: 1,
+            title: 'Maintenance Request Update',
+            message: 'Your maintenance request has been updated',
+            is_read: false,
+            created_at: '2024-01-01T00:00:00.000Z'
+          }
+        ]
+      }
+    }
   })
   @ApiResponse({ 
     status: 401, 
@@ -96,7 +126,16 @@ export class UsersController {
         });
       }
 
-      return user;
+      // Fetch the full user data with relationships from the database
+      const fullUser = await this.usersService.findOne(user.id);
+      if (!fullUser) {
+        throw new NotFoundException({
+          message: 'User not found in database',
+          errorType: 'USER_NOT_FOUND'
+        });
+      }
+
+      return fullUser;
     } catch (error) {
       // Re-throw HTTP exceptions as they are already properly formatted
       if (error instanceof HttpException) {
@@ -136,11 +175,31 @@ export class UsersController {
     return { success: true, message: 'Signed out successfully' };
   }
 
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiOperation({ 
+    summary: 'Register a new user',
+    description: 'Create a new user account and automatically sign them in. Returns full user data including owned accounts and notifications, along with access and refresh tokens.'
+  })
   @ApiResponse({ 
     status: 201, 
     description: 'User registered successfully',
-    type: SigninResponseDto
+    type: SigninResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'tenant',
+        profile_image_url: null,
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-15T10:30:00.000Z',
+        owned_accounts: [],
+        notifications: [],
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      }
+    }
   })
   @ApiResponse({ status: 400, description: 'Email already in use' })
   @Post('/signup')
@@ -187,12 +246,44 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Sign in user',
-    description: 'Sign in with user credentials. Only email and password are required.'
+    description: 'Sign in with user credentials. Only email and password are required. Returns full user data including owned accounts and notifications, along with access and refresh tokens.'
   })
   @ApiResponse({ 
     status: 200, 
     description: 'User signed in successfully',
-    type: SigninResponseDto
+    type: SigninResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'landlord',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z',
+        owned_accounts: [
+          {
+            id: 1,
+            name: 'Main Property Account',
+            status: 'active',
+            created_at: '2024-01-01T00:00:00.000Z'
+          }
+        ],
+        notifications: [
+          {
+            id: 1,
+            title: 'Maintenance Request Update',
+            message: 'Your maintenance request has been updated',
+            is_read: false,
+            created_at: '2024-01-01T00:00:00.000Z'
+          }
+        ],
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      }
+    }
   })
   @ApiResponse({ status: 400, description: 'Invalid credentials' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -234,12 +325,45 @@ export class UsersController {
 
   @ApiOperation({ 
     summary: 'Refresh access token',
-    description: 'Get a new access token using a valid refresh token'
+    description: 'Get a new access token using a valid refresh token. Returns full user data including owned accounts and notifications, along with the new access token.'
   })
   @ApiResponse({ 
     status: 200, 
     description: 'Access token refreshed successfully',
-    type: RefreshTokenResponseDto
+    type: RefreshTokenResponseDto,
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        user: {
+          id: 1,
+          email: 'john.doe@example.com',
+          name: 'John Doe',
+          phone: '+1-555-123-4567',
+          role: 'landlord',
+          profile_image_url: 'https://example.com/images/profile.jpg',
+          is_active: true,
+          created_at: '2024-01-15T10:30:00.000Z',
+          updated_at: '2024-01-20T14:45:00.000Z',
+          owned_accounts: [
+            {
+              id: 1,
+              name: 'Main Property Account',
+              status: 'active',
+              created_at: '2024-01-01T00:00:00.000Z'
+            }
+          ],
+          notifications: [
+            {
+              id: 1,
+              title: 'Maintenance Request Update',
+              message: 'Your maintenance request has been updated',
+              is_read: false,
+              created_at: '2024-01-01T00:00:00.000Z'
+            }
+          ]
+        }
+      }
+    }
   })
   @ApiResponse({ 
     status: 400, 
@@ -306,9 +430,45 @@ export class UsersController {
     }
   }
 
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ status: 200, description: 'User found successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiOperation({ 
+    summary: 'Get user by ID',
+    description: 'Retrieve detailed information about a specific user by their ID. Returns user data excluding sensitive information like password hash.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User found successfully',
+    type: UserResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
   @Get('/:id')
   @Serialize(UserResponseDto)
   async findUser(@Param('id') id: string) {
@@ -319,31 +479,195 @@ export class UsersController {
     return user;
   }
 
-  @ApiOperation({ summary: 'Get all users or search by email' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get all users or search by email',
+    description: 'Retrieve a list of all users in the system or search for users by email address. Returns user data excluding sensitive information.'
+  })
+  @ApiQuery({ 
+    name: 'email', 
+    description: 'Email address to search for (optional). If provided, returns only users matching this email.',
+    required: false,
+    example: 'john.doe@example.com',
+    type: 'string'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Users retrieved successfully',
+    type: [UserResponseDto],
+    schema: {
+      example: [
+        {
+          id: 1,
+          email: 'john.doe@example.com',
+          name: 'John Doe',
+          phone: '+1-555-123-4567',
+          role: 'tenant',
+          profile_image_url: 'https://example.com/images/profile1.jpg',
+          is_active: true,
+          created_at: '2024-01-15T10:30:00.000Z',
+          updated_at: '2024-01-20T14:45:00.000Z'
+        },
+        {
+          id: 2,
+          email: 'jane.smith@example.com',
+          name: 'Jane Smith',
+          phone: '+1-555-987-6543',
+          role: 'landlord',
+          profile_image_url: 'https://example.com/images/profile2.jpg',
+          is_active: true,
+          created_at: '2024-01-10T09:15:00.000Z',
+          updated_at: '2024-01-18T11:20:00.000Z'
+        }
+      ]
+    }
+  })
   @Get()
   @Serialize(UserResponseDto)
   findAllUsers(@Query('email') email: string) {
     return this.usersService.find(email);
   }
 
-  @ApiOperation({ summary: 'Delete user by ID' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @Delete('/:id')
-  @UseGuards(AuthGuard, CsrfGuard)
-  removeUser(@Param('id') id: string) {
-    return this.usersService.remove(parseInt(id));
-  }
-
-  @ApiOperation({ summary: 'Update user by ID' })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiOperation({ 
+    summary: 'Update user by ID',
+    description: 'Update specific user information. Only provided fields will be updated. Password updates will be automatically hashed.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user to update',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User updated successfully',
+    type: UserResponseDto,
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Smith',
+        phone: '+1-555-987-6543',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/new-profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T16:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad Request - Invalid data provided',
+    schema: {
+      example: {
+        message: ['email must be an email', 'role must be one of the following values: super_admin, landlord, manager, tenant'],
+        errorType: 'VALIDATION_ERROR',
+        statusCode: 400
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - CSRF token missing or invalid',
+    schema: {
+      example: {
+        message: 'CSRF token missing or invalid',
+        errorType: 'CSRF_ERROR',
+        statusCode: 403
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
   @Patch('/:id')
   @UseGuards(AuthGuard, CsrfGuard)
   updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
     return this.usersService.update(parseInt(id), body);
+  }
+
+  @ApiOperation({ 
+    summary: 'Delete user by ID',
+    description: 'Permanently remove a user from the system. This action cannot be undone and will also remove associated data.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'Unique identifier of the user to delete',
+    example: 1,
+    type: 'integer'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User deleted successfully',
+    schema: {
+      example: {
+        id: 1,
+        email: 'john.doe@example.com',
+        name: 'John Doe',
+        phone: '+1-555-123-4567',
+        role: 'tenant',
+        profile_image_url: 'https://example.com/images/profile.jpg',
+        is_active: true,
+        created_at: '2024-01-15T10:30:00.000Z',
+        updated_at: '2024-01-20T14:45:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - No valid access token provided or token expired',
+    schema: {
+      example: {
+        message: 'Unauthorized',
+        errorType: 'UNAUTHORIZED',
+        statusCode: 401
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - CSRF token missing or invalid',
+    schema: {
+      example: {
+        message: 'CSRF token missing or invalid',
+        errorType: 'CSRF_ERROR',
+        statusCode: 403
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found',
+    schema: {
+      example: {
+        message: 'user not found',
+        errorType: 'USER_NOT_FOUND',
+        statusCode: 404
+      }
+    }
+  })
+  @Delete('/:id')
+  @UseGuards(AuthGuard, CsrfGuard)
+  removeUser(@Param('id') id: string) {
+    return this.usersService.remove(parseInt(id));
   }
 }

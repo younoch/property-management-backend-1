@@ -4,7 +4,7 @@ import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber } from 'class-validat
 export class CreateLeaseDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  account_id: number;
+  portfolio_id: number;
 
   @ApiProperty({ example: 1 })
   @IsInt()

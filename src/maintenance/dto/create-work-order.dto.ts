@@ -4,7 +4,7 @@ import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional } from 'c
 export class CreateWorkOrderDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  account_id: number;
+  portfolio_id: number;
 
   @ApiProperty({ example: 1 })
   @IsInt()
