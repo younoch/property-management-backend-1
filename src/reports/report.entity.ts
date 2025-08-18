@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 
 @Entity()
@@ -36,4 +36,13 @@ export class Report {
 
   @ManyToOne(() => User)
   user: User;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 }

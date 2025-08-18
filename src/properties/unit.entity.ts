@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, Unique, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, Unique, JoinColumn, DeleteDateColumn } from 'typeorm';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Property } from './property.entity';
 
@@ -47,6 +47,9 @@ export class Unit {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 }
 
 

@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
   Index,
+  DeleteDateColumn,
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Property } from '../properties/property.entity';
@@ -32,7 +33,10 @@ export class Portfolio {
   @Column()
   subscription_plan: string;
 
-  @Column()
+  @Column({ default: '' })
+  provider_customer_id: string;
+
+  @Column({ default: 'active' })
   status: string;
 
   @OneToMany(() => Property, (property) => property.portfolio)
@@ -43,6 +47,9 @@ export class Portfolio {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 }
 
 

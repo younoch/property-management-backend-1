@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePortfolioDto {
   @ApiProperty({ description: 'Portfolio name', example: 'Rental Portfolio A' })
@@ -17,10 +17,15 @@ export class CreatePortfolioDto {
   @IsNotEmpty()
   subscription_plan: string;
 
-  @ApiProperty({ description: 'Portfolio status', example: 'active', enum: ['active', 'inactive', 'suspended'] })
+  @ApiPropertyOptional({ description: 'Billing provider customer ID (Stripe/SSLCommerz/etc.)', example: '' })
   @IsString()
-  @IsNotEmpty()
-  status: string;
+  @IsOptional()
+  provider_customer_id?: string;
+
+  @ApiPropertyOptional({ description: 'Portfolio status', example: 'active', enum: ['active', 'inactive', 'suspended'], default: 'active' })
+  @IsString()
+  @IsOptional()
+  status?: string;
 }
 
 

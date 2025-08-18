@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { Lease } from './lease.entity';
 import { Tenant } from './tenant.entity';
 
@@ -17,6 +17,15 @@ export class LeaseTenant {
   @ManyToOne(() => Tenant, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 }
 
 

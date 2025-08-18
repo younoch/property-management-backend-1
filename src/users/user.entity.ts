@@ -6,6 +6,7 @@ import {
   Index,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Notification } from '../notifications/notification.entity';
@@ -45,6 +46,9 @@ export class User {
   updated_at: Date;
 
   // Legacy fields removed for production readiness
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 
   @OneToMany(() => Portfolio, (portfolio) => portfolio.landlord)
   owned_portfolios: Portfolio[];

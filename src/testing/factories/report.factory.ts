@@ -14,6 +14,9 @@ export class ReportFactory {
       lat: 37.7749,
       mileage: 50000,
       user: user || null,
+      created_at: new Date(),
+      updated_at: new Date(),
+      deleted_at: null,
       ...overrides,
     };
   }

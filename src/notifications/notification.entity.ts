@@ -6,7 +6,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-  Index
+  Index,
+  DeleteDateColumn
 } from "typeorm";
 import { User } from "../users/user.entity";
 import { Portfolio } from "../portfolios/portfolio.entity";
@@ -61,4 +62,7 @@ export class Notification {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date | null;
 } 

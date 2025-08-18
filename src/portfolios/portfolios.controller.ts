@@ -18,7 +18,8 @@ export class PortfoliosController {
         name: 'Rental Portfolio A',
         landlord_id: 12,
         subscription_plan: 'premium',
-        status: 'active',
+        // status is optional; defaults to 'active' if omitted
+        provider_customer_id: ''
       },
     },
   })
@@ -32,6 +33,7 @@ export class PortfoliosController {
         name: 'Rental Portfolio A',
         landlord_id: 12,
         subscription_plan: 'premium',
+        provider_customer_id: '',
         status: 'active',
         properties: [],
         created_at: '2025-01-15T10:30:00.000Z',
@@ -56,6 +58,7 @@ export class PortfoliosController {
           name: 'Rental Portfolio A',
           landlord_id: 12,
           subscription_plan: 'premium',
+          provider_customer_id: '',
           status: 'active',
           properties: [],
           created_at: '2025-01-15T10:30:00.000Z',
@@ -66,6 +69,7 @@ export class PortfoliosController {
           name: 'Short-Term Rentals',
           landlord_id: 12,
           subscription_plan: 'basic',
+          provider_customer_id: '',
           status: 'inactive',
           properties: [],
           created_at: '2025-02-01T09:00:00.000Z',
@@ -91,6 +95,7 @@ export class PortfoliosController {
         name: 'Rental Portfolio A',
         landlord_id: 12,
         subscription_plan: 'premium',
+        provider_customer_id: '',
         status: 'active',
         properties: [],
         created_at: '2025-01-15T10:30:00.000Z',
@@ -117,6 +122,7 @@ export class PortfoliosController {
           name: 'Rental Portfolio A',
           landlord_id: 12,
           subscription_plan: 'premium',
+          provider_customer_id: '',
           status: 'active',
           properties: [],
           created_at: '2025-01-15T10:30:00.000Z',
@@ -138,6 +144,7 @@ export class PortfoliosController {
       example: {
         name: 'Rental Portfolio A - Downtown Focus',
         status: 'suspended',
+        provider_customer_id: ''
       },
     },
   })
@@ -151,6 +158,7 @@ export class PortfoliosController {
         name: 'Rental Portfolio A - Downtown Focus',
         landlord_id: 12,
         subscription_plan: 'premium',
+        provider_customer_id: '',
         status: 'suspended',
         properties: [],
         created_at: '2025-01-15T10:30:00.000Z',
