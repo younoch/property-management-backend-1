@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { PortfoliosService } from './portfolios.service';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
 import { Portfolio } from './portfolio.entity';
+import { FindPortfoliosDto } from './dto/find-portfolios.dto';
+import { PaginatedPortfoliosResponseDto } from './dto/paginated-portfolios.dto';
 
 @ApiTags('portfolios')
 @Controller('portfolios')
@@ -46,41 +48,11 @@ export class PortfoliosController {
     return this.portfoliosService.create(createDto);
   }
 
-  @ApiOperation({ summary: 'Get all portfolios' })
-  @ApiResponse({
-    status: 200,
-    description: 'Portfolios retrieved successfully',
-    type: [Portfolio],
-    schema: {
-      example: [
-        {
-          id: 1,
-          name: 'Rental Portfolio A',
-          landlord_id: 12,
-          subscription_plan: 'premium',
-          provider_customer_id: '',
-          status: 'active',
-          properties: [],
-          created_at: '2025-01-15T10:30:00.000Z',
-          updated_at: '2025-01-15T10:30:00.000Z',
-        },
-        {
-          id: 2,
-          name: 'Short-Term Rentals',
-          landlord_id: 12,
-          subscription_plan: 'basic',
-          provider_customer_id: '',
-          status: 'inactive',
-          properties: [],
-          created_at: '2025-02-01T09:00:00.000Z',
-          updated_at: '2025-02-10T11:15:00.000Z',
-        },
-      ],
-    },
-  })
+  @ApiOperation({ summary: 'Get all portfolios (paginated + search)' })
+  @ApiResponse({ status: 200, description: 'Portfolios retrieved successfully', type: PaginatedPortfoliosResponseDto })
   @Get()
-  findAll() {
-    return this.portfoliosService.findAll();
+  findAll(@Query() query: FindPortfoliosDto) {
+    return this.portfoliosService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get portfolio by ID' })
@@ -109,31 +81,12 @@ export class PortfoliosController {
     return this.portfoliosService.findOne(+id);
   }
 
-  @ApiOperation({ summary: 'Get portfolios by landlord ID' })
+  @ApiOperation({ summary: 'Get portfolios by landlord ID (paginated + search)' })
   @ApiParam({ name: 'landlordId', description: 'Landlord ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Landlord portfolios retrieved successfully',
-    type: [Portfolio],
-    schema: {
-      example: [
-        {
-          id: 1,
-          name: 'Rental Portfolio A',
-          landlord_id: 12,
-          subscription_plan: 'premium',
-          provider_customer_id: '',
-          status: 'active',
-          properties: [],
-          created_at: '2025-01-15T10:30:00.000Z',
-          updated_at: '2025-01-15T10:30:00.000Z',
-        },
-      ],
-    },
-  })
+  @ApiResponse({ status: 200, description: 'Landlord portfolios retrieved successfully', type: PaginatedPortfoliosResponseDto })
   @Get('landlord/:landlordId')
-  findByLandlord(@Param('landlordId') landlordId: string) {
-    return this.portfoliosService.findByLandlord(+landlordId);
+  findByLandlord(@Param('landlordId') landlordId: string, @Query() query: FindPortfoliosDto) {
+    return this.portfoliosService.findByLandlord(+landlordId, query);
   }
 
   @ApiOperation({ summary: 'Update portfolio by ID' })
