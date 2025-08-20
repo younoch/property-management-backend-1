@@ -16,6 +16,8 @@ import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './property.entity';
+import { FindPropertiesDto } from './dto/find-properties.dto';
+import { PaginatedPropertiesResponseDto } from './dto/paginated-properties.dto';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 import { ConfigService } from '@nestjs/config';
@@ -29,11 +31,11 @@ export class PropertiesGlobalController {
     private readonly configService: ConfigService,
   ) {}
 
-  @ApiOperation({ summary: 'Get all properties' })
-  @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: [Property] })
+  @ApiOperation({ summary: 'Get all properties (paginated + search)' })
+  @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: PaginatedPropertiesResponseDto })
   @Get()
-  findAll() {
-    return this.propertiesService.findAll();
+  findAll(@Query() query: FindPropertiesDto) {
+    return this.propertiesService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get property by ID' })
@@ -112,10 +114,10 @@ export class PropertiesController {
     return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: portfolioId }, userId);
   }
 
-  @ApiOperation({ summary: 'Get all properties for a portfolio' })
-  @ApiResponse({ status: 200, description: 'Portfolio properties retrieved successfully', type: [Property] })
+  @ApiOperation({ summary: 'Get all properties for a portfolio (paginated + search)' })
+  @ApiResponse({ status: 200, description: 'Portfolio properties retrieved successfully', type: PaginatedPropertiesResponseDto })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
-    return this.propertiesService.findByPortfolio(portfolioId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Query() query: FindPropertiesDto) {
+    return this.propertiesService.findByPortfolio(portfolioId, query);
   }
 } 

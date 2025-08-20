@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -6,17 +6,19 @@ import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { Tenant } from '../tenancy/tenant.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
+import { FindTenantsDto } from './dto/find-tenants.dto';
+import { PaginatedTenantsResponseDto } from './dto/paginated-tenants.dto';
 
 @ApiTags('tenants')
 @Controller('tenants')
 export class TenantsGlobalController {
   constructor(private readonly tenantsService: TenantsService) {}
 
-  @ApiOperation({ summary: 'Get all tenants' })
-  @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: [Tenant] })
+  @ApiOperation({ summary: 'Get all tenants (paginated + search)' })
+  @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: PaginatedTenantsResponseDto })
   @Get()
-  findAll() {
-    return this.tenantsService.findAll();
+  findAll(@Query() query: FindTenantsDto) {
+    return this.tenantsService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get tenant by ID' })
@@ -59,11 +61,11 @@ export class TenantsController {
     return this.tenantsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
-  @ApiOperation({ summary: 'Get all tenants for a portfolio' })
-  @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: [Tenant] })
+  @ApiOperation({ summary: 'Get all tenants for a portfolio (paginated + search)' })
+  @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: PaginatedTenantsResponseDto })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
-    return this.tenantsService.findByPortfolio(portfolioId);
+  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Query() query: FindTenantsDto) {
+    return this.tenantsService.findByPortfolio(portfolioId, query);
   }
 }
 

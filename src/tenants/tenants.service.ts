@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Tenant } from '../tenancy/tenant.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -17,12 +17,54 @@ export class TenantsService {
     return this.repo.save(tenant);
   }
 
-  findAll() {
-    return this.repo.find();
+  async findAll(query?: { page?: number; limit?: number; search?: string }) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 10;
+    const search = (query?.search ?? '').trim();
+
+    const where: any[] = [];
+    if (search) {
+      where.push(
+        { first_name: ILike(`%${search}%`) },
+        { last_name: ILike(`%${search}%`) },
+        { email: ILike(`%${search}%`) },
+        { phone: ILike(`%${search}%`) },
+      );
+    }
+
+    const [data, total] = await this.repo.findAndCount({
+      where: where.length ? where : undefined,
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { data, total, page, limit };
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.repo.find({ where: { portfolio_id: portfolioId } });
+  async findByPortfolio(portfolioId: number, query?: { page?: number; limit?: number; search?: string }) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 10;
+    const search = (query?.search ?? '').trim();
+
+    let where: any | any[] = { portfolio_id: portfolioId };
+    if (search) {
+      where = [
+        { portfolio_id: portfolioId, first_name: ILike(`%${search}%`) },
+        { portfolio_id: portfolioId, last_name: ILike(`%${search}%`) },
+        { portfolio_id: portfolioId, email: ILike(`%${search}%`) },
+        { portfolio_id: portfolioId, phone: ILike(`%${search}%`) },
+      ];
+    }
+
+    const [data, total] = await this.repo.findAndCount({
+      where,
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {
