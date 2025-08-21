@@ -47,23 +47,30 @@ export class LeasesGlobalController {
 }
 
 @ApiTags('leases')
-@Controller('portfolios/:portfolioId/leases')
+@Controller('portfolios/:portfolioId/units/:unitId/leases')
 export class LeasesController {
   constructor(private readonly leasesService: LeasesService) {}
 
-  @ApiOperation({ summary: 'Create a new lease for a portfolio' })
+  @ApiOperation({ summary: 'Create a new lease for a unit' })
   @ApiResponse({ status: 201, description: 'Lease created successfully', type: Lease })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateLeaseDto) {
-    return this.leasesService.create({ ...dto, portfolio_id: portfolioId });
+  create(
+    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('unitId', ParseIntPipe) unitId: number,
+    @Body() dto: CreateLeaseDto,
+  ) {
+    return this.leasesService.create({ ...dto, portfolio_id: portfolioId, unit_id: unitId });
   }
 
-  @ApiOperation({ summary: 'Get all leases for a portfolio' })
+  @ApiOperation({ summary: 'Get all leases for a unit' })
   @ApiResponse({ status: 200, description: 'Leases retrieved successfully', type: [Lease] })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
-    return this.leasesService.findByPortfolio(portfolioId);
+  findByUnit(
+    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('unitId', ParseIntPipe) unitId: number,
+  ) {
+    return this.leasesService.findByUnit(portfolioId, unitId);
   }
 }
 

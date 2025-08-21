@@ -25,6 +25,10 @@ export class LeasesService {
     return this.repo.find({ where: { portfolio_id: portfolioId } });
   }
 
+  findByUnit(portfolioId: number, unitId: number) {
+    return this.repo.find({ where: { portfolio_id: portfolioId, unit_id: unitId } });
+  }
+
   async findOne(id: number) {
     const lease = await this.repo.findOne({ where: { id } });
     if (!lease) throw new NotFoundException('Lease not found');
