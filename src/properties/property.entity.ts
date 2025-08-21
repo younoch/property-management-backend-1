@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn, 
   Column, 
   ManyToOne, 
+  OneToMany,
   CreateDateColumn, 
   UpdateDateColumn,
   JoinColumn,
@@ -10,6 +11,7 @@ import {
   DeleteDateColumn
 } from "typeorm";
 import { Portfolio } from "../portfolios/portfolio.entity";
+import { Unit } from "./unit.entity";
 
 @Entity()
 @Index(['city', 'state'])
@@ -56,6 +58,9 @@ export class Property {
     property_type: string;
 
     // number_of_units removed; derive by counting units
+
+    @OneToMany(() => Unit, (unit) => unit.property)
+    units: Unit[];
 
     @Column({ nullable: true, type: "text" })
     description: string;

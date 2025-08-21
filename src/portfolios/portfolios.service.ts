@@ -35,7 +35,7 @@ export class PortfoliosService {
 
     const [data, total] = await this.portfoliosRepository.findAndCount({
       where: where.length ? where : undefined,
-      relations: ['landlord', 'properties'],
+      relations: ['landlord', 'properties', 'properties.units'],
       order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -47,7 +47,7 @@ export class PortfoliosService {
   async findOne(id: number): Promise<Portfolio> {
     const portfolio = await this.portfoliosRepository.findOne({
       where: { id },
-      relations: ['landlord', 'properties'],
+      relations: ['landlord', 'properties', 'properties.units'],
     });
     if (!portfolio) {
       throw new NotFoundException(`Portfolio with ID ${id} not found`);
@@ -72,7 +72,7 @@ export class PortfoliosService {
 
     const [data, total] = await this.portfoliosRepository.findAndCount({
       where,
-      relations: ['landlord', 'properties'],
+      relations: ['landlord', 'properties', 'properties.units'],
       order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
