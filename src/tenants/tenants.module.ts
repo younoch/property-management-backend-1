@@ -1,3 +1,4 @@
+// src/tenants/tenants.controller.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TenantsController, TenantsGlobalController } from './tenants.controller';
@@ -10,5 +11,3 @@ import { Tenant } from '../tenancy/tenant.entity';
   providers: [TenantsService],
 })
 export class TenantsModule {}
-
-

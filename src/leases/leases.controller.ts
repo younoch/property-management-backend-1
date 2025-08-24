@@ -1,8 +1,10 @@
+// src/leases/leases.controller.ts
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { LeasesService } from './leases.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { UpdateLeaseDto } from './dto/update-lease.dto';
+import { AttachTenantsDto } from './dto/attach-tenants.dto';
 import { Lease } from '../tenancy/lease.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
@@ -43,6 +45,24 @@ export class LeasesGlobalController {
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.leasesService.remove(id);
+  }
+
+  @ApiOperation({ summary: 'Attach tenants to a lease' })
+  @ApiParam({ name: 'id', description: 'Lease ID' })
+  @ApiResponse({ status: 200, description: 'Tenants attached successfully' })
+  @Post(':id/tenants')
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  async attachTenants(@Param('id', ParseIntPipe) id: number, @Body() dto: AttachTenantsDto) {
+    return this.leasesService.attachTenants(id, dto.tenant_ids);
+  }
+
+  @ApiOperation({ summary: 'Activate a lease' })
+  @ApiParam({ name: 'id', description: 'Lease ID' })
+  @ApiResponse({ status: 200, description: 'Lease activated successfully', type: Lease })
+  @Post(':id/activate')
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  async activate(@Param('id', ParseIntPipe) id: number) {
+    return this.leasesService.activate(id);
   }
 }
 

@@ -1,3 +1,4 @@
+// src/tenants/tenants.controller.ts
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';

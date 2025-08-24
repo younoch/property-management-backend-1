@@ -1,3 +1,4 @@
+// src/tenancy/lease-tenant.entity.ts
 import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { Lease } from './lease.entity';
 import { Tenant } from './tenant.entity';

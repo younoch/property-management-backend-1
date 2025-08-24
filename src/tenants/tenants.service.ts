@@ -1,3 +1,4 @@
+// src/tenants/tenants.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
@@ -85,5 +86,3 @@ export class TenantsService {
     return { success: true };
   }
 }
-
-
