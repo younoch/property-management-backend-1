@@ -8,6 +8,7 @@ import { AttachTenantsDto } from './dto/attach-tenants.dto';
 import { Lease } from '../tenancy/lease.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
+import { EndLeaseDto } from './dto/end-lease.dto';
 
 @ApiTags('leases')
 @Controller('leases')
@@ -91,6 +92,26 @@ export class LeasesController {
     @Param('unitId', ParseIntPipe) unitId: number,
   ) {
     return this.leasesService.findByUnit(portfolioId, unitId);
+  }
+}
+
+@ApiTags('leases')
+@Controller('portfolios/:portfolioId/leases')
+export class PortfoliosLeasesController {
+  constructor(private readonly leasesService: LeasesService) {}
+
+  @ApiOperation({ summary: 'End a lease and set unit vacant if ending' })
+  @ApiParam({ name: 'portfolioId', description: 'Portfolio ID' })
+  @ApiParam({ name: 'leaseId', description: 'Lease ID' })
+  @ApiResponse({ status: 200, description: 'Lease ended successfully' })
+  @Post(':leaseId/end')
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  async endLease(
+    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('leaseId', ParseIntPipe) leaseId: number,
+    @Body() dto: EndLeaseDto,
+  ) {
+    return this.leasesService.endLease(portfolioId, leaseId, dto.end_date);
   }
 }
 

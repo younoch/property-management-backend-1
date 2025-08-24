@@ -1,22 +1,33 @@
 // src/leases/leases.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { DataSource, Repository, In } from 'typeorm';
+
 import { Lease } from '../tenancy/lease.entity';
-import { CreateLeaseDto } from './dto/create-lease.dto';
-import { UpdateLeaseDto } from './dto/update-lease.dto';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { Tenant } from '../tenancy/tenant.entity';
+import { Unit } from '../properties/unit.entity'; // ⬅️ adjust path if different
+
+import { CreateLeaseDto } from './dto/create-lease.dto';
+import { UpdateLeaseDto } from './dto/update-lease.dto';
 
 @Injectable()
 export class LeasesService {
   constructor(
     @InjectRepository(Lease)
     private readonly repo: Repository<Lease>,
-  @InjectRepository(LeaseTenant)
-  private readonly leaseTenantRepo: Repository<LeaseTenant>,
-  @InjectRepository(Tenant)
-  private readonly tenantRepo: Repository<Tenant>,
+    @InjectRepository(LeaseTenant)
+    private readonly leaseTenantRepo: Repository<LeaseTenant>,
+    @InjectRepository(Tenant)
+    private readonly tenantRepo: Repository<Tenant>,
+    @InjectRepository(Unit)
+    private readonly unitRepo: Repository<Unit>,     // ⬅️ add
+    private readonly dataSource: DataSource,         // ⬅️ add
   ) {}
 
   create(dto: CreateLeaseDto) {
@@ -36,15 +47,20 @@ export class LeasesService {
     return this.repo.find({ where: { portfolio_id: portfolioId, unit_id: unitId } });
   }
 
+  /**
+   * Robust findOne that also fetches attached tenants regardless of entity relations.
+   */
   async findOne(id: number) {
-    const lease = await this.repo.findOne({ 
-      where: { id },
-      relations: [
-        'leaseTenants',
-        'leaseTenants.tenant'
-      ]
-    });
+    const lease = await this.repo.findOne({ where: { id } });
     if (!lease) throw new NotFoundException('Lease not found');
+
+    // Load attached tenants (works even if Lease doesn't have @OneToMany)
+    const leaseTenants = await this.leaseTenantRepo.find({
+      where: { lease_id: id },
+      relations: ['tenant'],
+    });
+    (lease as any).leaseTenants = leaseTenants;
+
     return lease;
   }
 
@@ -65,12 +81,13 @@ export class LeasesService {
    * Returns the list of attached tenants for the lease.
    */
   async attachTenants(leaseId: number, tenantIds: number[]) {
-    const lease = await this.findOne(leaseId);
+    // Ensure lease exists
+    await this.findOne(leaseId);
 
     // validate tenants exist
     const tenants = await this.tenantRepo.find({ where: { id: In(tenantIds) } });
-    const foundIds = new Set(tenants.map(t => t.id));
-    const missing = tenantIds.filter(id => !foundIds.has(id));
+    const foundIds = new Set(tenants.map((t) => t.id));
+    const missing = tenantIds.filter((id) => !foundIds.has(id));
     if (missing.length) {
       throw new NotFoundException(`Tenants not found: ${missing.join(',')}`);
     }
@@ -78,40 +95,93 @@ export class LeasesService {
     // create unique pairs and avoid duplicates
     const toInsert: LeaseTenant[] = [];
     for (const tenantId of tenantIds) {
-      const exists = await this.leaseTenantRepo.findOne({ where: { lease_id: leaseId, tenant_id: tenantId } });
+      const exists = await this.leaseTenantRepo.findOne({
+        where: { lease_id: leaseId, tenant_id: tenantId },
+      });
       if (!exists) {
-  const lt: LeaseTenant = { lease_id: leaseId, tenant_id: tenantId } as any;
-  toInsert.push(lt);
+        toInsert.push({ lease_id: leaseId, tenant_id: tenantId } as any);
       }
     }
 
     if (toInsert.length) {
-      // use insert for bulk create to satisfy typings
       await this.leaseTenantRepo.insert(toInsert as any);
     }
 
-    return this.leaseTenantRepo.find({ where: { lease_id: leaseId }, relations: ['tenant'] });
+    return this.leaseTenantRepo.find({
+      where: { lease_id: leaseId },
+      relations: ['tenant'],
+    });
   }
 
   /**
-   * Activate a lease: must be in 'draft' and have at least one attached tenant.
+   * Activate a lease:
+   * - must be 'draft'
+   * - must have ≥1 attached tenant
+   * - unit must be currently 'vacant'
+   * - no other active lease for the same unit
+   * All changes happen in a single DB transaction.
    */
   async activate(leaseId: number) {
-    const lease = await this.findOne(leaseId);
+    // Reload with the fields we need
+    const lease = await this.repo.findOne({ where: { id: leaseId } });
+    if (!lease) throw new NotFoundException('Lease not found');
 
     if (lease.status !== 'draft') {
-      throw new Error('Only leases in draft status can be activated');
+      throw new BadRequestException('Only leases in draft status can be activated');
     }
 
-    const attached = await this.leaseTenantRepo.find({ where: { lease_id: leaseId } });
-    if (!attached || attached.length === 0) {
-      throw new Error('Cannot activate lease without at least one tenant attached');
+    // Require at least one attached tenant
+    const attached = await this.leaseTenantRepo.count({ where: { lease_id: leaseId } });
+    if (attached === 0) {
+      throw new BadRequestException('Cannot activate lease without at least one tenant attached');
     }
 
-    lease.status = 'active';
-    await this.repo.save(lease);
-    return lease;
+    // Unit must be vacant at activation time
+    const unit = await this.unitRepo.findOne({ where: { id: lease.unit_id } });
+    if (!unit) throw new NotFoundException('Unit not found for this lease');
+    if (unit.status !== 'vacant') {
+      throw new ConflictException('Unit is not vacant; cannot activate lease');
+    }
+
+    // Optional: ensure no other ACTIVE lease exists for this unit
+    const overlappingActive = await this.repo.count({
+      where: { unit_id: lease.unit_id, status: 'active' as any },
+    });
+    if (overlappingActive > 0) {
+      throw new ConflictException('Another active lease already exists for this unit');
+    }
+
+    // Transaction: set lease -> active, unit -> occupied
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(Lease, { id: leaseId }, { status: 'active' as any });
+      await manager.update(Unit, { id: lease.unit_id }, { status: 'occupied' as any });
+    });
+
+    // Return fresh state (with attached tenants)
+    return this.findOne(leaseId);
+  }
+
+  /**
+   * End a lease on the provided date. If the provided date equals the lease's end_date,
+   * mark the unit as 'vacant'. Runs in a transaction.
+   */
+  async endLease(portfolioId: number, leaseId: number, endDate: string) {
+    // load lease and ensure it belongs to portfolio
+    const lease = await this.repo.findOne({ where: { id: leaseId } });
+    if (!lease) throw new NotFoundException('Lease not found');
+    if (lease.portfolio_id !== portfolioId) {
+      throw new BadRequestException('Lease does not belong to the provided portfolio');
+    }
+
+    // perform transaction: update lease end_date and status; if endDate equals lease.end_date (or we set it), update unit.status to 'vacant'
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(Lease, { id: leaseId }, { end_date: endDate, status: 'ended' as any });
+
+      // set unit to vacant if end_date equals provided date
+      // (we just set it, so always set unit to vacant)
+      await manager.update(Unit, { id: lease.unit_id }, { status: 'vacant' as any });
+    });
+
+    return this.findOne(leaseId);
   }
 }
-
-

@@ -19,8 +19,10 @@ export interface SuccessResponse<T> {
 export class TransformInterceptor<T> implements NestInterceptor<T, SuccessResponse<T>> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<SuccessResponse<T>> {
     const request = context.switchToHttp().getRequest();
-    const method = request.method;
-    const url = request.url;
+  const method = request.method;
+  // use path without query string for more robust matching
+  const url = request.url;
+  const path = url.split('?')[0];
     
     // Generate appropriate success message based on HTTP method and endpoint
     let message = 'Operation completed successfully';
@@ -45,8 +47,18 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
       } else {
         message = 'Data retrieved successfully';
       }
-    } else if (method === 'POST') {
-      if (url.includes('/auth/signup')) {
+    }
+    if (method === 'POST') {
+      // Lease-specific POST endpoints (check the path first with stricter rules)
+      if (/\/portfolios\/\d+\/leases\/\d+\/end/.test(path) || (path.includes('/leases') && path.includes('/end'))) {
+        message = 'Lease ended successfully';
+      } else if (path.includes('/leases') && path.includes('/tenants')) {
+        message = 'Tenants attached successfully';
+      } else if (path.includes('/leases') && path.includes('/activate')) {
+        message = 'Lease activated successfully';
+      } else if (/\/portfolios\/\d+\/units\/\d+\/leases/.test(path) || (path.includes('/portfolios') && path.includes('/units') && path.includes('/leases'))) {
+        message = 'Lease created successfully';
+      } else if (path.includes('/auth/signup')) {
         message = 'User registered successfully';
       } else if (url.includes('/auth/signin')) {
         message = 'User signed in successfully';
@@ -54,7 +66,8 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
         message = 'User signed out successfully';
       } else if (url.includes('/properties')) {
         message = 'Property created successfully';
-      } else if (url.includes('/portfolios')) {
+      } else if (url.includes('/portfolios') && !url.includes('/units') && !url.includes('/leases') && !url.includes('/end')) {
+        // only treat as portfolio-creation when the route is not acting on nested resources
         message = 'Portfolio created successfully';
       } else if (url.includes('/users')) {
         message = 'User created successfully';
