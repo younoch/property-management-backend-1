@@ -16,7 +16,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DB_SYNC=false
-      - DB_SSL=true
+      - DB_SSL=false
+      - RUN_MIGRATIONS_ON_BOOT=true
       - COOKIE_KEY=${COOKIE_KEY}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
     ports:
