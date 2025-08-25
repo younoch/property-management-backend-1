@@ -31,7 +31,7 @@ export class Invoice {
   @Column({ type: 'date' })
   due_date: string;
 
-  @Column({ type: 'varchar', default: 'open' })
+  @Column({ type: 'varchar', default: 'draft' })
   status: 'draft' | 'open' | 'partially_paid' | 'paid' | 'void';
 
   @Column({ type: 'numeric', precision: 12, scale: 2 })

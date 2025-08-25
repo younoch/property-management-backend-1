@@ -13,6 +13,7 @@ import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { LeaseCharge } from '../billing/lease-charge.entity';
 import { Invoice } from '../billing/invoice.entity';
 import { InvoiceItem } from '../billing/invoice-item.entity';
+import { PaymentApplication } from '../billing/payment-application.entity';
 import { Payment } from '../billing/payment.entity';
 import { MaintenanceRequest } from '../maintenance/maintenance-request.entity';
 import { WorkOrder } from '../maintenance/work-order.entity';
@@ -43,7 +44,8 @@ export const AppDataSource = new DataSource({
     LeaseCharge,
     Invoice,
     InvoiceItem,
-    Payment,
+  Payment,
+  PaymentApplication,
     MaintenanceRequest,
     WorkOrder,
     Document,

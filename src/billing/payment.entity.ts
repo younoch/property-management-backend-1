@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, OneToMany, DeleteDateColumn } from 'typeorm';
 import { Portfolio } from '../portfolios/portfolio.entity';
-import { Invoice } from './invoice.entity';
+import { Lease } from '../tenancy/lease.entity';
+import { PaymentApplication } from './payment-application.entity';
 
 @Entity()
 @Index(['portfolio_id'])
-@Index(['invoice_id'])
-@Index(['received_at'])
+@Index(['lease_id'])
 export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -17,27 +17,31 @@ export class Payment {
   @Column()
   portfolio_id: number;
 
-  @ManyToOne(() => Invoice, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'invoice_id' })
-  invoice: Invoice | null;
+  @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'lease_id' })
+  lease: Lease | null;
 
   @Column({ nullable: true })
-  invoice_id: number | null;
+  lease_id: number | null;
 
-  @Column({ type: 'timestamptz', default: () => 'now()' })
-  received_at: Date;
-
-  @Column({ type: 'varchar', nullable: true })
-  method: 'cash' | 'bank_transfer' | 'card' | 'ach' | 'mobile' | null;
-
+  // store as numeric string to match existing codebase conventions
   @Column({ type: 'numeric', precision: 12, scale: 2 })
   amount: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  reference: string | null;
+  @Column({ type: 'varchar', default: 'cash' })
+  method: 'cash' | 'bank' | 'mobile' | 'other';
 
-  @Column({ type: 'varchar', default: 'succeeded' })
-  status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+  @Column({ type: 'date' })
+  at: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  reference?: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string | null;
+
+  @OneToMany(() => PaymentApplication, (pa) => pa.payment)
+  applications: PaymentApplication[];
 
   @CreateDateColumn()
   created_at: Date;
