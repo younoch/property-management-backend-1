@@ -1,41 +1,49 @@
-# ---------- Stage 1: deps (pnpm only to speed up build) ----------
+# ---------- Stage 1: deps (install all deps incl dev for build) ----------
 FROM node:22-alpine AS deps
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN npm i -g pnpm && pnpm i --frozen-lockfile
+# If you don't commit package-lock.json, this still works
+COPY package*.json ./
+RUN npm ci
 
-# ---------- Stage 2: builder (runs nest build -> dist/main.js) ----------
+# ---------- Stage 2: builder (compile TS -> JS) ----------
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Bring node_modules from deps to have nest/tsc available
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# makes sure dist/main.js (not dist/src/main.js) is produced:
-# nest-cli.json -> { "sourceRoot": "src", "compilerOptions": { "outputPath": "dist" } }
-# tsconfig.build.json -> rootDir: "./src", outDir: "./dist"
-RUN pnpm run build
 
-# ---------- Stage 3: production (npm, prod deps only) ----------
+# Copy the rest of the source (ts, configs, assets)
+COPY . .
+
+# Ensure these files are in repo:
+# - nest-cli.json  -> { "sourceRoot": "src", "compilerOptions": { "outputPath": "dist" } }
+# - tsconfig.build.json -> rootDir: "./src", outDir: "./dist"
+# - tsconfig.json
+RUN npm run build
+
+# ---------- Stage 3: production (only prod deps + built dist) ----------
 FROM node:22-alpine AS production
 WORKDIR /app
+ENV NODE_ENV=production
 
-# non-root
-RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
+# Copy manifest and install ONLY prod deps
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# install only prod deps with npm (no package-lock required)
-COPY package.json ./
-RUN npm i --omit=dev
+# Copy compiled app
+COPY --from=builder /app/dist ./dist
 
-# copy compiled app
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-# optional healthcheck script if you use it
-COPY --chown=nestjs:nodejs healthcheck.js ./healthcheck.js
+# Optional: healthcheck script (only if you actually have this file)
+# COPY healthcheck.js ./healthcheck.js
 
+# Non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001 \
+  && mkdir -p logs && chown -R nestjs:nodejs logs
 USER nestjs
+
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
-
-CMD ["node", "dist/main.js"]
+# If you kept start:prod = "node dist/main", either works, but be explicit:
+# If you prefer to use the script:
+CMD ["npm", "run", "start:prod"]
