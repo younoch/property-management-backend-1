@@ -1,53 +1,41 @@
-# Dockerfile
-# Build stage
+# ---------- Build stage ----------
 FROM node:22-alpine AS builder
-
 WORKDIR /app
 
-# Copy package files
-COPY package*.json pnpm-lock.yaml ./
-
-# Install dependencies
+# install pnpm for build
 RUN npm install -g pnpm
+
+COPY package*.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY . .
-
-# Build the application
 RUN pnpm run build
 
-# Production stage
-FROM node:22-alpine AS production
+# debug: confirm dist exists
+RUN echo "---- ls dist ----" && ls -la dist
 
+# ---------- Production stage ----------
+FROM node:22-alpine AS production
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
+# create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
 
-# Copy package files
-COPY package*.json pnpm-lock.yaml ./
+COPY package*.json package-lock.json ./
+RUN npm install --omit=dev
 
-# Install only production dependencies
-RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile --prod
+# copy built app from builder
+COPY --from=builder --chown=nestjs:nodejs /app/dist/ ./dist/
 
-# Copy built application
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+# copy healthcheck if you need it
+COPY --chown=nestjs:nodejs healthcheck.js ./healthcheck.js
 
-# Create logs directory
 RUN mkdir -p logs && chown -R nestjs:nodejs logs
-
-# Switch to non-root user
 USER nestjs
 
-# Expose port (matching the application port)
 EXPOSE 8000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
 
-# Start the application
-CMD ["sh", "-lc", "node dist/main"]
+CMD ["node", "dist/main.js"]
