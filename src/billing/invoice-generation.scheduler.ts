@@ -4,8 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LeaseCharge } from './lease-charge.entity';
 import { Invoice } from './invoice.entity';
-import { InvoiceItem } from './invoice-item.entity';
-
 @Injectable()
 export class InvoiceGenerationScheduler {
   private readonly logger = new Logger(InvoiceGenerationScheduler.name);
@@ -13,7 +11,6 @@ export class InvoiceGenerationScheduler {
   constructor(
     @InjectRepository(LeaseCharge) private readonly chargeRepo: Repository<LeaseCharge>,
     @InjectRepository(Invoice) private readonly invoiceRepo: Repository<Invoice>,
-    @InjectRepository(InvoiceItem) private readonly itemRepo: Repository<InvoiceItem>,
   ) {}
 
   // Runs daily at 01:00 AM; generates invoices for charges that start today or are monthly and due this month
@@ -46,33 +43,30 @@ export class InvoiceGenerationScheduler {
         .getOne();
       if (existing) continue;
 
-      // Create invoice and line item based on charge
-      const subtotal = charge.amount as unknown as number;
+      // Create invoice with embedded items based on charge
+      const subtotal = parseFloat(charge.amount);
       const invoice = this.invoiceRepo.create({
         portfolio_id: charge.portfolio_id,
         lease_id: charge.lease_id,
         issue_date: issueDate,
         due_date: dueDate,
-        status: 'open' as any,
-        subtotal: subtotal as any,
-        tax: 0 as any,
-        total: subtotal as any,
-        balance: subtotal as any,
+        status: 'open',
+        subtotal: subtotal.toString(),
+        tax: '0',
+        total: subtotal.toString(),
+        balance: subtotal.toString(),
+        items: [{
+          name: charge.name,
+          qty: 1,
+          unit_price: subtotal,
+          amount: subtotal,
+        }]
       });
-      const savedInvoice = await this.invoiceRepo.save(invoice);
 
-      const item = this.itemRepo.create({
-        invoice_id: savedInvoice.id,
-        name: charge.name,
-        qty: 1 as any,
-        unit_price: charge.amount as any,
-        amount: charge.amount as any,
-      });
-      await this.itemRepo.save(item);
+      await this.invoiceRepo.save(invoice);
     }
 
     this.logger.log(`Monthly invoice generation completed for ${charges.length} charges`);
   }
 }
-
 

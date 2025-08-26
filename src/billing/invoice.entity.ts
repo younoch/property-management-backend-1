@@ -1,7 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
-import { InvoiceItem } from './invoice-item.entity';
+
+export interface InvoiceItem {
+  name: string;
+  qty: number;
+  unit_price: number;
+  amount: number;
+}
 
 @Entity()
 @Index(['portfolio_id'])
@@ -46,7 +52,7 @@ export class Invoice {
   @Column({ type: 'numeric', precision: 12, scale: 2 })
   balance: string;
 
-  @OneToMany(() => InvoiceItem, (item) => item.invoice)
+  @Column({ type: 'jsonb', default: [] })
   items: InvoiceItem[];
 
   @CreateDateColumn()
@@ -58,5 +64,3 @@ export class Invoice {
   @DeleteDateColumn()
   deleted_at: Date | null;
 }
-
-

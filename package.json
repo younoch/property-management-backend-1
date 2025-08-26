@@ -26,6 +26,8 @@
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
+    "reset-db:prod": "NODE_ENV=production ts-node scripts/reset-db.prod.ts",
+    "reset-db:prod:docker": "docker-compose -f docker-compose.prod.yml run --rm api npm run reset-db:prod",
     "generate:env": "node generate-env.js"
   },
   "dependencies": {
