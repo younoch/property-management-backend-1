@@ -6,11 +6,12 @@ import { config as loadEnv } from 'dotenv';
 
 // Load environment variables from .env.production if it exists
 loadEnv({ path: path.resolve(process.cwd(), '.env.production') });
+const DATABASE_URL = "postgresql://property_management_prod_user:UFdYYvhrmqg951EilaDpYgx0tOUq0dxX@dpg-d2b3s6ur433s739dv0qg-a/property_management_prod"
 
 // TypeORM configuration
 const dataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
+  url: DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/database/migrations/*{.ts,.js}'],
@@ -19,7 +20,7 @@ const dataSource = new DataSource({
 });
 
 async function resetProductionDatabase() {
-  if (!process.env.DATABASE_URL) {
+  if (!DATABASE_URL) {
     console.error('Error: DATABASE_URL environment variable is not set');
     process.exit(1);
   }
@@ -31,7 +32,7 @@ async function resetProductionDatabase() {
     await dataSource.initialize();
     
     // Get database name from URL
-    const dbUrl = new URL(process.env.DATABASE_URL);
+    const dbUrl = new URL(DATABASE_URL);
     const dbName = dbUrl.pathname.substring(1);
     const adminDbUrl = `${dbUrl.origin}/postgres`; // Connect to default postgres database
 
