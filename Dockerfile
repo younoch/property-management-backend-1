@@ -8,10 +8,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy the rest of the application
 COPY . .
 
 # Command to run the reset script and exit
-CMD ["sh", "-c", "node dist/main && exit 0"]
+CMD ["sh", "-c", "npm run reset-db:prod && exit 0"]
