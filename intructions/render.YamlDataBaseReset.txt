@@ -1,0 +1,39 @@
+# render.yaml
+services:
+  # Database reset service
+  - type: web
+    name: db-reset
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: property-management-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: property-management-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: property-management-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: property-management-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: property-management-db
+          property: database
+      - key: DB_SSL
+        value: "true"
+
+databases:
+  - name: property-management-db
+    plan: free
+    databaseName: property_management_prod
