@@ -27,7 +27,7 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "reset-db:prod:docker": "docker-compose -f docker-compose.prod.yml run --rm api npm run reset-db:prod",
-    "reset-db:prod": "ts-node scripts/reset-db.prod.ts",
+    "reset-db:prod": "ts-node -r tsconfig-paths/register scripts/reset-db.prod.ts",
     "generate:env": "node generate-env.js"
   },
   "dependencies": {
@@ -84,7 +84,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   },
   "jest": {
     "moduleFileExtensions": [

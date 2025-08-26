@@ -1,53 +1,55 @@
 // scripts/reset-db.prod.ts
 import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { config as loadEnv } from 'dotenv';
 
-// Load environment variables from .env.production if it exists
+// Load environment variables
 loadEnv({ path: path.resolve(process.cwd(), '.env.production') });
 
-// Use the internal Render database URL
-const DATABASE_URL = "postgresql://property_management_prod_user:UFdYYvhrmqg951EilaDpYgx0tOUq0dxX@dpg-d2b3s6ur433s739dv0qg-a/property_management_prod";
-
-// TypeORM configuration
+// Database configuration
 const dataSource = new DataSource({
   type: 'postgres',
-  url: DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Always use SSL in production
+  url: process.env.DATABASE_URL || "postgresql://property_management_prod_user:UFdYYvhrmqg951EilaDpYgx0tOUq0dxX@dpg-d2b3s6ur433s739dv0qg-a/property_management_prod",
+  ssl: { rejectUnauthorized: false },
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/database/migrations/*{.ts,.js}'],
-  migrationsRun: false,
-  logging: true,
 });
 
-async function resetProductionDatabase() {
+async function resetDatabase() {
+  const queryRunner = dataSource.createQueryRunner();
+  
   try {
-    console.log('Initializing production database connection...');
-    
-    // Initialize the data source
     await dataSource.initialize();
-    console.log('Connected to the database');
-    
-    // Drop all tables
-    console.log('Dropping all tables...');
-    await dataSource.dropDatabase();
-    console.log('All tables dropped');
-    
-    // Run migrations
-    console.log('Running migrations...');
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    // Get all user tables
+    const tables = await queryRunner.query(`
+      SELECT tablename 
+      FROM pg_tables 
+      WHERE schemaname = 'public'
+      AND tablename NOT LIKE 'pg_%'
+      AND tablename NOT LIKE 'sql_%'
+    `);
+
+    // Drop all user tables
+    await queryRunner.query(`
+      DROP TABLE IF EXISTS ${tables.map(t => `"${t.tablename}"`).join(',')} CASCADE;
+    `);
+
+    await queryRunner.commitTransaction();
     await dataSource.runMigrations();
-    console.log('Migrations completed successfully');
-    
-    // Close the connection
-    await dataSource.destroy();
-    console.log('Database reset completed successfully');
+    console.log('✅ Database reset and migrations completed!');
     
   } catch (error) {
+    await queryRunner.rollbackTransaction();
     console.error('❌ Error resetting database:');
     console.error(error);
     process.exit(1);
+  } finally {
+    await queryRunner.release();
+    await dataSource.destroy();
   }
 }
 
-resetProductionDatabase();
+resetDatabase();
