@@ -1,15 +1,19 @@
-import { Entity, Column, ManyToOne, PrimaryColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index, PrimaryColumn } from 'typeorm';
 import { Payment } from './payment.entity';
 import { Invoice } from './invoice.entity';
 
 @Entity()
 @Index(['invoice_id'])
 @Index(['payment_id'])
+@Index(['id'], { unique: true })
 export class PaymentApplication {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   payment_id: number;
 
-  @PrimaryColumn()
+  @Column()
   invoice_id: number;
 
   @ManyToOne(() => Payment, (p) => p.applications, { onDelete: 'CASCADE' })

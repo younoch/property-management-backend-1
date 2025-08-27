@@ -12,9 +12,14 @@ import { InvoicesService } from './invoices.service';
 import { LeaseChargesService } from './lease-charges.service';
 import { PaymentsService } from './payments.service';
 import { LeaseBillingController } from './leases-billing.controller';
+import { AuditLogModule } from '../common/audit-log.module';
+import { LeaseToInvoiceMapper } from './lease-to-invoice.mapper';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([LeaseCharge, Invoice, Payment, PaymentApplication])],
+  imports: [
+    TypeOrmModule.forFeature([LeaseCharge, Invoice, Payment, PaymentApplication]),
+    AuditLogModule,
+  ],
   controllers: [
     InvoicesController,
     InvoicesGlobalController,
@@ -28,8 +33,12 @@ import { LeaseBillingController } from './leases-billing.controller';
     InvoicesService,
     LeaseChargesService,
     PaymentsService,
+    LeaseToInvoiceMapper,
   ],
-  exports: [TypeOrmModule.forFeature([LeaseCharge, Invoice, Payment])],
+  exports: [
+    TypeOrmModule.forFeature([LeaseCharge, Invoice, Payment]),
+    LeaseToInvoiceMapper,
+  ],
 })
 export class BillingModule {}
 

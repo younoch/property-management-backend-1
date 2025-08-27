@@ -5,16 +5,28 @@ import { Portfolio } from './portfolio.entity';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
 import { FindPortfoliosDto } from './dto/find-portfolios.dto';
+import { TimezoneService } from '../common/services/timezone.service';
 
 @Injectable()
 export class PortfoliosService {
   constructor(
     @InjectRepository(Portfolio)
     private portfoliosRepository: Repository<Portfolio>,
+    private readonly timezoneService: TimezoneService,
   ) {}
 
   async create(createDto: CreatePortfolioDto): Promise<Portfolio> {
-    const portfolio = this.portfoliosRepository.create(createDto);
+    // Validate timezone if provided, or use default 'UTC'
+    const timezone = createDto.timezone || 'UTC';
+    if (!this.timezoneService.isValidTimezone(timezone)) {
+      throw new Error(`Invalid timezone: ${timezone}`);
+    }
+    
+    const portfolio = this.portfoliosRepository.create({
+      ...createDto,
+      timezone, // Ensure timezone is set
+    });
+    
     return await this.portfoliosRepository.save(portfolio);
   }
 

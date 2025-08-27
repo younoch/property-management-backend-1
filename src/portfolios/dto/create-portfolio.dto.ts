@@ -1,5 +1,6 @@
 import { IsString, IsNumber, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsValidTimezone } from '../../common/validators/valid-timezone.decorator';
 
 export class CreatePortfolioDto {
   @ApiProperty({ description: 'Portfolio name', example: 'Rental Portfolio A' })
@@ -26,6 +27,18 @@ export class CreatePortfolioDto {
   @IsString()
   @IsOptional()
   status?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'Time zone for the portfolio (e.g., America/New_York, Asia/Dhaka). Must be a valid IANA timezone.', 
+    example: 'UTC',
+    default: 'UTC' 
+  })
+  @IsString()
+  @IsOptional()
+  @IsValidTimezone({
+    message: 'Invalid timezone. Must be a valid IANA timezone (e.g., America/New_York, Asia/Dhaka)'
+  })
+  timezone?: string;
 }
 
 

@@ -39,6 +39,9 @@ export class Portfolio {
   @Column({ default: 'active' })
   status: string;
 
+  @Column({ default: 'UTC' })
+  timezone: string;
+
   @OneToMany(() => Property, (property) => property.portfolio)
   properties: Property[];
 

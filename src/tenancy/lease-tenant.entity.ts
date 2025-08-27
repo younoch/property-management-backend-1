@@ -1,9 +1,10 @@
 // src/tenancy/lease-tenant.entity.ts
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column, Index } from 'typeorm';
 import { Lease } from './lease.entity';
 import { Tenant } from './tenant.entity';
 
 @Entity()
+@Index(['lease_id', 'is_primary'], { unique: true, where: 'is_primary = true' })
 export class LeaseTenant {
   @PrimaryColumn()
   lease_id: number;
@@ -27,6 +28,18 @@ export class LeaseTenant {
 
   @DeleteDateColumn()
   deleted_at: Date | null;
+
+  @Column({ type: 'boolean', default: false })
+  is_primary: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  moved_in_date: string | null;
+
+  @Column({ type: 'date', nullable: true })
+  moved_out_date: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  relationship: string | null; // e.g., 'co-tenant', 'guarantor', 'occupant'
 }
 
 

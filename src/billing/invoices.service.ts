@@ -85,7 +85,7 @@ export class InvoicesService {
   }
 
   async findOne(id: number) {
-    const invoice = await this.repo.findOne({ where: { id }, relations: ['items'] });
+    const invoice = await this.repo.findOne({ where: { id } });
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;
   }

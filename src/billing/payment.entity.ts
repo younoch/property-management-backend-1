@@ -3,6 +3,8 @@ import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
 
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'ach' | 'mobile';
+
 @Entity()
 @Index(['portfolio_id'])
 @Index(['lease_id'])
@@ -28,8 +30,15 @@ export class Payment {
   @Column({ type: 'numeric', precision: 12, scale: 2 })
   amount: string;
 
-  @Column({ type: 'varchar', default: 'cash' })
-  method: 'cash' | 'bank' | 'mobile' | 'other';
+  @Column({ type: 'numeric', precision: 12, scale: 2, default: '0.00' })
+  unapplied_amount: string;
+
+  @Column({ 
+    type: 'enum',
+    enum: ['cash', 'bank_transfer', 'card', 'ach', 'mobile'],
+    default: 'cash' 
+  })
+  method: PaymentMethod;
 
   @Column({ type: 'date' })
   at: string;
