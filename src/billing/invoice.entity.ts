@@ -155,50 +155,70 @@ export class Invoice {
   })
   items: InvoiceItem[];
 
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
+  @Column({
+    type: 'numeric',
+    precision: 12,
     scale: 2,
-    default: '0.00',
-    comment: 'Subtotal before tax (sum of all line items)'
+    default: 0,
+    comment: 'Subtotal before tax (sum of all line items)',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
   })
-  subtotal: string;
+  subtotal: number;
 
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
-    scale: 2, 
-    default: '0.00',
-    comment: 'Total tax amount'
-  })
-  tax: string;
-
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
+  @Column({
+    type: 'numeric',
+    precision: 12,
     scale: 2,
-    default: '0.00',
-    comment: 'Total amount including tax'
+    default: 0,
+    comment: 'Total tax amount',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
   })
-  total: string;
+  tax: number;
 
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
-    scale: 2, 
-    default: '0.00',
-    comment: 'Remaining balance to be paid'
-  })
-  balance: string;
-
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
+  @Column({
+    type: 'numeric',
+    precision: 12,
     scale: 2,
-    default: '0.00',
-    comment: 'Total amount paid so far'
+    default: 0,
+    comment: 'Total amount including tax',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
   })
-  amount_paid: string;
+  total: number;
+
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Remaining balance to be paid',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
+  })
+  balance: number;
+
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Total amount paid so far',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
+  })
+  amount_paid: number;
 
   @Column({ 
     type: 'varchar', 
@@ -253,7 +273,7 @@ export class Invoice {
     }
 
     // Ensure total is not negative (credits will be handled separately)
-    if (this.total !== undefined && parseFloat(this.total) < 0) {
+    if (this.total !== undefined && this.total < 0) {
       throw new BadRequestException('Invoice total cannot be negative. Use credits for overpayments.');
     }
 
@@ -277,9 +297,12 @@ export class Invoice {
     }
   }
 
-  // Helper method to convert string amounts to numbers safely
-  private toNumber(amount: string | number): number {
-    return typeof amount === 'string' ? parseFloat(amount) : amount;
+  // Helper method to handle number values safely
+  private toNumber(value: string | number): number {
+    if (typeof value === 'number') return value;
+    if (!value) return 0;
+    const num = parseFloat(value.toString().replace(/[^0-9.-]+/g, ''));
+    return isNaN(num) ? 0 : num;
   }
 
   // Calculate the total paid amount from payment applications
@@ -291,46 +314,53 @@ export class Invoice {
     });
     
     return applications.reduce(
-      (sum: number, app: PaymentApplication) => sum + decimal(parseFloat(app.amount)), 
+      (sum: number, app: PaymentApplication) => sum + this.toNumber(app.amount), 
       0
     );
   }
 
   // Recalculate all derived fields
   async recalculate(entityManager: any): Promise<void> {
-    if (this.status === 'void') return; // Void invoices are immutable
+    if (!this.items?.length) {
+      this.subtotal = 0;
+      this.tax = 0;
+      this.total = 0;
+      this.balance = 0;
+      this.amount_paid = await this.getPaidAmount(entityManager);
+      return;
+    }
 
     // Calculate subtotal from items
-    this.subtotal = this.items.reduce(
-      (sum, item) => sum + decimal(item.amount),
-      0
-    ).toString();
+    this.subtotal = parseFloat(this.items
+      .reduce((sum, item) => sum + this.toNumber(item.amount), 0)
+      .toFixed(2));
 
-    // Calculate total (subtotal + tax)
-    this.total = (decimal(parseFloat(this.subtotal)) + decimal(parseFloat(this.tax))).toString();
-
-    // Get paid amount and update balance
-    const paid = await this.getPaidAmount(entityManager);
-    this.amount_paid = paid.toString();
-    this.balance = Math.max(0, decimal(parseFloat(this.total) - paid)).toString();
-
-    // Update status based on balance
+    // Calculate tax (simplified - in real app, this would use tax rules)
+    this.tax = 0;
+    
+    // Calculate total
+    this.total = parseFloat((this.subtotal + this.tax).toFixed(2));
+    
+    // Get paid amount
+    this.amount_paid = await this.getPaidAmount(entityManager);
+    
+    // Calculate balance
+    this.balance = parseFloat((this.total - this.amount_paid).toFixed(2));
+    
+    // Update status based on new values
     await this.updateStatus();
   }
 
   // Update invoice status based on current state
   async updateStatus(): Promise<void> {
-    if (this.status === 'void') return; // Void invoices are immutable
+    if (this.status === 'void') return;
     
-    const total = parseFloat(this.total);
-    const paid = parseFloat(this.total) - parseFloat(this.balance);
-    
-    if (paid >= total) {
+    if (this.balance <= 0 && this.total > 0) {
       this.status = 'paid';
+    } else if (this.amount_paid > 0 && this.balance > 0) {
+      this.status = 'partially_paid';
     } else if (this.is_overdue) {
       this.status = 'overdue';
-    } else if (paid > 0) {
-      this.status = 'partially_paid';
     } else if (this.is_issued) {
       this.status = 'open';
     } else {
@@ -340,34 +370,30 @@ export class Invoice {
 
   // Issue the invoice
   async issue(entityManager: any): Promise<void> {
-    if (this.status !== 'draft') {
-      throw new Error('Only draft invoices can be issued');
+    if (this.is_issued) return;
+    
+    // Set issued date to now if not set
+    if (!this.issue_date) {
+      this.issue_date = new Date().toISOString().split('T')[0];
     }
     
-    if (!this.items || this.items.length === 0) {
-      throw new Error('Cannot issue an invoice with no line items');
-    }
-    
-    // Set issue date to today if not already set
-    const today = new Date().toISOString().split('T')[0];
-    this.issue_date = this.issue_date || today;
-    
-    // Set default due date if not provided (30 days from issue date)
+    // Set due date if not set (issue date + 30 days by default)
     if (!this.due_date) {
-      const dueDate = addDays(parseISO(this.issue_date), 30);
-      this.due_date = format(dueDate, 'yyyy-MM-dd');
+      const dueDate = new Date(this.issue_date);
+      dueDate.setDate(dueDate.getDate() + 30);
+      this.due_date = dueDate.toISOString().split('T')[0];
     }
     
-    // Mark as issued and set initial status
+    // Generate invoice number if not set (format: INV-YYYYMMDD-XXXX)
+    if (!this.invoice_number) {
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const random = Math.floor(1000 + Math.random() * 9000);
+      this.invoice_number = `INV-${date}-${random}`;
+    }
+    
+    // Set issued flag and update status
     this.is_issued = true;
-    
-    // Recalculate totals and update status
     await this.recalculate(entityManager);
-    
-    // Ensure we have a valid status after recalculation
-    if (!this.status) {
-      this.status = 'open';
-    }
     
     // Generate invoice number if not set
     if (!this.invoice_number) {

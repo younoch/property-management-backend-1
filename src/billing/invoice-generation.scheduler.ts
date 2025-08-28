@@ -43,24 +43,40 @@ export class InvoiceGenerationScheduler {
         .getOne();
       if (existing) continue;
 
-      // Create invoice with embedded items based on charge
-      const subtotal = parseFloat(charge.amount);
+      // Create invoice items based on charge
+      const items = [{
+        id: crypto.randomUUID(),
+        type: 'rent' as const,
+        name: charge.name,
+        description: `Monthly charge for ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+        qty: 1,
+        unit_price: charge.amount,
+        amount: charge.amount,
+        tax_rate: 0,
+        tax_amount: 0,
+        period_start: issueDate,
+        period_end: monthEnd.toISOString().slice(0, 10)
+      }];
+
+      // Calculate totals from items
+      const subtotal = parseFloat(items.reduce((sum, item) => sum + item.amount, 0).toFixed(2));
+      const tax = 0; // Assuming no tax for now
+      const total = parseFloat((subtotal + tax).toFixed(2));
+
       const invoice = this.invoiceRepo.create({
-        portfolio_id: charge.portfolio_id,
-        lease_id: charge.lease_id,
+        portfolio: { id: charge.portfolio_id },
+        lease: { id: charge.lease_id },
         issue_date: issueDate,
         due_date: dueDate,
         status: 'open',
-        subtotal: subtotal.toString(),
-        tax: '0',
-        total: subtotal.toString(),
-        balance: subtotal.toString(),
-        items: [{
-          name: charge.name,
-          qty: 1,
-          unit_price: subtotal,
-          amount: subtotal,
-        }]
+        period_start: issueDate,
+        period_end: monthEnd.toISOString().slice(0, 10),
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
+        balance: total,
+        items: items,
+        is_issued: true
       });
 
       await this.invoiceRepo.save(invoice);

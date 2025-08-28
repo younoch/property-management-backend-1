@@ -26,12 +26,28 @@ export class Payment {
   @Column({ nullable: true })
   lease_id: number | null;
 
-  // store as numeric string to match existing codebase conventions
-  @Column({ type: 'numeric', precision: 12, scale: 2 })
-  amount: string;
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
+  })
+  amount: number;
 
-  @Column({ type: 'numeric', precision: 12, scale: 2, default: '0.00' })
-  unapplied_amount: string;
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
+  })
+  unapplied_amount: number;
 
   @Column({ 
     type: 'enum',

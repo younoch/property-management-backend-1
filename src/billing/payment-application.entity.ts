@@ -24,8 +24,16 @@ export class PaymentApplication {
   @JoinColumn({ name: 'invoice_id' })
   invoice: Invoice;
 
-  @Column({ type: 'numeric', precision: 12, scale: 2 })
-  amount: string;
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value || '0')
+    }
+  })
+  amount: number;
 
   @CreateDateColumn()
   created_at: Date;
