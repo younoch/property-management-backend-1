@@ -4,14 +4,17 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
+import { DataSource, Repository, In, Not } from 'typeorm';
 
 import { Lease } from '../tenancy/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { Tenant } from '../tenancy/tenant.entity';
-import { Unit } from '../properties/unit.entity'; // ⬅️ adjust path if different
+import { Unit } from '../properties/unit.entity';
+type UnitStatus = 'vacant' | 'occupied' | 'maintenance';
+import { Portfolio } from '../portfolios/portfolio.entity';
 
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { UpdateLeaseDto } from './dto/update-lease.dto';
