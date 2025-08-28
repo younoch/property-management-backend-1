@@ -30,6 +30,9 @@ export const AppDataSource = new DataSource({
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
   synchronize: false, // Disable synchronize for migrations
+  migrationsRun: false, // We'll run migrations manually
+  migrationsTableName: 'migrations',
+  migrations: ['src/database/migrations/*.ts'],
   logging: true,
   entities: [
     User,
@@ -49,7 +52,6 @@ export const AppDataSource = new DataSource({
     Document,
     Notification,
   ],
-  migrations: ['src/database/migrations/*.ts'],
   subscribers: [],
   ssl: ((process.env.NODE_ENV === 'production') && (configService.get<string>('DB_SSL') === 'true'))
     ? { rejectUnauthorized: false }

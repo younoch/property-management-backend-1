@@ -33,9 +33,11 @@ export class LeasesService {
     private readonly dataSource: DataSource,         // ⬅️ add
   ) {}
 
-  create(dto: CreateLeaseDto) {
+  async create(dto: CreateLeaseDto): Promise<Lease> {
     const lease = this.repo.create(dto as any);
-    return this.repo.save(lease);
+    const result = await this.repo.save(lease);
+    // Since we're saving a single entity, we can safely cast the result to Lease
+    return result as unknown as Lease;
   }
 
   findAll() {
@@ -46,7 +48,7 @@ export class LeasesService {
     return this.repo.find({ where: { portfolio_id: portfolioId } });
   }
 
-  findByUnit(portfolioId: number, unitId: number) {
+  async findByUnit(portfolioId: number, unitId: number): Promise<Lease[]> {
     return this.repo.find({ where: { portfolio_id: portfolioId, unit_id: unitId } });
   }
 

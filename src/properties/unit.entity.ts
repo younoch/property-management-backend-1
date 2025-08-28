@@ -30,14 +30,23 @@ export class Unit {
   @Column({ type: 'int', nullable: true })
   bedrooms: number | null;
 
-  @Column({ type: 'numeric', precision: 3, scale: 1, nullable: true })
-  bathrooms: string | null;
+  @Column({ type: 'int', nullable: true })
+  bathrooms: number | null;
 
   @Column({ type: 'int', nullable: true })
   sqft: number | null;
 
-  @Column({ type: 'numeric', precision: 12, scale: 2, nullable: true })
-  market_rent: string | null;
+  @Column({ 
+    type: 'numeric', 
+    precision: 12, 
+    scale: 2, 
+    nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => value ? parseFloat(value) : null
+    }
+  })
+  market_rent: number | null;
 
   @Column({ type: 'varchar', default: 'vacant' })
   status: 'vacant' | 'occupied' | 'maintenance';

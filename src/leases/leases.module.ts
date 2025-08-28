@@ -7,11 +7,15 @@ import { Lease } from '../tenancy/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { Tenant } from '../tenancy/tenant.entity';
 import { Unit } from 'src/properties/unit.entity';
+import { LeaseMapper } from '../tenancy/mappers/lease.mapper';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Lease, LeaseTenant, Tenant, Unit])],
   controllers: [LeasesController, LeasesGlobalController, PortfoliosLeasesController],
-  providers: [LeasesService],
+  providers: [
+    LeasesService,
+    LeaseMapper
+  ],
 })
 export class LeasesModule {}
 

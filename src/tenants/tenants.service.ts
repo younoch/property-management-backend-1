@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Tenant } from '../tenancy/tenant.entity';
+import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 
@@ -11,6 +12,8 @@ export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private readonly repo: Repository<Tenant>,
+    @InjectRepository(LeaseTenant)
+    private readonly leaseTenantRepo: Repository<LeaseTenant>,
   ) {}
 
   create(dto: CreateTenantDto) {
@@ -82,6 +85,11 @@ export class TenantsService {
 
   async remove(id: number) {
     const tenant = await this.findOne(id);
+    
+    // First, delete all related lease_tenant records
+    await this.leaseTenantRepo.delete({ tenant_id: id });
+    
+    // Then delete the tenant
     await this.repo.remove(tenant);
     return { success: true };
   }

@@ -9,8 +9,8 @@ export class AddBillingPeriodUniqueness1724772100000 implements MigrationInterfa
       WHERE 
         i1.id > i2.id AND 
         i1.lease_id = i2.lease_id AND 
-        i1.billing_period_start = i2.billing_period_start AND
-        i1.billing_period_end = i2.billing_period_end;
+        i1.period_start = i2.period_start AND
+        i1.period_end = i2.period_end;
     `);
 
     // Create a unique index on lease_id and billing period
@@ -18,7 +18,7 @@ export class AddBillingPeriodUniqueness1724772100000 implements MigrationInterfa
       'invoice',
       new TableIndex({
         name: 'IDX_invoice_lease_billing_period',
-        columnNames: ['lease_id', 'billing_period_start', 'billing_period_end'],
+        columnNames: ['lease_id', 'period_start', 'period_end'],
         isUnique: true,
       }),
     );

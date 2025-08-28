@@ -19,11 +19,15 @@ export class PaymentsService {
   ) {}
 
   async create(dto: CreatePaymentDto) {
+    if (!dto.portfolio_id) {
+      throw new Error('Portfolio ID is required');
+    }
+    
     // Create payment with proper type casting
     const paymentData: Partial<Payment> = {
-      portfolio: { id: dto.portfolio_id } as any,
-      lease: dto.lease_id ? { id: dto.lease_id } as any : null,
-      amount: dto.amount.toString(),
+      portfolio: { id: Number(dto.portfolio_id) } as any,
+      lease: dto.lease_id ? { id: Number(dto.lease_id) } as any : null,
+      amount: parseFloat(dto.amount.toString()),
       method: dto.method || 'cash',
       reference: dto.reference || null,
       at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
@@ -82,12 +86,17 @@ export class PaymentsService {
       if (!lease) {
         throw new NotFoundException(`Lease with ID ${leaseId} not found`);
       }
+      
+      // Ensure portfolio_id is properly set
+      if (!lease.portfolio_id && lease.unit) {
+        lease.portfolio_id = lease.unit.portfolio_id;
+      }
 
       // Create payment with proper type casting
       const paymentData: Partial<Payment> = {
         portfolio: { id: lease.portfolio_id } as any,
         lease: { id: leaseId } as any,
-        amount: dto.amount.toString(),
+        amount: parseFloat(dto.amount.toString()),
         method: dto.method || 'cash',
         reference: dto.reference || null,
         at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
@@ -116,6 +125,7 @@ export class PaymentsService {
       }
       
       let remaining = parseFloat(dto.amount.toString());
+      const paymentAmount = remaining; // Store the original payment amount
 
       // Load open/overdue invoices for this lease, ordered by due date
       const invoices = await invoiceRepo.find({
@@ -130,17 +140,17 @@ export class PaymentsService {
       for (const invoice of invoices) {
         if (remaining <= 0) break;
 
-        const invoiceBalance = parseFloat(invoice.balance);
+        const invoiceBalance = invoice.balance;
         const amountToApply = Math.min(remaining, invoiceBalance);
         
         if (amountToApply > 0) {
           const paymentApplication = paymentAppRepo.create({
             payment_id: savedPayment.id,
             invoice_id: invoice.id,
-            amount: amountToApply.toString()
+            amount: amountToApply
           });
           
-          const savedApp = await transactionalEntityManager.save(paymentApplication);
+          const savedApp = await transactionalEntityManager.save(PaymentApplication, paymentApplication);
           remaining = parseFloat((remaining - amountToApply).toFixed(2));
           
           // Recalculate invoice and update status
