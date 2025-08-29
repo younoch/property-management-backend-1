@@ -8,10 +8,10 @@ export class CreatePaymentDto {
   @IsInt()
   portfolio_id?: number;
 
-  @ApiProperty({ example: 1, required: false })
-  @IsOptional()
+  @ApiProperty({ example: 1, description: 'ID of the lease this payment is for' })
   @IsInt()
-  lease_id?: number;
+  @IsNotEmpty()
+  lease_id: number;
 
   @ApiProperty({ example: 1, description: 'ID of the user creating the payment' })
   @IsInt()

@@ -23,43 +23,108 @@ export class PaymentsService {
       throw new Error('Portfolio ID is required');
     }
     
-    // Create payment with proper type casting
-    const paymentData: Partial<Payment> = {
-      portfolio: { id: Number(dto.portfolio_id) } as any,
-      lease: dto.lease_id ? { id: Number(dto.lease_id) } as any : null,
-      amount: parseFloat(dto.amount.toString()),
-      method: dto.method || 'cash',
-      reference: dto.reference || null,
-      at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
-      notes: dto.notes || null
-    };
-    
-    const payment = this.repo.create(paymentData);
-    const savedPayment = await this.repo.save(payment);
-    
-    // Log payment creation
-    if (dto.user_id) {
+    return this.dataSource.transaction(async (transactionalEntityManager) => {
+      const invoiceRepo = transactionalEntityManager.getRepository(Invoice);
+      const paymentAppRepo = transactionalEntityManager.getRepository(PaymentApplication);
+      const leaseRepo = transactionalEntityManager.getRepository(Lease);
+      const paymentRepo = transactionalEntityManager.getRepository(Payment);
+
+      // Create payment with proper type casting
+      const paymentData: Partial<Payment> = {
+        portfolio: { id: Number(dto.portfolio_id) } as any,
+        lease: { id: Number(dto.lease_id) } as any,
+        lease_id: Number(dto.lease_id),
+        portfolio_id: Number(dto.portfolio_id),
+        amount: parseFloat(dto.amount.toString()),
+        method: dto.method || 'cash',
+        reference: dto.reference || null,
+        at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
+        notes: dto.notes || null
+      };
+      
+      const payment = this.repo.create(paymentData);
+      const savedPayment = await transactionalEntityManager.save(payment);
+      
+      // Initialize metadata for audit log
       const metadata: Record<string, any> = {
         amount: savedPayment.amount,
         method: savedPayment.method,
-        reference: savedPayment.reference
+        reference: savedPayment.reference,
+        leaseId: dto.lease_id
       };
       
-      if (dto.lease_id) metadata.leaseId = dto.lease_id;
-      if (dto.invoice_id) metadata.invoiceId = dto.invoice_id;
-      
-      await this.auditLogService.log({
-        entityType: 'Payment',
-        entityId: savedPayment.id,
-        action: AuditAction.CREATE,
-        userId: dto.user_id,
-        portfolioId: dto.portfolio_id,
-        metadata,
-        description: `Created payment #${savedPayment.id}`
+      // Apply payment to invoices for the lease
+      const lease = await leaseRepo.findOne({ 
+        where: { id: dto.lease_id },
+        relations: ['unit']
       });
-    }
-    
-    return savedPayment;
+      
+      if (lease) {
+        let remaining = parseFloat(dto.amount.toString());
+        
+        // Load open/overdue invoices for this lease, ordered by due date
+        const invoices = await invoiceRepo.find({
+          where: { 
+            lease_id: dto.lease_id,
+            status: In(['open', 'overdue', 'partially_paid'])
+          },
+          order: { due_date: 'ASC' }
+        });
+
+        // Apply payment to invoices in chronological order
+        for (const invoice of invoices) {
+          if (remaining <= 0) break;
+
+          const invoiceBalance = invoice.balance;
+          const amountToApply = Math.min(remaining, invoiceBalance);
+          
+          if (amountToApply > 0) {
+            const paymentApplication = paymentAppRepo.create({
+              payment_id: savedPayment.id,
+              invoice_id: invoice.id,
+              amount: amountToApply
+            });
+            
+            await transactionalEntityManager.save(paymentApplication);
+            
+            // Recalculate invoice to update all financials and status
+            await invoice.recalculate(transactionalEntityManager);
+            await transactionalEntityManager.save(invoice);
+            
+            remaining = parseFloat((remaining - amountToApply).toFixed(2));
+          }
+        }
+        
+        // Update remaining amount in payment
+        savedPayment.unapplied_amount = remaining;
+        await transactionalEntityManager.save(Payment, savedPayment);
+      }
+      
+      // Log the payment creation
+      if (dto.user_id) {
+        if (dto.invoice_id) {
+          metadata.invoiceId = dto.invoice_id;
+        }
+        
+        await this.auditLogService.log({
+          entityType: 'Payment',
+          entityId: savedPayment.id,
+          action: AuditAction.CREATE,
+          userId: dto.user_id,
+          portfolioId: dto.portfolio_id,
+          metadata,
+          description: `Created payment #${savedPayment.id}`
+        });
+      }
+      
+      // Reload the payment with all relations before returning
+      const finalPayment = await transactionalEntityManager.findOne(Payment, {
+        where: { id: savedPayment.id },
+        relations: ['portfolio', 'lease', 'applications', 'applications.invoice']
+      });
+      
+      return finalPayment || savedPayment;
+    });
   }
 
   findAll() {
@@ -191,12 +256,17 @@ export class PaymentsService {
         throw new Error('Failed to load updated payment');
       }
 
-      return updatedPayment;
+      return updatedPayment; // Return the updated payment with lease relationship
     });
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.repo.find({ where: { portfolio_id: portfolioId } });
+  async findByPortfolio(portfolioId: number) {
+    return this.repo.find({ 
+      where: { 
+        portfolio: { id: portfolioId } 
+      },
+      relations: ['portfolio', 'lease']
+    });
   }
 
   async findOne(id: number) {

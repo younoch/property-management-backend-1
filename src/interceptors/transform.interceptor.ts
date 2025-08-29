@@ -66,6 +66,8 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
         message = 'User signed out successfully';
       } else if (url.includes('/properties')) {
         message = 'Property created successfully';
+      } else if (url.includes('/portfolios') && url.includes('/payments')) {
+        message = 'Payment created successfully';
       } else if (url.includes('/portfolios') && !url.includes('/units') && !url.includes('/leases') && !url.includes('/end')) {
         // only treat as portfolio-creation when the route is not acting on nested resources
         message = 'Portfolio created successfully';

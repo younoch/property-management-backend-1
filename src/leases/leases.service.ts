@@ -64,7 +64,8 @@ export class LeasesService {
       where: { lease_id: id },
       relations: ['tenant'],
     });
-    (lease as any).leaseTenants = leaseTenants;
+    // Use the same property name that's expected by the mapper (lease_tenants)
+    (lease as any).lease_tenants = leaseTenants;
 
     return lease;
   }

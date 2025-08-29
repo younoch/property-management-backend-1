@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, OneToMany, DeleteDateColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
@@ -19,12 +20,13 @@ export class Payment {
   @Column()
   portfolio_id: number;
 
-  @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
+  @ManyToOne(() => Lease, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'lease_id' })
-  lease: Lease | null;
+  lease: Lease;
 
-  @Column({ nullable: true })
-  lease_id: number | null;
+  @Column()
+  @ApiProperty({ example: 1, description: 'ID of the associated lease' })
+  lease_id: number;
 
   @Column({
     type: 'numeric',
