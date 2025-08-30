@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Invoice } from './invoice.entity';
+import { DataSource, Not, Repository } from 'typeorm';
+import { format, parseISO } from 'date-fns';
+import { Invoice, InvoiceItemType } from './invoice.entity';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { DataSource } from 'typeorm';
 import { Lease } from '../tenancy/lease.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class InvoicesService {
@@ -20,8 +21,12 @@ export class InvoicesService {
     return this.repo.save(invoice);
   }
 
-  findAll() {
-    return this.repo.find();
+  findAll(billingMonth?: string) {
+    const where: any = {};
+    if (billingMonth) {
+      where.billing_month = billingMonth;
+    }
+    return this.repo.find({ where });
   }
 
   findByPortfolio(portfolioId: number) {
@@ -32,7 +37,65 @@ export class InvoicesService {
     return this.repo.find({ where: { lease_id: leaseId } });
   }
 
-  async generateNextForLease(leaseId: number) {
+  /**
+   * Find invoices by lease ID and billing month
+   * @param portfolioId - ID of the portfolio
+   * @param leaseId - ID of the lease
+   * @param billingMonth - Billing month in YYYY-MM format
+   * @returns Array of invoices matching the criteria
+   */
+  async findByLeaseAndMonth(portfolioId: number, leaseId: number, billingMonth: string) {
+    // Validate billing month format (YYYY-MM)
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {
+      throw new BadRequestException('Invalid billing month format. Use YYYY-MM');
+    }
+
+    return this.repo.find({
+      where: {
+        portfolio_id: portfolioId,
+        lease_id: leaseId,
+        billing_month: billingMonth,
+        status: Not('void') // Exclude voided invoices
+      },
+      order: {
+        created_at: 'DESC' // Get the most recent first
+      }
+    });
+  }
+
+  /**
+   * Generates the next invoice for a lease
+   * @param leaseId - ID of the lease
+   * @param options - Generation options
+   * @param options.force - Force creation even if invoice exists for the period
+   * @param options.additionalCharges - Additional charges to include in the invoice
+   * @param options.billingDate - Optional billing date (defaults to current date)
+   * @returns Created or updated invoice
+   */
+  async generateNextForLease(
+    leaseId: number, 
+    options: { 
+      force?: boolean; 
+      additionalCharges?: Array<{
+        id: string;
+        type: InvoiceItemType;
+        name: string;
+        description?: string;
+        amount: number;
+        qty?: number;
+        unit_price?: number;
+        period_start?: string;
+        period_end?: string;
+      }>;
+      billingDate?: Date;
+    } = {}
+  ) {
+    const { 
+      force = false, 
+      additionalCharges = [],
+      billingDate = new Date()
+    } = options;
+
     // Get lease with relations
     const leaseRepo = this.dataSource.getRepository(Lease);
     const lease = await leaseRepo.findOne({ 
@@ -41,16 +104,66 @@ export class InvoicesService {
     });
     if (!lease) throw new NotFoundException('Lease not found');
 
-    // Determine period for next invoice
-    const existing = await this.repo.find({ 
-      where: { lease_id: leaseId }, 
-      order: { issue_date: 'DESC' }, 
-      take: 1 
+    // Format billing month as YYYY-MM
+    const billingMonth = format(billingDate, 'yyyy-MM');
+    
+    // Check for existing invoice for this billing month
+    const existingInvoice = await this.repo.findOne({
+      where: {
+        lease_id: leaseId,
+        billing_month: billingMonth,
+        status: Not('void')
+      }
+    });
+
+    // Handle existing invoice
+    if (existingInvoice && !force) {
+      if (additionalCharges.length === 0) {
+        throw new BadRequestException(
+          `An invoice for ${format(parseISO(`${billingMonth}-01`), 'MMMM yyyy')} already exists. ` +
+          'To add additional charges, include them in the request or use the force flag to override.'
+        );
+      }
+      
+      // Add additional charges to existing invoice
+      const updatedItems = [...(existingInvoice.items || [])];
+      
+      // Add additional charges with generated IDs if not provided
+      for (const charge of additionalCharges) {
+        updatedItems.push({
+          id: charge.id || uuidv4(),
+          type: charge.type,
+          name: charge.name,
+          description: charge.description,
+          amount: charge.amount,
+          qty: charge.qty || 1,
+          unit_price: charge.unit_price || charge.amount,
+          period_start: charge.period_start,
+          period_end: charge.period_end
+        });
+      }
+      
+      const subtotal = updatedItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+      existingInvoice.items = updatedItems;
+      existingInvoice.subtotal = subtotal;
+      existingInvoice.total = subtotal + (existingInvoice.tax || 0);
+      existingInvoice.balance = existingInvoice.total - (existingInvoice.amount_paid || 0);
+      
+      return this.repo.save(existingInvoice);
+    }
+
+    // Determine next invoice date based on lease start date or last invoice
+    let nextDate = new Date(lease.start_date);
+    const lastInvoice = await this.repo.findOne({
+      where: { 
+        lease_id: leaseId,
+        status: Not('void')
+      },
+      order: { issue_date: 'DESC' },
     });
     
-    let nextDate = new Date(lease.start_date);
-    if (existing && existing.length > 0) {
-      nextDate = new Date(existing[0].issue_date);
+    if (lastInvoice) {
+      nextDate = new Date(lastInvoice.issue_date);
       nextDate.setMonth(nextDate.getMonth() + 1);
     }
 
@@ -84,9 +197,9 @@ export class InvoicesService {
     const dueDate = new Date(nextDate);
     dueDate.setDate(lease.billing_day || dueDate.getDate());
 
-    // Create invoice items
+    // Create invoice items starting with rent
     const items: any[] = [{
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       type: 'rent',
       name: isProrated ? 'Prorated Rent' : 'Monthly Rent',
       description: isProrated 
@@ -101,7 +214,7 @@ export class InvoicesService {
 
     // Add deposit as a separate line item for the first invoice
     const depositAmount = parseFloat(lease.deposit);
-    const isFirstInvoice = !existing || existing.length === 0;
+    const isFirstInvoice = !lastInvoice;
     
     if (isFirstInvoice && depositAmount > 0) {
       items.push({
@@ -122,14 +235,15 @@ export class InvoicesService {
     const tax = 0; // Assuming no tax for now
     const total = parseFloat((subtotal + tax).toFixed(2));
 
-    // Create the invoice
+    // Create the invoice with billing_month
     const invoice = this.repo.create({
       portfolio: { id: lease.portfolio_id },
       lease: { id: lease.id },
       issue_date: nextDate.toISOString().slice(0, 10),
       due_date: dueDate.toISOString().slice(0, 10),
+      billing_month: billingMonth,
       period_start: nextDate.toISOString().slice(0, 10),
-      period_end: new Date(y, nextDate.getMonth() + 1, 0).toISOString().slice(0, 10),
+      period_end: new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).toISOString().slice(0, 10),
       status: 'open',
       items,
       subtotal: subtotal,

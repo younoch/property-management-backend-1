@@ -20,7 +20,7 @@ export class Payment {
   @Column()
   portfolio_id: number;
 
-  @ManyToOne(() => Lease, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lease_id' })
   lease: Lease;
 

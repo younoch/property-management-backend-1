@@ -13,6 +13,7 @@ import {
   AfterLoad,
   Like
 } from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
@@ -60,6 +61,7 @@ export interface InvoiceItem {
 @Index(['lease_id'])
 @Index(['due_date'])
 @Index(['status', 'due_date']) // For faster status-based queries
+@Index(['lease_id', 'billing_month'], { unique: true, where: "status != 'void'" }) // Prevent duplicate invoices for same lease and month
 export class Invoice {
   @PrimaryGeneratedColumn()
   id: number;
@@ -106,25 +108,58 @@ export class Invoice {
   })
   invoice_number: string | null;
 
+  @ApiProperty({
+    example: '2025-09-01',
+    description: 'Start date of the billing period (ISO format)',
+    format: 'date',
+    required: true
+  })
   @Column({ 
-    type: 'varchar', 
-    nullable: true,
+    type: 'date', 
+    nullable: false,
     comment: 'Start date of the billing period (ISO format)'
   })
-  period_start: string | null;
+  period_start: string;
 
+  @ApiProperty({
+    example: '2025-09',
+    description: 'Billing month in YYYY-MM format',
+    pattern: '^\\d{4}-(0[1-9]|1[0-2])$',
+    required: true
+  })
   @Column({ 
     type: 'varchar', 
-    nullable: true,
+    length: 7, 
+    nullable: false,
+    comment: 'Billing month in YYYY-MM format',
+    default: () => "to_char(CURRENT_DATE, 'YYYY-MM')"  // Default to current month
+  })
+  billing_month: string;
+
+  @ApiProperty({
+    example: '2025-09-30',
+    description: 'End date of the billing period (ISO format)',
+    format: 'date',
+    required: true
+  })
+  @Column({ 
+    type: 'date', 
+    nullable: false,
     comment: 'End date of the billing period (ISO format)'
   })
-  period_end: string | null;
+  period_end: string;
 
-  @Column({ 
-    type: 'varchar', 
-    length: 20,
+  @ApiProperty({
+    enum: ['draft', 'open', 'partially_paid', 'paid', 'void', 'overdue'],
+    enumName: 'InvoiceStatus',
+    example: 'open',
+    description: 'Current status of the invoice'
+  })
+  @Column({
+    type: 'enum',
+    enum: ['draft', 'open', 'partially_paid', 'paid', 'void', 'overdue'],
     default: 'draft',
-    comment: 'Invoice status: draft, open, partially_paid, paid, void, or overdue'
+    comment: 'Current status of the invoice'
   })
   status: InvoiceStatus;
 
@@ -135,13 +170,51 @@ export class Invoice {
   })
   is_issued: boolean;
 
-  @Column({ 
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Unique identifier for the line item' },
+        type: { 
+          type: 'string', 
+          enum: ['rent', 'deposit', 'late_fee', 'other', 'credit', 'discount'],
+          description: 'Type of line item'
+        },
+        name: { type: 'string', description: 'Display name of the item' },
+        description: { type: 'string', description: 'Optional description' },
+        qty: { type: 'number', description: 'Quantity', default: 1 },
+        unit_price: { type: 'number', description: 'Price per unit' },
+        amount: { type: 'number', description: 'Total amount (qty * unit_price)' },
+        tax_rate: { type: 'number', description: 'Tax rate (0-100)' },
+        tax_amount: { type: 'number', description: 'Pre-calculated tax amount' },
+        period_start: { type: 'string', format: 'date', description: 'Start date for time-based items' },
+        period_end: { type: 'string', format: 'date', description: 'End date for time-based items' },
+        metadata: { type: 'object', description: 'Additional metadata' }
+      },
+      required: ['id', 'type', 'name', 'qty', 'unit_price', 'amount']
+    },
+    description: 'Line items included in this invoice',
+    example: [
+      {
+        id: 'item_123',
+        type: 'rent',
+        name: 'Monthly Rent',
+        description: 'Rent for September 2025',
+        qty: 1,
+        unit_price: 1500,
+        amount: 1500,
+        period_start: '2025-09-01',
+        period_end: '2025-09-30'
+      }
+    ]
+  })
+  @Column({
     type: 'jsonb',
-    default: [],
-    comment: 'Line items for this invoice',
+    default: () => "'[]'::jsonb",
+    comment: 'Line items on this invoice',
     transformer: {
-      to: (value: any) => {
-        // Ensure amount is calculated and rounded for each item
+      to: (value: InvoiceItem[]) => {
         if (Array.isArray(value)) {
           return value.map(item => ({
             ...item,
