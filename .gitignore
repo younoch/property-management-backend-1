@@ -49,3 +49,8 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+
+# tsconfig build info
+*.tsbuildinfo
+pnpm-lock.yaml
