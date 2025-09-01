@@ -13,10 +13,10 @@ export class CreatePortfolioDto {
   @IsNotEmpty()
   landlord_id: number;
 
-  @ApiProperty({ description: 'Subscription plan', example: 'premium', enum: ['basic', 'premium', 'enterprise'] })
+  @ApiPropertyOptional({ description: 'Subscription plan', example: 'premium', enum: ['basic', 'premium', 'enterprise'] })
   @IsString()
-  @IsNotEmpty()
-  subscription_plan: string;
+  @IsOptional()
+  subscription_plan?: string;
 
   @ApiPropertyOptional({ description: 'Billing provider customer ID (Stripe/SSLCommerz/etc.)', example: '' })
   @IsString()

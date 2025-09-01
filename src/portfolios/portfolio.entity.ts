@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Property } from '../properties/property.entity';
+import { IsNotEmpty } from 'class-validator';
 
 @Entity()
 @Index(['landlord'])
@@ -21,6 +22,7 @@ export class Portfolio {
   id: number;
 
   @Column()
+  @IsNotEmpty()
   name: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
@@ -28,6 +30,7 @@ export class Portfolio {
   landlord: User;
 
   @Column()
+  @IsNotEmpty()
   landlord_id: number;
 
   @Column()
@@ -54,5 +57,3 @@ export class Portfolio {
   @DeleteDateColumn()
   deleted_at: Date | null;
 }
-
-
