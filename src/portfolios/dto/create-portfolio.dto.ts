@@ -13,9 +13,9 @@ export class CreatePortfolioDto {
   @IsNotEmpty()
   landlord_id: number;
 
-  @ApiPropertyOptional({ description: 'Subscription plan', example: 'premium', enum: ['basic', 'premium', 'enterprise'] })
+  @ApiPropertyOptional({ description: 'Subscription plan', example: 'premium', enum: ['free', 'basic', 'premium', 'enterprise'] })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   subscription_plan?: string;
 
   @ApiPropertyOptional({ description: 'Billing provider customer ID (Stripe/SSLCommerz/etc.)', example: '' })
@@ -40,5 +40,3 @@ export class CreatePortfolioDto {
   })
   timezone?: string;
 }
-
-

@@ -12,6 +12,7 @@ import {
 } from "typeorm";
 import { Portfolio } from "../portfolios/portfolio.entity";
 import { Unit } from "./unit.entity";
+import { IsNotEmpty } from 'class-validator';
 
 @Entity()
 @Index(['city', 'state'])
@@ -25,36 +26,39 @@ export class Property {
     portfolio: Portfolio;
 
     @Column()
+    @IsNotEmpty()
     portfolio_id: number;
 
     @Column()
+    @IsNotEmpty()
     name: string;
 
-    @Column()
+    @Column({ nullable: true })
     address_line1: string;
 
     @Column({ nullable: true })
     address_line2: string;
 
-    @Column()
+    @Column({ nullable: true })
     city: string;
 
-    @Column()
+    @Column({ nullable: true })
     state: string;
 
-    @Column({ name: 'postal_code' })
+    @Column({ name: 'postal_code', nullable: true })
     zip_code: string;
 
-    @Column()
+    @Column({ nullable: true })
     country: string;
 
-    @Column("decimal", { precision: 10, scale: 6 })
+    @Column("decimal", { precision: 10, scale: 6, nullable: true })
     latitude: number;
 
-    @Column("decimal", { precision: 10, scale: 6 })
+    @Column("decimal", { precision: 10, scale: 6, nullable: true })
     longitude: number;
 
     @Column()
+    @IsNotEmpty()
     property_type: string;
 
     // number_of_units removed; derive by counting units

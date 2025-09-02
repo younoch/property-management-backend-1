@@ -16,7 +16,7 @@ export class CreatePropertyDto {
     required: false
   })
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   portfolio_id?: number;
 
   @ApiProperty({
@@ -35,7 +35,7 @@ export class CreatePropertyDto {
     maxLength: 255
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
   address_line1: string;
 
@@ -53,58 +53,64 @@ export class CreatePropertyDto {
   @ApiProperty({
     description: 'City',
     example: 'New York',
-    maxLength: 100
+    maxLength: 100,
+    required: false
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(100)
-  city: string;
+  city?: string;
 
   @ApiProperty({
     description: 'State/Province',
     example: 'NY',
-    maxLength: 100
+    maxLength: 100,
+    required: false
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(100)
-  state: string;
+  state?: string;
 
   @ApiProperty({
     description: 'ZIP/Postal code',
     example: '10001',
-    maxLength: 20
+    maxLength: 20,
+    required: false
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(20)
-  zip_code: string; // stored as postal_code in DB
+  zip_code?: string; // stored as postal_code in DB
 
   @ApiProperty({
     description: 'Country',
     example: 'USA',
-    maxLength: 100
+    maxLength: 100,
+    required: false
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(100)
-  country: string;
+  country?: string;
 
   @ApiProperty({
     description: 'Latitude coordinate',
-    example: 40.7128
+    example: 40.7128,
+    required: false
   })
   @IsNumber()
-  @IsNotEmpty()
-  latitude: number;
+  @IsOptional()
+  latitude?: number;
 
   @ApiProperty({
     description: 'Longitude coordinate',
-    example: -74.0060
+    example: -74.0060,
+    required: false
   })
   @IsNumber()
-  @IsNotEmpty()
-  longitude: number;
+  @IsOptional()
+  longitude?: number;
 
   @ApiProperty({
     description: 'Type of property',
