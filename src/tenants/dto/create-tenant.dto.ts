@@ -19,7 +19,7 @@ export class CreateTenantDto {
   last_name: string;
 
   @ApiProperty({ example: 'jane@example.com', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsEmail()
   email?: string;
 
@@ -29,7 +29,7 @@ export class CreateTenantDto {
   phone?: string;
 
   @ApiProperty({ example: true, required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsBoolean()
   is_active?: boolean;
 }
