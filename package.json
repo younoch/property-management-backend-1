@@ -61,6 +61,7 @@
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.24",
+    "uuid": "^12.0.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -73,6 +74,7 @@
     "@types/node": "^22.15.30",
     "@types/pg": "^8.10.9",
     "@types/supertest": "^6.0.3",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "@typescript-eslint/parser": "^8.33.1",
     "dotenv": "^17.2.1",
