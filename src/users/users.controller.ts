@@ -151,6 +151,76 @@ export class UsersController {
   }
 
   @ApiOperation({ 
+    summary: 'Complete user onboarding',
+    description: 'Mark the onboarding process as completed for the current user.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Onboarding completed successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Onboarding completed successfully',
+        requires_onboarding: false,
+        onboarding_completed_at: '2024-01-15T10:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad Request - Onboarding already completed',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - User not authenticated',
+    type: ErrorResponseDto
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Not Found - User not found',
+    type: ErrorResponseDto
+  })
+  @Post('/complete-onboarding')
+  @UseGuards(AuthGuard)
+  @Serialize(UserResponseDto)
+  async completeOnboarding(@CurrentUser() user: User) {
+    try {
+      // Check if onboarding is already completed
+      if (!user.requires_onboarding) {
+        throw new BadRequestException({
+          message: 'Onboarding already completed',
+          errorType: 'ONBOARDING_ALREADY_COMPLETED'
+        });
+      }
+
+      // Update user to mark onboarding as completed
+      const updatedUser = await this.usersService.update(user.id, {
+        requires_onboarding: false,
+        onboarding_completed_at: new Date()
+      });
+
+      return {
+        success: true,
+        message: 'Onboarding completed successfully',
+        requires_onboarding: updatedUser.requires_onboarding,
+        onboarding_completed_at: updatedUser.onboarding_completed_at
+      };
+    } catch (error) {
+      // Re-throw HTTP exceptions as they are already properly formatted
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      
+      // Handle unexpected errors
+      throw new InternalServerErrorException({
+        message: 'Failed to complete onboarding',
+        errorType: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  @ApiOperation({ 
     summary: 'Sign out user',
     description: 'Sign out the currently authenticated user. Clears authentication cookies and CSRF token.'
   })
