@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateLeaseChargeDto {
   @ApiProperty({ example: 1 })
@@ -10,10 +10,13 @@ export class CreateLeaseChargeDto {
   @IsInt()
   lease_id: number;
 
-  @ApiProperty({ example: 'Monthly Rent' })
-  @IsString()
-  @IsNotEmpty()
-  name: string;
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  unit_id: number;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  property_id: number;
 
   @ApiProperty({ example: 1500.0 })
   @IsNumber()

@@ -16,7 +16,7 @@ export class AuthService {
     // See if email is in use
     const users = await this.usersService.find(email);
     if (users.length) {
-      throw new BadRequestException('email in use');
+      throw new BadRequestException('This email address is already registered. Please use a different email or try signing in.');
     }
 
     // Hash the password with bcrypt
@@ -39,7 +39,7 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
-      throw new BadRequestException('bad password');
+      throw new BadRequestException('The password you entered is incorrect. Please try again or reset your password if needed.');
     }
 
     return user;
@@ -85,7 +85,7 @@ export class AuthService {
       
       // Check if it's a refresh token
       if (payload.type !== 'refresh') {
-        throw new BadRequestException('Invalid refresh token');
+        throw new BadRequestException('The refresh token provided is invalid or has expired. Please sign in again.');
       }
 
       // Get the user
@@ -96,7 +96,7 @@ export class AuthService {
 
       // Check if user is active
       if (!user.is_active) {
-        throw new BadRequestException('User account is deactivated');
+        throw new BadRequestException('Your account has been deactivated. Please contact support for assistance.');
       }
 
       // Generate new access token
@@ -125,10 +125,10 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new BadRequestException('Refresh token has expired');
+        throw new BadRequestException('Your session has expired. Please sign in again to continue.');
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new BadRequestException('Invalid refresh token');
+        throw new BadRequestException('The refresh token provided is invalid or has expired. Please sign in again.');
       }
       throw error;
     }
