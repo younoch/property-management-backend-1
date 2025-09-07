@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { 
   Entity, 
   PrimaryGeneratedColumn, 
@@ -310,6 +311,7 @@ export class Invoice {
   deleted_at: Date | null;
 
   // Track original values for immutability checks
+  @Exclude()
   private originalValues: Partial<Invoice> = {};
 
   // Load original values after entity is loaded

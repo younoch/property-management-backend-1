@@ -17,7 +17,7 @@ export class Unit {
   @Column()
   portfolio_id: number;
 
-  @ManyToOne(() => Property, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Property, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'property_id' })
   property: Property;
 

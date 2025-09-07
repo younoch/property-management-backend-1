@@ -265,6 +265,26 @@ export class InvoicesService {
 
   async update(id: number, dto: UpdateInvoiceDto) {
     const invoice = await this.findOne(id);
+    
+    // If items are being updated, process them and recalculate totals
+    if (dto.items) {
+      // Ensure each item has an amount calculated (qty * unit_price)
+      dto.items = dto.items.map(item => ({
+        ...item,
+        amount: (item.qty || 1) * (item.unit_price || 0)
+      }));
+      
+      // Calculate new totals
+      const subtotal = dto.items.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const tax = dto.tax !== undefined ? dto.tax : (invoice.tax || 0);
+      const amountPaid = invoice.amount_paid || 0;
+      
+      // Update invoice fields
+      dto.subtotal = subtotal;
+      dto.total = subtotal + tax;
+      dto.balance = dto.total - amountPaid;
+    }
+    
     Object.assign(invoice, dto);
     return this.repo.save(invoice);
   }
