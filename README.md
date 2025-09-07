@@ -149,6 +149,84 @@ DB_NAME=property_management_dev
 - `PATCH /auth/:id` - Update user (requires CSRF token)
 - `DELETE /auth/:id` - Delete user (requires CSRF token)
 
+### Feedback Endpoints
+- `POST /feedback` - Submit feedback (supports both authenticated and unauthenticated users)
+  - **Body**: 
+    ```json
+    {
+      "message": "Your feedback message",
+      "user_email": "user@example.com",
+      "page_url": "http://example.com/page",
+      "user_id": 1 // Optional, for authenticated users
+    }
+    ```
+  - **Response**:
+    ```json
+    {
+      "success": true,
+      "message": "Thank you for your feedback!",
+      "data": {
+        "id": 1,
+        "message": "Your feedback message",
+        "pageUrl": "http://example.com/page",
+        "isReviewed": false,
+        "createdAt": "2023-01-01T12:00:00.000Z",
+        "userId": 1,
+        "userEmail": "user@example.com"
+      },
+      "timestamp": "2023-01-01T12:00:00.000Z",
+      "path": "/feedback"
+    }
+    ```
+
+- `GET /feedback` - Get all feedback (Admin/Manager only)
+  - **Query Params**:
+    - `page`: Page number (default: 1)
+    - `limit`: Items per page (default: 10)
+    - `reviewed`: Filter by reviewed status (true/false)
+  - **Response**:
+    ```json
+    {
+      "success": true,
+      "message": "Feedback retrieved successfully",
+      "data": [
+        {
+          "id": 1,
+          "message": "Feedback message",
+          "pageUrl": "http://example.com/page",
+          "isReviewed": false,
+          "createdAt": "2023-01-01T12:00:00.000Z",
+          "userId": 1,
+          "userEmail": "user@example.com"
+        }
+      ],
+      "meta": {
+        "total": 1,
+        "page": 1,
+        "limit": 10
+      },
+      "timestamp": "2023-01-01T12:00:00.000Z",
+      "path": "/feedback"
+    }
+    ```
+
+- `PATCH /feedback/:id/review` - Mark feedback as reviewed (Admin/Manager only)
+  - **Response**:
+    ```json
+    {
+      "success": true,
+      "message": "Feedback marked as reviewed",
+      "data": {
+        "id": 1,
+        "isReviewed": true,
+        "message": "Feedback message",
+        "createdAt": "2023-01-01T12:00:00.000Z"
+      },
+      "timestamp": "2023-01-01T12:00:00.000Z",
+      "path": "/feedback/1/review"
+    }
+    ```
+
 ## 🔒 Security Best Practices
 
 ### Frontend Implementation
