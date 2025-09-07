@@ -1,3 +1,4 @@
+// src/database/data-source.ts
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
@@ -25,35 +26,20 @@ const configService = new ConfigService();
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: configService.get<string>('DB_HOST'),
-  port: configService.get<number>('DB_PORT'),
+  port: Number(configService.get<string>('DB_PORT')),
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
-  synchronize: false, // Disable synchronize for migrations
-  migrationsRun: false, // We'll run migrations manually
+  synchronize: false,
+  migrationsRun: false,
   migrationsTableName: 'migrations',
-  migrations: ['src/database/migrations/*.ts'],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
   logging: true,
   entities: [
-    User,
-    Portfolio,
-    PortfolioMember,
-    Property,
-    Unit,
-    Tenant,
-    Lease,
-    LeaseTenant,
-    LeaseCharge,
-    Invoice,
-    Payment,
-  PaymentApplication,
-    MaintenanceRequest,
-    WorkOrder,
-    Document,
-    Notification,
+    User, Portfolio, PortfolioMember, Property, Unit, Tenant, Lease, LeaseTenant,
+    LeaseCharge, Invoice, Payment, PaymentApplication, MaintenanceRequest,
+    WorkOrder, Document, Notification
   ],
   subscribers: [],
-  ssl: ((process.env.NODE_ENV === 'production') && (configService.get<string>('DB_SSL') === 'true'))
-    ? { rejectUnauthorized: false }
-    : false,
-}); 
+  ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
+});
