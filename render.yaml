@@ -1,56 +1,15 @@
 # render.yaml
 services:
+  # Database reset service
   - type: web
-    name: property-management-api
+    name: db-reset
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 8000
-      - key: DB_SYNC
-        value: false
-      - key: DB_SSL
-        value: true
-      - key: ALLOWED_ORIGINS
-        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000,https://property-management-api-7yk4.onrender.com"
-      - key: COOKIE_KEY
-        generateValue: true
-      - key: ENABLE_SWAGGER
-        value: true
-      - key: RUN_MIGRATIONS_ON_BOOT
-        value: true
-      # JWT Configuration - REQUIRED
-      - key: JWT_ACCESS_SECRET
-        generateValue: true
-      - key: JWT_ACCESS_EXPIRES_IN
-        value: "15m"
-      - key: JWT_REFRESH_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_EXPIRES_IN
-        value: "7d"
-      # CSRF Configuration
-      - key: CSRF_SECRET
-        generateValue: true
-      - key: CSRF_TOKEN_EXPIRY_HOURS
-        value: "24"
-      # Cookie Configuration for cross-domain production
-      - key: COOKIE_DOMAIN
-        value: ""
-      - key: COOKIE_SECURE
-        value: true
-      - key: COOKIE_SAME_SITE
-        value: "none"
-      - key: COOKIE_HTTP_ONLY
-        value: true
-      # Frontend/Backend domains (will update for custom domain later)
-      - key: FRONTEND_DOMAIN
-        value: "property-manegment-frontend.vercel.app"
-      - key: BACKEND_DOMAIN
-        value: "property-management-api.onrender.com"
-      # Database Configuration
       - key: DB_HOST
         fromDatabase:
           name: property-management-db
@@ -71,6 +30,8 @@ services:
         fromDatabase:
           name: property-management-db
           property: database
+      - key: DB_SSL
+        value: "true"
 
 databases:
   - name: property-management-db
