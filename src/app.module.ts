@@ -35,6 +35,7 @@ import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
 import * as cookieParser from 'cookie-parser';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import * as cookieParser from 'cookie-parser';
     HealthModule,
     MonitoringModule,
     CsrfModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [
