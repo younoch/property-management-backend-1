@@ -88,17 +88,18 @@ export class InvoiceGenerationScheduler {
       const total = parseFloat((subtotal + tax).toFixed(2));
 
       const invoice = this.invoiceRepo.create({
-        portfolio: { id: charge.portfolio_id },
-        lease: { id: charge.lease_id },
+        portfolio_id: charge.portfolio_id,
+        lease_id: charge.lease_id,
         issue_date: issueDate,
         due_date: dueDate,
         status: 'open',
         period_start: periodStart.toISOString().slice(0, 10),
         period_end: periodEnd.toISOString().slice(0, 10),
         subtotal: subtotal,
-        tax: tax,
-        total: total,
-        balance: total,
+        tax_amount: tax,
+        total_amount: total,
+        balance_due: total,
+        amount_paid: 0,
         items: items,
         is_issued: true
       });

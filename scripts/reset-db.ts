@@ -2,15 +2,14 @@ import { DataSource } from 'typeorm';
 import * as path from 'path';
 import { execSync } from 'child_process';
 
-// Database configuration - using localhost to connect to the database
+// Database configuration - using docker-compose.dev.yml credentials
 const DB_CONFIG = {
   host: 'localhost',
   port: 5432,
   username: 'postgres',
-  password: 'postgres',
+  password: 'rR%jrYKNqQdnYVQUkzuN',
   database: 'property_rental_management_db',
-  // Using connection string with the correct password
-  connectionString: 'postgresql://postgres:postgres@localhost:5432/postgres'
+  connectionString: 'postgresql://postgres:rR%jrYKNqQdnYVQUkzuN@localhost:5432/postgres'
 };
 
 async function resetDatabase() {

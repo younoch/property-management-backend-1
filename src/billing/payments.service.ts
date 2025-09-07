@@ -75,7 +75,7 @@ export class PaymentsService {
         for (const invoice of invoices) {
           if (remaining <= 0) break;
 
-          const invoiceBalance = invoice.balance;
+          const invoiceBalance = invoice.balance_due;
           const amountToApply = Math.min(remaining, invoiceBalance);
           
           if (amountToApply > 0) {
@@ -205,7 +205,7 @@ export class PaymentsService {
       for (const invoice of invoices) {
         if (remaining <= 0) break;
 
-        const invoiceBalance = invoice.balance;
+        const invoiceBalance = invoice.balance_due;
         const amountToApply = Math.min(remaining, invoiceBalance);
         
         if (amountToApply > 0) {
@@ -233,7 +233,7 @@ export class PaymentsService {
               paymentId: savedPayment.id,
               invoiceId: invoice.id,
               amount: amountToApply,
-              remainingBalance: invoice.balance
+              remainingBalance: invoice.balance_due
             },
             description: `Applied $${amountToApply.toFixed(2)} from payment #${savedPayment.id} to invoice #${invoice.invoice_number || invoice.id}`
           });

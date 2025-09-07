@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { 
   Entity, 
   PrimaryGeneratedColumn, 
@@ -12,26 +11,47 @@ import {
   BeforeInsert,
   BeforeUpdate,
   AfterLoad,
+  OneToMany,
   Like
 } from 'typeorm';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Portfolio } from '../portfolios/portfolio.entity';
-import { Lease } from '../tenancy/lease.entity';
-import { PaymentApplication } from './payment-application.entity';
+import { ApiProperty } from '@nestjs/swagger';
 import { BadRequestException } from '@nestjs/common';
+import { Exclude } from 'class-transformer';
 import { 
   addDays, 
   isAfter, 
   isBefore, 
   parseISO, 
-  format, 
-  isToday,
-  differenceInDays,
-  startOfDay,
-  endOfDay
+  format,
+  differenceInDays
 } from 'date-fns';
+import { Portfolio } from '../portfolios/portfolio.entity';
+import { Lease } from '../tenancy/lease.entity';
+import { PaymentApplication } from './payment-application.entity';
 
+// Types for invoice statuses
 export type InvoiceStatus = 'draft' | 'open' | 'partially_paid' | 'paid' | 'void' | 'overdue';
+
+// Types for invoice line items
+export type InvoiceItemType = 'rent' | 'late_fee' | 'deposit' | 'other' | 'credit' | 'discount';
+
+// Interface for invoice line items
+export interface InvoiceItem {
+  id: string;                   // Unique identifier for the line item
+  type: InvoiceItemType;        // Type of line item
+  name: string;                 // Display name
+  description?: string;         // Optional description
+  qty: number;                  // Quantity
+  unit_price: number;           // Price per unit
+  amount: number;               // Total amount (qty * unit_price)
+  tax_rate?: number;            // Tax rate (0-100)
+  tax_amount?: number;          // Pre-calculated tax amount
+  period_start?: string;        // For time-based items like rent
+  period_end?: string;          // For time-based items like rent
+  metadata?: Record<string, any>; // Additional metadata
+  created_at?: Date;            // When the item was created
+  updated_at?: Date;            // When the item was last updated
+}
 
 // Helper for consistent decimal arithmetic
 const decimal = (value: number | string, decimals: number = 2): number => {
@@ -39,25 +59,7 @@ const decimal = (value: number | string, decimals: number = 2): number => {
   return parseFloat(num.toFixed(decimals));
 };
 
-// Types for invoice line items
-export type InvoiceItemType = 'rent' | 'late_fee' | 'deposit' | 'other' | 'credit' | 'discount';
-
-export interface InvoiceItem {
-  id: string;                   // Unique identifier for the line item
-  type: InvoiceItemType;        // Type of line item
-  name: string;                 // Display name
-  description?: string;         // Optional description
-  qty: number;                 // Quantity
-  unit_price: number;          // Price per unit
-  amount: number;              // Total amount (qty * unit_price)
-  tax_rate?: number;           // Tax rate (0-100)
-  tax_amount?: number;         // Pre-calculated tax amount
-  period_start?: string;       // For time-based items like rent
-  period_end?: string;         // For time-based items like rent
-  metadata?: Record<string, any>; // Additional metadata
-}
-
-@Entity()
+@Entity('invoices')
 @Index(['portfolio_id'])
 @Index(['lease_id'])
 @Index(['due_date'])
@@ -65,49 +67,133 @@ export interface InvoiceItem {
 @Index(['lease_id', 'billing_month'], { unique: true, where: "status != 'void'" }) // Prevent duplicate invoices for same lease and month
 export class Invoice {
   @PrimaryGeneratedColumn()
+  @ApiProperty({ description: 'Unique identifier for the invoice' })
   id: number;
 
   @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
+  @ApiProperty({ type: () => Portfolio, description: 'The portfolio this invoice belongs to' })
   portfolio: Portfolio;
 
-  @Column()
+  @Column({ name: 'portfolio_id' })
+  @ApiProperty({ description: 'ID of the portfolio this invoice belongs to' })
   portfolio_id: number;
 
   @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'lease_id' })
+  @ApiProperty({ type: () => Lease, description: 'The lease this invoice is for', nullable: true })
   lease: Lease | null;
 
-  @Column({ nullable: true })
+  @Column({ name: 'lease_id', nullable: true })
+  @ApiProperty({ description: 'ID of the lease this invoice is for', nullable: true })
   lease_id: number | null;
 
   @Column({ 
+    type: 'varchar',
+    length: 50,
+    unique: true,
+    comment: 'Unique invoice number',
+    name: 'invoice_number'
+  })
+  @ApiProperty({ description: 'Unique invoice number' })
+  invoice_number: string;
+
+  @Column({ 
     type: 'date',
-    comment: 'Date when the invoice was created/issued'
+    comment: 'Date when the invoice was created/issued',
+    name: 'issue_date',
+    default: () => 'CURRENT_DATE'
+  })
+  @ApiProperty({ 
+    description: 'Date when the invoice was created/issued', 
+    format: 'date',
+    default: 'CURRENT_DATE'
   })
   issue_date: string;
 
   @Column({ 
     type: 'date',
     nullable: true,
-    comment: 'Due date for payment, calculated based on issue_date + payment_terms'
+    comment: 'Due date for payment, calculated based on issue_date + payment_terms',
+    name: 'due_date'
   })
+  @ApiProperty({ description: 'Due date for payment', format: 'date', nullable: true })
   due_date: string | null;
 
   @Column({ 
     type: 'integer', 
     default: 0,
-    comment: 'Grace period in days after due date before late fees apply'
+    comment: 'Grace period in days after due date before late fees apply',
+    name: 'grace_days'
+  })
+  @ApiProperty({ 
+    description: 'Grace period in days after due date before late fees apply', 
+    default: 0 
   })
   grace_days: number;
 
-  @Column({ 
-    type: 'varchar', 
-    nullable: true,
-    unique: true,
-    comment: 'Unique invoice number for reference'
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Subtotal amount before tax',
+    name: 'subtotal'
   })
-  invoice_number: string | null;
+  @ApiProperty({ description: 'Subtotal amount before tax', default: 0 })
+  subtotal: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Total tax amount',
+    name: 'tax_amount'
+  })
+  @ApiProperty({ description: 'Total tax amount', default: 0 })
+  tax_amount: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Total amount including tax',
+    name: 'total_amount'
+  })
+  @ApiProperty({ 
+    description: 'Total amount including tax', 
+    default: 0,
+    example: 1082.50
+  })
+  total_amount: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Amount paid so far',
+    name: 'amount_paid'
+  })
+  @ApiProperty({ 
+    description: 'Amount paid so far', 
+    default: 0,
+    example: 500.00
+  })
+  amount_paid: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Remaining balance',
+    name: 'balance_due'
+  })
+  @ApiProperty({ description: 'Remaining balance', default: 0 })
+  balance_due: number;
 
   @ApiProperty({
     example: '2025-09-01',
@@ -157,12 +243,68 @@ export class Invoice {
     description: 'Current status of the invoice'
   })
   @Column({
-    type: 'enum',
-    enum: ['draft', 'open', 'partially_paid', 'paid', 'void', 'overdue'],
+    type: 'varchar', 
+    length: 20, 
     default: 'draft',
     comment: 'Current status of the invoice'
   })
   status: InvoiceStatus;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+    comment: 'Additional notes for the invoice',
+    name: 'notes'
+  })
+  @ApiProperty({
+    description: 'Additional notes for the invoice',
+    required: false,
+    example: 'Payment due upon receipt'
+  })
+  notes: string | null;
+
+  @Column({ 
+    type: 'text',
+    nullable: true,
+    comment: 'Terms and conditions for the invoice',
+    name: 'terms'
+  })
+  @ApiProperty({ description: 'Terms and conditions for the invoice', required: false })
+  terms: string | null;
+
+  @Column({ 
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: 'When the invoice was sent to the customer',
+    name: 'sent_at'
+  })
+  @ApiProperty({ 
+    description: 'When the invoice was sent to the customer', 
+    format: 'date-time',
+    required: false 
+  })
+  sent_at: Date | null;
+
+  @Column({ 
+    type: 'timestamp',
+    nullable: true,
+    comment: 'When the invoice was paid'
+  })
+  paid_at: Date | null;
+
+  @Column({ 
+    type: 'timestamp',
+    nullable: true,
+    comment: 'When the invoice was marked as void'
+  })
+  voided_at: Date | null;
+
+  @Column({ 
+    type: 'jsonb',
+    nullable: true,
+    comment: 'Additional metadata for the invoice'
+  })
+  metadata: Record<string, any> | null;
 
   @Column({ 
     type: 'boolean', 
@@ -171,45 +313,6 @@ export class Invoice {
   })
   is_issued: boolean;
 
-  @ApiProperty({
-    type: 'array',
-    items: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Unique identifier for the line item' },
-        type: { 
-          type: 'string', 
-          enum: ['rent', 'deposit', 'late_fee', 'other', 'credit', 'discount'],
-          description: 'Type of line item'
-        },
-        name: { type: 'string', description: 'Display name of the item' },
-        description: { type: 'string', description: 'Optional description' },
-        qty: { type: 'number', description: 'Quantity', default: 1 },
-        unit_price: { type: 'number', description: 'Price per unit' },
-        amount: { type: 'number', description: 'Total amount (qty * unit_price)' },
-        tax_rate: { type: 'number', description: 'Tax rate (0-100)' },
-        tax_amount: { type: 'number', description: 'Pre-calculated tax amount' },
-        period_start: { type: 'string', format: 'date', description: 'Start date for time-based items' },
-        period_end: { type: 'string', format: 'date', description: 'End date for time-based items' },
-        metadata: { type: 'object', description: 'Additional metadata' }
-      },
-      required: ['id', 'type', 'name', 'qty', 'unit_price', 'amount']
-    },
-    description: 'Line items included in this invoice',
-    example: [
-      {
-        id: 'item_123',
-        type: 'rent',
-        name: 'Monthly Rent',
-        description: 'Rent for September 2025',
-        qty: 1,
-        unit_price: 1500,
-        amount: 1500,
-        period_start: '2025-09-01',
-        period_end: '2025-09-30'
-      }
-    ]
-  })
   @Column({
     type: 'jsonb',
     default: () => "'[]'::jsonb",
@@ -229,77 +332,6 @@ export class Invoice {
   })
   items: InvoiceItem[];
 
-  @Column({
-    type: 'numeric',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Subtotal before tax (sum of all line items)',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
-  })
-  subtotal: number;
-
-  @Column({
-    type: 'numeric',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Total tax amount',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
-  })
-  tax: number;
-
-  @Column({
-    type: 'numeric',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Total amount including tax',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
-  })
-  total: number;
-
-  @Column({
-    type: 'numeric',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Remaining balance to be paid',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
-  })
-  balance: number;
-
-  @Column({
-    type: 'numeric',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Total amount paid so far',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
-  })
-  amount_paid: number;
-
-  @Column({ 
-    type: 'varchar', 
-    nullable: true,
-    comment: 'Optional notes about the invoice'
-  })
-  notes: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
@@ -311,7 +343,7 @@ export class Invoice {
   deleted_at: Date | null;
 
   // Track original values for immutability checks
-  @Exclude()
+  @Exclude({ toPlainOnly: true })
   private originalValues: Partial<Invoice> = {};
 
   // Load original values after entity is loaded
@@ -322,8 +354,8 @@ export class Invoice {
       due_date: this.due_date,
       status: this.status,
       subtotal: this.subtotal,
-      tax: this.tax,
-      total: this.total,
+      tax_amount: this.tax_amount,
+      total_amount: this.total_amount,
       items: [...this.items]
     };
   }
@@ -348,7 +380,7 @@ export class Invoice {
     }
 
     // Ensure total is not negative (credits will be handled separately)
-    if (this.total !== undefined && this.total < 0) {
+    if (this.total_amount !== undefined && this.total_amount < 0) {
       throw new BadRequestException('Invoice total cannot be negative. Use credits for overpayments.');
     }
 
@@ -398,9 +430,9 @@ export class Invoice {
   async recalculate(entityManager: any): Promise<void> {
     if (!this.items?.length) {
       this.subtotal = 0;
-      this.tax = 0;
-      this.total = 0;
-      this.balance = 0;
+      this.tax_amount = 0;
+      this.total_amount = 0;
+      this.balance_due = 0;
       this.amount_paid = await this.getPaidAmount(entityManager);
       return;
     }
@@ -411,16 +443,16 @@ export class Invoice {
       .toFixed(2));
 
     // Calculate tax (simplified - in real app, this would use tax rules)
-    this.tax = 0;
+    this.tax_amount = 0;
     
     // Calculate total
-    this.total = parseFloat((this.subtotal + this.tax).toFixed(2));
+    this.total_amount = parseFloat((this.subtotal + this.tax_amount).toFixed(2));
     
     // Get paid amount
     this.amount_paid = await this.getPaidAmount(entityManager);
     
-    // Calculate balance
-    this.balance = parseFloat((this.total - this.amount_paid).toFixed(2));
+    // Calculate balance due
+    this.balance_due = parseFloat((this.total_amount - this.amount_paid).toFixed(2));
     
     // Update status based on new values
     await this.updateStatus();
@@ -430,9 +462,9 @@ export class Invoice {
   async updateStatus(): Promise<void> {
     if (this.status === 'void') return;
     
-    if (this.balance <= 0 && this.total > 0) {
+    if (this.balance_due <= 0 && this.total_amount > 0) {
       this.status = 'paid';
-    } else if (this.amount_paid > 0 && this.balance > 0) {
+    } else if (this.amount_paid > 0 && this.balance_due > 0) {
       this.status = 'partially_paid';
     } else if (this.is_overdue) {
       this.status = 'overdue';
