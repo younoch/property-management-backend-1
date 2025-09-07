@@ -1,39 +1,64 @@
-# render.yaml
 services:
-  # Database reset service
   - type: web
-    name: db-reset
+    name: property-management-api
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    autoDeploy: false
     envVars:
+      # General Node / NestJS
       - key: NODE_ENV
         value: production
-      - key: DB_HOST
-        fromDatabase:
-          name: property-management-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: property-management-db
-          property: port
-      - key: DB_USERNAME
-        fromDatabase:
-          name: property-management-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: property-management-db
-          property: password
-      - key: DB_NAME
-        fromDatabase:
-          name: property-management-db
-          property: database
+      - key: PORT
+        value: 8000
+      - key: DB_SYNC
+        value: false
       - key: DB_SSL
-        value: "true"
+        value: true
+      - key: ALLOWED_ORIGINS
+        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000,https://property-management-api-7yk4.onrender.com"
+      - key: RUN_MIGRATIONS_ON_BOOT
+        value: true
 
-databases:
-  - name: property-management-db
-    plan: free
-    databaseName: property_management_prod
+      # JWT Configuration
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: "15m"
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: "7d"
+
+      # CSRF Configuration
+      - key: CSRF_SECRET
+        generateValue: true
+      - key: CSRF_TOKEN_EXPIRY_HOURS
+        value: "24"
+
+      # Cookie Configuration
+      - key: COOKIE_DOMAIN
+        value: ""
+      - key: COOKIE_SECURE
+        value: true
+      - key: COOKIE_SAME_SITE
+        value: "none"
+      - key: COOKIE_HTTP_ONLY
+        value: true
+
+      # Frontend/Backend Domains
+      - key: FRONTEND_DOMAIN
+        value: "property-manegment-frontend.vercel.app"
+      - key: BACKEND_DOMAIN
+        value: "property-management-api.onrender.com"
+
+      # --- Neon Postgres Connection ---
+      - key: DB_HOST
+        value: ep-morning-math-ad0chyet-pooler.c-2.us-east-1.aws.neon.tech
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_USERNAME
+        value: neondb_owner
+      - key: DB_PASSWORD
+        value: npg_L7XRIMNjGTo4
+      - key: DB_NAME
+        value: neondb
