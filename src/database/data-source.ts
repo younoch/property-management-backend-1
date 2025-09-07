@@ -21,7 +21,14 @@ import { Document } from '../documents/document.entity';
 
 // Load environment variables for CLI context
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+
 const configService = new ConfigService();
+
+// Helper to determine SSL configuration
+const sslConfig =
+  configService.get<string>('DB_SSL') === 'true'
+    ? { rejectUnauthorized: false }
+    : undefined;
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -30,16 +37,29 @@ export const AppDataSource = new DataSource({
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
-  synchronize: false,
+  synchronize: true, // dev only
   migrationsRun: false,
   migrationsTableName: 'migrations',
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   logging: true,
   entities: [
-    User, Portfolio, PortfolioMember, Property, Unit, Tenant, Lease, LeaseTenant,
-    LeaseCharge, Invoice, Payment, PaymentApplication, MaintenanceRequest,
-    WorkOrder, Document, Notification
+    User,
+    Portfolio,
+    PortfolioMember,
+    Property,
+    Unit,
+    Tenant,
+    Lease,
+    LeaseTenant,
+    LeaseCharge,
+    Invoice,
+    Payment,
+    PaymentApplication,
+    MaintenanceRequest,
+    WorkOrder,
+    Document,
+    Notification,
   ],
   subscribers: [],
-  ssl: { rejectUnauthorized: false }, // ✅ Neon SSL fix
+  ssl: sslConfig, // ✅ Neon SSL fix
 });
