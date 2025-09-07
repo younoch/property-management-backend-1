@@ -14,7 +14,9 @@ export class UsersService {
       name, 
       phone, 
       role,
-      is_active: true 
+      is_active: true,
+      requires_onboarding: true, // New users need to complete onboarding
+      onboarding_completed_at: null // Will be set when onboarding is completed
     });
 
     return this.repo.save(user);

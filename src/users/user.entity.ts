@@ -39,6 +39,12 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ default: true })
+  requires_onboarding: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  onboarding_completed_at: Date | null;
+
   @CreateDateColumn()
   created_at: Date;
 

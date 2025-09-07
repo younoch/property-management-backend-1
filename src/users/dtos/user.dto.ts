@@ -126,6 +126,21 @@ export class UserDataDto {
 
   @Expose()
   @ApiProperty({
+    description: 'Whether the user needs to complete onboarding',
+    example: true
+  })
+  requires_onboarding: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Timestamp when onboarding was completed',
+    example: '2024-01-20T14:45:00.000Z',
+    nullable: true
+  })
+  onboarding_completed_at: Date | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Portfolios owned by the user (if landlord)',
     type: [PortfolioDto],
     example: [
@@ -229,6 +244,21 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty({
+    description: 'Whether the user needs to complete onboarding',
+    example: true
+  })
+  requires_onboarding: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Timestamp when onboarding was completed',
+    example: '2024-01-20T14:45:00.000Z',
+    nullable: true
+  })
+  onboarding_completed_at: Date | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Portfolios owned by the user (if landlord)',
     type: [PortfolioDto],
     example: [
@@ -329,6 +359,21 @@ export class FullUserResponseDto {
     example: '2024-01-20T14:45:00.000Z'
   })
   updated_at: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Whether the user needs to complete onboarding',
+    example: true
+  })
+  requires_onboarding: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Timestamp when onboarding was completed',
+    example: '2024-01-20T14:45:00.000Z',
+    nullable: true
+  })
+  onboarding_completed_at: Date | null;
 
   @Expose()
   @ApiProperty({
