@@ -3,6 +3,9 @@ import { Lease } from '../lease.entity';
 import { LeaseResponseDto } from '../dto/lease-response.dto';
 import { LeaseTenantResponseDto } from '../dto/lease-tenant-response.dto';
 import { LeaseTenant } from '../lease-tenant.entity';
+import { PortfolioShortDto } from '../../portfolios/dto/portfolio-short.dto';
+import { PropertyShortDto } from '../../properties/dto/property-short.dto';
+import { UnitShortDto } from '../../properties/dto/unit-short.dto';
 
 @Injectable()
 export class LeaseMapper {
@@ -44,11 +47,41 @@ export class LeaseMapper {
       const num = parseFloat(value);
       return isNaN(num) ? defaultValue : num;
     };
+
+    // Map portfolio information if available
+    const portfolio = lease.portfolio ? {
+      id: lease.portfolio.id,
+      name: lease.portfolio.name || '',
+      subscription_plan: lease.portfolio.subscription_plan || 'free',
+      status: lease.portfolio.status || 'active'
+    } : null;
+
+    // Map unit information if available
+    const unit = lease.unit ? {
+      id: lease.unit.id,
+      label: lease.unit.label || '',
+      bedrooms: lease.unit.bedrooms || null,
+      bathrooms: lease.unit.bathrooms || null,
+      sqft: lease.unit.sqft || null,
+      market_rent: lease.unit.market_rent ? toNumber(lease.unit.market_rent) : null,
+      status: lease.unit.status || 'vacant'
+    } : null;
+
+    // Map property information if unit and property are available
+    const property = lease.unit?.property ? {
+      id: lease.unit.property.id,
+      name: lease.unit.property.name || '',
+      type: lease.unit.property.property_type || 'residential',
+      status: 'active' // Default status since Property entity doesn't have a status field
+    } : null;
     
     return {
       id: lease.id,
       unit_id: lease.unit_id,
       portfolio_id: lease.portfolio_id,
+      portfolio,
+      unit,
+      property,
       start_date: lease.start_date,
       end_date: lease.end_date,
       rent: toNumber(lease.rent, 0),

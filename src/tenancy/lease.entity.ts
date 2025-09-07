@@ -34,14 +34,14 @@ export class Lease {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
   @Column()
   portfolio_id: number;
 
-  @ManyToOne(() => Unit, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => Unit, { onDelete: 'RESTRICT', eager: true })
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
 

@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LeaseStatus } from '../lease.entity';
 import { LeaseTenantResponseDto } from './lease-tenant-response.dto';
+import { PortfolioShortDto } from '../../portfolios/dto/portfolio-short.dto';
+import { PropertyShortDto } from '../../properties/dto/property-short.dto';
+import { UnitShortDto } from '../../properties/dto/unit-short.dto';
 
 export class LeaseResponseDto {
   @ApiProperty({ description: 'Lease ID' })
@@ -9,8 +12,32 @@ export class LeaseResponseDto {
   @ApiProperty({ description: 'Portfolio ID' })
   portfolio_id: number;
 
+  @ApiProperty({ 
+    type: PortfolioShortDto,
+    description: 'Portfolio information',
+    required: false,
+    nullable: true
+  })
+  portfolio?: PortfolioShortDto | null;
+
   @ApiProperty({ description: 'Unit ID' })
   unit_id: number;
+
+  @ApiProperty({ 
+    type: UnitShortDto,
+    description: 'Unit information',
+    required: false,
+    nullable: true
+  })
+  unit?: UnitShortDto | null;
+
+  @ApiProperty({ 
+    type: PropertyShortDto,
+    description: 'Property information',
+    required: false,
+    nullable: true
+  })
+  property?: PropertyShortDto | null;
 
   @ApiProperty({ description: 'Lease start date (YYYY-MM-DD)' })
   start_date: string;
