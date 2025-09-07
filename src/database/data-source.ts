@@ -41,5 +41,5 @@ export const AppDataSource = new DataSource({
     WorkOrder, Document, Notification
   ],
   subscribers: [],
-  ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false }, // ✅ Neon SSL fix
 });
