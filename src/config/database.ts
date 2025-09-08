@@ -4,6 +4,15 @@ import { join } from 'path';
 import * as pg from 'pg';
 import 'dotenv/config';
 
+// Import pg-native if available
+try {
+  const pgNative = require('pg-native');
+  // @ts-ignore - Assigning to read-only property
+  pg.native = pgNative;
+} catch (error) {
+  console.warn('pg-native not installed, falling back to JavaScript implementation');
+}
+
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -80,8 +89,8 @@ const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
   autoLoadEntities: true,
   // Connection options
   extra: {
-    // Explicitly set the pg module
-    pg: pg,
+    // Set the pg module
+    ...(pg.native ? { pgNative: pg.native } : {}),
     // Pool configuration
     max: 20,
     min: 2,
@@ -94,6 +103,8 @@ const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
       }
     } : {})
   },
+  // Use native driver if available
+  ...(pg.native ? { driver: pg.native } : {}),
   // Retry configuration
   retryAttempts: 10,
   retryDelay: 3000,

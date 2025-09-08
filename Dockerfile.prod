@@ -3,8 +3,15 @@ FROM node:18.20.2-alpine3.19 AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies including PostgreSQL client libraries
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    postgresql-dev \
+    gcc \
+    musl-dev \
+    && npm install -g node-gyp
 
 # Copy package files first for better caching
 COPY package*.json ./

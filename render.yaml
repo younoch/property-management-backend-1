@@ -22,6 +22,40 @@ services:
         value: 3000
       - key: HOST
         value: 0.0.0.0
+      
+      # Database Configuration
+      - key: DB_HOST
+        fromDatabase:
+          name: property-management-db
+          property: hostname
+      - key: DB_PORT
+        fromDatabase:
+          name: property-management-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: property-management-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: property-management-db
+          property: password
+      - key: DB_DATABASE
+        fromDatabase:
+          name: property-management-db
+          property: database
+      - key: DB_SSL
+        value: 'true'
+      - key: DB_SYNC
+        value: 'false'
+      - key: RUN_MIGRATIONS_ON_BOOT
+        value: 'true'
+      
+      # TypeORM Configuration
+      - key: TYPEORM_CONNECTION
+        value: postgres
+      - key: TYPEORM_LOGGING
+        value: 'true'
       - key: NPM_CONFIG_PRODUCTION
         value: 'false'
       # Database configuration
