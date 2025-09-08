@@ -5,12 +5,21 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Set npm registry and retry settings
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
+
 # Copy package files
 COPY package*.json ./
 COPY .npmrc* ./
 
-# Install all dependencies including devDependencies
-RUN npm install --legacy-peer-deps
+# Clean npm cache and install with retry logic
+RUN npm cache clean --force && \
+    npm install --legacy-peer-deps --prefer-offline --no-audit || \
+    (sleep 5 && npm install --legacy-peer-deps --prefer-offline --no-audit) || \
+    (sleep 10 && npm install --legacy-peer-deps --prefer-offline --no-audit)
 
 # ---------- Stage 1: deps (copy node_modules from base) ----------
 FROM node:22-alpine AS deps
@@ -43,7 +52,9 @@ COPY .npmrc* ./
   # Copy manifest and install ONLY prod deps
   COPY package*.json ./
   RUN npm cache clean --force && \
-      npm install --omit=dev --legacy-peer-deps && \
+      npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit || \
+      (sleep 5 && npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit) || \
+      (sleep 10 && npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit) && \
       npm cache clean --force
   
 # Copy compiled app
