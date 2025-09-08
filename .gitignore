@@ -1,6 +1,5 @@
 .env.development
 .env.test
-.env.production
 .env.development.backup
 .env.production.backup
 .env.test.backup
