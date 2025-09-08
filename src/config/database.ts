@@ -50,16 +50,30 @@ const sslConfig = process.env.DB_SSL === 'true' ? {
 // Enable query logging in development and test environments
 const logging = !isProduction && !isTest;
 
-// Helper to parse Render's DATABASE_URL if present
+// Helper to parse database URL from environment
 const parseDatabaseUrl = () => {
+  // Handle Neon connection string format
   if (process.env.DATABASE_URL) {
     const url = new URL(process.env.DATABASE_URL);
+    // Handle Neon's connection string format
+    if (url.hostname.includes('neon.tech')) {
+      return {
+        host: url.hostname,
+        port: parseInt(url.port, 10) || 5432,
+        username: url.username,
+        password: url.password,
+        database: url.pathname.replace(/^\//, '').split('?')[0], // Remove query params
+        ssl: true
+      };
+    }
+    // Standard PostgreSQL connection string
     return {
       host: url.hostname,
-      port: parseInt(url.port, 10),
+      port: parseInt(url.port, 10) || 5432,
       username: url.username,
       password: url.password,
-      database: url.pathname.replace(/^\//, '')
+      database: url.pathname.replace(/^\//, '').split('?')[0],
+      ssl: url.searchParams.get('sslmode') === 'require'
     };
   }
   return {
@@ -67,7 +81,8 @@ const parseDatabaseUrl = () => {
     port: parseInt(process.env.DB_PORT || '5432', 10),
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
-    database: process.env.DB_DATABASE || 'property_management'
+    database: process.env.DB_DATABASE || 'property_management',
+    ssl: process.env.DB_SSL === 'true'
   };
 };
 
@@ -80,6 +95,9 @@ const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
   username: dbConfig.username,
   password: dbConfig.password,
   database: dbConfig.database,
+  ssl: dbConfig.ssl ? {
+    rejectUnauthorized: false, // Required for Neon
+  } : false,
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
   synchronize: process.env.DB_SYNC === 'true',

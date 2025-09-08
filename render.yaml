@@ -23,29 +23,9 @@ services:
       - key: HOST
         value: 0.0.0.0
       
-      # Database Configuration
-      - key: DB_HOST
-        fromDatabase:
-          name: property-management-db
-          property: hostname
-      - key: DB_PORT
-        fromDatabase:
-          name: property-management-db
-          property: port
-      - key: DB_USERNAME
-        fromDatabase:
-          name: property-management-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: property-management-db
-          property: password
-      - key: DB_DATABASE
-        fromDatabase:
-          name: property-management-db
-          property: database
-      - key: DB_SSL
-        value: 'true'
+      # Database Configuration - Using Neon
+      - key: DATABASE_URL
+        value: 'postgresql://neondb_owner:npg_L7XRIMNjGTo4@ep-morning-math-ad0chyet-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
       - key: DB_SYNC
         value: 'false'
       - key: RUN_MIGRATIONS_ON_BOOT
