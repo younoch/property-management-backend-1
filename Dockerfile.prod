@@ -1,15 +1,20 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:18.20.2-alpine3.19 AS builder
 
 WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
 COPY pnpm-lock.yaml* ./
 
-# Install dependencies
-RUN npm install -g pnpm
-RUN pnpm install
+# Install pnpm
+RUN npm install -g pnpm@8.14.0
+
+# Install all dependencies
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -18,27 +23,52 @@ COPY . .
 RUN pnpm run build
 
 # Production stage
-FROM node:18-alpine
+FROM node:18.20.2-alpine3.19
 
 WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache tini
+
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV TZ=UTC
+ENV NPM_CONFIG_PRODUCTION=false
 
 # Copy package files
 COPY package*.json ./
 COPY pnpm-lock.yaml* ./
 
+# Install pnpm
+RUN npm install -g pnpm@8.14.0
+
 # Install production dependencies only
-RUN npm install -g pnpm
-RUN pnpm install --prod
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy built assets from builder
 COPY --from=builder /app/dist ./dist
 
 # Copy required files
 COPY .env.production .
-COPY package.json .
+
+# Set permissions
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { if (res.statusCode !== 200) throw new Error() }).on('error', () => process.exit(1))"
 
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Use tini as init process
+ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start the application
 CMD ["node", "dist/main.js"]

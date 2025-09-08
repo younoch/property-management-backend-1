@@ -5,12 +5,15 @@ services:
     dockerfilePath: ./Dockerfile.prod
     plan: free
     autoDeploy: true
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: pnpm install --frozen-lockfile && pnpm run build
     startCommand: node dist/main.js
     healthCheckPath: /health
     instanceCount: 1
     env: node
-    nodeVersion: 18.x
+    nodeVersion: 18.20.2
+    buildCommand: |
+      pnpm install --frozen-lockfile
+      pnpm run build
     envVars:
       # General Node / NestJS
       - key: NODE_ENV
@@ -21,36 +24,19 @@ services:
         value: 0.0.0.0
       - key: NPM_CONFIG_PRODUCTION
         value: 'false'
-      - key: DB_TYPE
-        value: postgres
-      - key: DB_HOST
+      # Database configuration
+      - key: DATABASE_URL
         fromDatabase:
           name: property-management-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: property-management-db
-          property: port
-      - key: DB_USERNAME
-        fromDatabase:
-          name: property-management-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: property-management-db
-          property: password
-      - key: DB_DATABASE
-        fromDatabase:
-          name: property-management-db
-          property: database
+          property: connectionString
       - key: DB_SYNC
         value: 'false'
-      - key: DB_SSL
-        value: 'true'
       - key: RUN_MIGRATIONS_ON_BOOT
         value: 'true'
       - key: NODE_OPTIONS
         value: '--max_old_space_size=1024'
+      - key: TZ
+        value: 'UTC'
 
       # JWT Configuration
       - key: JWT_ACCESS_SECRET
