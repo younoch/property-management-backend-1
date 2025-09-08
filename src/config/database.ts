@@ -89,6 +89,14 @@ const parseDatabaseUrl = () => {
 
 const dbConfig = parseDatabaseUrl();
 
+// Debug: Log database configuration
+console.log('Database Configuration:');
+console.log('- Host:', dbConfig.host);
+console.log('- Port:', dbConfig.port);
+console.log('- Database:', dbConfig.database);
+console.log('- SSL Enabled:', !!dbConfig.ssl);
+console.log('Environment:', process.env.NODE_ENV || 'development');
+
 const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
   type: 'postgres',
   host: dbConfig.host,
@@ -154,7 +162,7 @@ const productionConfig: Partial<PostgresConnectionOptions> = {
 };
 
 // Merge configurations based on environment
-export const databaseConfig: TypeOrmModuleOptions = {
+const finalConfig = {
   ...baseConfig,
   ...(isProduction ? productionConfig : {
     // Development pool settings (more relaxed)
@@ -167,5 +175,21 @@ export const databaseConfig: TypeOrmModuleOptions = {
     }
   }),
 };
+
+// Debug: Log final configuration
+console.log('Final Database Configuration:');
+console.log('- Type:', finalConfig.type);
+console.log('- Host:', finalConfig.host);
+console.log('- Port:', finalConfig.port);
+console.log('- Database:', finalConfig.database);
+console.log('- SSL:', finalConfig.ssl ? 'Enabled' : 'Disabled');
+console.log('- Pool Settings:', {
+  max: finalConfig.extra?.max,
+  min: finalConfig.extra?.min,
+  idleTimeout: finalConfig.extra?.idleTimeoutMillis,
+  connectionTimeout: finalConfig.extra?.connectionTimeoutMillis
+});
+
+export const databaseConfig: TypeOrmModuleOptions = finalConfig;
 
 export default databaseConfig;
