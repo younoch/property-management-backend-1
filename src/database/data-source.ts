@@ -23,7 +23,8 @@ import { Document } from '../documents/document.entity';
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
 const configService = new ConfigService();
-
+console.log('🔎 DB_HOST:', configService.get<string>('DB_HOST'));
+console.log('🔎 DB_SSL:', configService.get<string>('DB_SSL'));
 // Helper to determine SSL configuration
 const sslConfig =
   configService.get<string>('DB_SSL') === 'true'
