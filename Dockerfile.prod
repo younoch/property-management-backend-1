@@ -3,15 +3,12 @@ FROM node:18.20.2-alpine3.19 AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies and pnpm
+RUN apk add --no-cache python3 make g++ \
+    && npm install -g pnpm@8.14.0
 
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
-
-# Install pnpm
-RUN npm install -g pnpm@8.14.0
+# Copy package files first for better caching
+COPY package.json pnpm-lock.yaml* ./
 
 # Install all dependencies
 RUN pnpm install --frozen-lockfile
@@ -28,7 +25,8 @@ FROM node:18.20.2-alpine3.19
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini \
+    && npm install -g pnpm@8.14.0
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -39,11 +37,7 @@ ENV TZ=UTC
 ENV NPM_CONFIG_PRODUCTION=false
 
 # Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
-
-# Install pnpm
-RUN npm install -g pnpm@8.14.0
+COPY package.json pnpm-lock.yaml* ./
 
 # Install production dependencies only
 RUN pnpm install --prod --frozen-lockfile
