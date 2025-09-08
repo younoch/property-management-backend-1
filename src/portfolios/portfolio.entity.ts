@@ -14,6 +14,9 @@ import { User } from '../users/user.entity';
 import { Property } from '../properties/property.entity';
 import { IsNotEmpty } from 'class-validator';
 
+// Import LeaseCharge as a type only to avoid circular dependency
+type LeaseChargeType = import('../billing/lease-charge.entity').LeaseCharge;
+
 @Entity()
 @Index(['landlord'])
 @Index(['status'])
@@ -98,9 +101,14 @@ export class Portfolio {
     late_fee_type?: 'fixed' | 'percentage';
   };
 
+  /** Relations */
   @OneToMany(() => Property, (property) => property.portfolio)
   properties: Property[];
 
+  @OneToMany('LeaseCharge', 'portfolio')
+  leaseCharges: LeaseChargeType[];
+
+  /** Timestamps */
   @CreateDateColumn()
   created_at: Date;
 

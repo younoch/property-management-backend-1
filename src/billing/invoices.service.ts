@@ -46,11 +46,11 @@ export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
   constructor(
-    @InjectRepository(Invoice)
+    @Inject('INVOICE_REPOSITORY')
     private readonly repo: Repository<Invoice>,
-    @InjectRepository(Lease)
+    @Inject('LEASE_REPOSITORY')
     private readonly leaseRepo: Repository<Lease>,
-    @InjectRepository(Portfolio)
+    @Inject('PORTFOLIO_REPOSITORY')
     private readonly portfolioRepo: Repository<Portfolio>,
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
@@ -65,24 +65,39 @@ export class InvoicesService {
    * where XXXX is a sequential number starting from 0001
    */
   private async generateInvoiceNumber(portfolioId: number): Promise<string> {
+    // First verify the portfolio exists
+    const portfolio = await this.portfolioRepo.findOne({
+      where: { id: portfolioId }
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio with ID ${portfolioId} not found`);
+    }
+
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
-    const prefix = `INV-${dateStr}-`;
+    // Use first 3 characters of portfolio name or 'P' + portfolio ID if name is not available
+    const portfolioPrefix = portfolio.name 
+      ? portfolio.name.substring(0, 3).toUpperCase() 
+      : `P${portfolioId}`;
+    const prefix = `INV-${portfolioPrefix}-${dateStr}-`;
     let attempt = 0;
     const maxAttempts = 10;
 
     while (attempt < maxAttempts) {
-      // Find the latest invoice with the same prefix
+      // Find the latest invoice with the same prefix in the same portfolio
       const latestInvoice = await this.repo
         .createQueryBuilder('invoice')
-        .where('invoice.invoice_number LIKE :prefix', { prefix: `${prefix}%` })
+        .where('invoice.portfolio_id = :portfolioId', { portfolioId })
+        .andWhere('invoice.invoice_number LIKE :prefix', { prefix: `${prefix}%` })
         .orderBy('invoice.invoice_number', 'DESC')
         .getOne();
 
       let sequence = 1;
       if (latestInvoice?.invoice_number) {
         // Extract the sequence number from the latest invoice
-        const lastSequence = parseInt(latestInvoice.invoice_number.split('-').pop() || '0', 10);
+        const parts = latestInvoice.invoice_number.split('-');
+        const lastSequence = parseInt(parts[parts.length - 1] || '0', 10);
         sequence = isNaN(lastSequence) ? 1 : lastSequence + 1 + attempt;
       } else {
         sequence = 1 + attempt;
@@ -105,6 +120,16 @@ export class InvoicesService {
   }
 
   async isInvoiceNumberUnique(portfolioId: number, invoiceNumber: string, excludeId?: number): Promise<boolean> {
+    // First verify the portfolio exists
+    const portfolio = await this.portfolioRepo.findOne({
+      where: { id: portfolioId }
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio with ID ${portfolioId} not found`);
+    }
+    
+    // Check for existing invoice with the same number in the same portfolio
     const where: any = { 
       portfolio_id: portfolioId,
       invoice_number: invoiceNumber,
@@ -114,8 +139,8 @@ export class InvoicesService {
       where.id = Not(excludeId);
     }
     
-    const existing = await this.repo.findOne({ where });
-    return !existing;
+    const count = await this.repo.count({ where });
+    return count === 0;
   }
 
   // Helper method to calculate due date (30 days from issue date by default)
@@ -139,6 +164,15 @@ export class InvoicesService {
     // Ensure required fields are present
     if (!dto.portfolio_id) {
       throw new BadRequestException('Portfolio ID is required');
+    }
+
+    // Verify portfolio exists
+    const portfolio = await this.portfolioRepo.findOne({
+      where: { id: dto.portfolio_id }
+    });
+    
+    if (!portfolio) {
+      throw new BadRequestException(`Portfolio with ID ${dto.portfolio_id} not found`);
     }
 
     // Create a new invoice instance with default values
@@ -253,8 +287,20 @@ export class InvoicesService {
     return this.repo.find({ where });
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.repo.find({ where: { portfolio_id: portfolioId } });
+  async findByPortfolio(portfolioId: number) {
+    // First verify the portfolio exists
+    const portfolio = await this.portfolioRepo.findOne({ 
+      where: { id: portfolioId } 
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio with ID ${portfolioId} not found`);
+    }
+    
+    return this.repo.find({ 
+      where: { portfolio_id: portfolioId },
+      relations: ['lease', 'items'] // Include related data
+    });
   }
 
   findByLease(leaseId: number) {
@@ -274,6 +320,29 @@ export class InvoicesService {
       throw new BadRequestException('Invalid billing month format. Use YYYY-MM');
     }
 
+    // Verify the portfolio exists
+    const portfolio = await this.portfolioRepo.findOne({
+      where: { id: portfolioId }
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio with ID ${portfolioId} not found`);
+    }
+
+    // Verify the lease exists and belongs to the portfolio
+    const lease = await this.leaseRepo.findOne({
+      where: { 
+        id: leaseId,
+        portfolio_id: portfolioId
+      }
+    });
+    
+    if (!lease) {
+      throw new NotFoundException(
+        `Lease with ID ${leaseId} not found in portfolio ${portfolioId}`
+      );
+    }
+
     return this.repo.find({
       where: {
         portfolio_id: portfolioId,
@@ -281,6 +350,7 @@ export class InvoicesService {
         billing_month: billingMonth,
         status: Not('void') // Exclude voided invoices
       },
+      relations: ['items'], // Include related items
       order: {
         created_at: 'DESC' // Get the most recent first
       }
@@ -480,10 +550,23 @@ export class InvoicesService {
     const taxAmount = 0; // Assuming no tax for now
     const totalAmount = parseFloat((subtotal + taxAmount).toFixed(2));
 
+    // Verify the portfolio exists before creating the invoice
+    const portfolio = await this.portfolioRepo.findOne({
+      where: { id: lease.portfolio_id }
+    });
+    
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio with ID ${lease.portfolio_id} not found for lease ${lease.id}`);
+    }
+
+    // Generate invoice number
+    const invoiceNumber = await this.generateInvoiceNumber(lease.portfolio_id);
+    
     // Create the invoice with billing_month
     const invoice = this.repo.create({
       portfolio_id: lease.portfolio_id,
       lease_id: lease.id,
+      invoice_number: invoiceNumber,
       issue_date: nextDate.toISOString().slice(0, 10),
       due_date: dueDate.toISOString().slice(0, 10),
       billing_month: billingMonth,
@@ -512,6 +595,17 @@ export class InvoicesService {
 
   async update(id: number, dto: UpdateInvoiceDto) {
     const invoice = await this.findOne(id);
+    
+    // If portfolio_id is being updated, verify the new portfolio exists
+    if (dto.portfolio_id && dto.portfolio_id !== invoice.portfolio_id) {
+      const portfolio = await this.portfolioRepo.findOne({
+        where: { id: dto.portfolio_id }
+      });
+      
+      if (!portfolio) {
+        throw new BadRequestException(`Portfolio with ID ${dto.portfolio_id} not found`);
+      }
+    }
     
     // If items are being updated, process them and recalculate totals
     if (dto.items) {

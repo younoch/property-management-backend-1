@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "🚀 Starting Property Management Backend with Docker..."
-
 # -----------------------------
 # Colors for output
 # -----------------------------
@@ -18,6 +16,9 @@ print_status() { echo -e "${BLUE}[INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+print_status "🚀 Starting Property Management Backend with Docker..."
+
 
 # -----------------------------
 # Load environment variables
@@ -53,26 +54,47 @@ done
 # -----------------------------
 # Check Docker
 # -----------------------------
-if ! sudo docker info > /dev/null 2>&1; then
+if ! docker info > /dev/null 2>&1; then
     print_error "Docker is not running. Start Docker first."
     exit 1
 fi
 
 # -----------------------------
-# Start PostgreSQL container if not running
+# Start required services
 # -----------------------------
-POSTGRES_CONTAINER="property_rental_management_postgres_dev"
+SERVICES=("postgres" "mailhog")
+NETWORK_NAME="property_management_backend_property_dev_network"
 
-if sudo docker ps --format "{{.Names}}" | grep -q "$POSTGRES_CONTAINER"; then
-    print_warning "PostgreSQL container is already running."
+# Create network if it doesn't exist
+if ! docker network ls | grep -q $NETWORK_NAME; then
+    docker network create $NETWORK_NAME
+fi
+
+# Start MailHog if not running
+if ! docker ps --format "{{.Names}}" | grep -q "mailhog"; then
+    print_status "Starting MailHog for email testing..."
+    docker run -d --name mailhog \
+        --network $NETWORK_NAME \
+        -p 1025:1025 \
+        -p 8025:8025 \
+        mailhog/mailhog
+    print_success "MailHog started at http://localhost:8025"
 else
+    print_warning "MailHog is already running."
+fi
+
+# Start PostgreSQL if not running
+POSTGRES_CONTAINER="property_rental_management_postgres_dev"
+if ! docker ps --format "{{.Names}}" | grep -q "$POSTGRES_CONTAINER"; then
     print_status "Starting PostgreSQL container..."
-    if sudo docker compose -f docker-compose.dev.yml up -d; then
+    if docker-compose -f docker-compose.dev.yml up -d; then
         print_success "PostgreSQL started successfully!"
     else
         print_error "Failed to start PostgreSQL. Check Docker logs."
         exit 1
     fi
+else
+    print_warning "PostgreSQL container is already running."
 fi
 
 # -----------------------------
@@ -142,17 +164,20 @@ echo $APP_PID > .app.pid
 # -----------------------------
 print_success "🎉 Property Management Backend is now running with Docker!"
 echo ""
-echo "📋 Access your application:"
-echo "  🌐 Main App: http://localhost:8000"
-echo "  📚 API Docs: http://localhost:8000/api"
-echo "  ❤️ Health: http://localhost:8000/health"
-echo "  📊 Metrics: http://localhost:8000/metrics"
+echo "🌐 Services:"
+echo "  - Main App:     http://localhost:8000"
+echo "  - API Docs:     http://localhost:8000/api"
+echo "  - Health:       http://localhost:8000/health"
+echo "  - Metrics:      http://localhost:8000/metrics"
+echo "  - MailHog:      http://localhost:8025 (Email Testing)"
+echo "  - PostgreSQL:   localhost:5432"
 echo ""
-echo "📋 Available commands:"
-echo "  🛑 Stop application: ./stop.sh"
-echo "  🔄 Restart: ./stop.sh && ./start.sh"
-echo "  🗄️  Reset database: sudo docker compose -f docker-compose.dev.yml down -v && sudo docker compose -f docker-compose.dev.yml up -d"
-echo "  📊 View logs: sudo docker logs $POSTGRES_CONTAINER"
+echo "🔧 Available commands:"
+echo "  🛑 Stop:         ./stop.sh"
+echo "  🔄 Restart:      ./stop.sh && ./start.sh"
+echo "  🗄️  Reset DB:    docker-compose -f docker-compose.dev.yml down -v && docker-compose -f docker-compose.dev.yml up -d"
+echo "  📊 View logs:   docker-compose logs -f"
+echo "  📧 View emails: http://localhost:8025"
 echo ""
 echo "💡 Press Ctrl+C to stop the application or run './stop.sh' in another terminal."
 

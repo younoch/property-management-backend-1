@@ -1,8 +1,23 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn, OneToOne } from 'typeorm';
-import { Portfolio } from '../portfolios/portfolio.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
+  JoinColumn,
+} from 'typeorm';
 import { Lease } from '../tenancy/lease.entity';
 import { Unit } from '../properties/unit.entity';
 import { Property } from '../properties/property.entity';
+
+// Using a simple interface to avoid circular dependency
+interface IPortfolio {
+  id: number;
+  // Add other necessary properties here
+}
 
 @Entity()
 @Index(['portfolio_id'])
@@ -13,13 +28,15 @@ export class LeaseCharge {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  /** Portfolio relation */
+  @ManyToOne('Portfolio', 'leaseCharges', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
+  portfolio: IPortfolio;
 
   @Column()
   portfolio_id: number;
 
+  /** Lease relation */
   @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lease_id' })
   lease: Lease;
@@ -27,9 +44,11 @@ export class LeaseCharge {
   @Column()
   lease_id: number;
 
+  /** Charge name (e.g., Monthly Rent) */
   @Column()
-  name: string; // e.g., Monthly Rent
+  name: string;
 
+  /** Unit relation */
   @ManyToOne(() => Unit, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
@@ -37,6 +56,7 @@ export class LeaseCharge {
   @Column()
   unit_id: number;
 
+  /** Property relation */
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })
   property: Property;
@@ -44,26 +64,30 @@ export class LeaseCharge {
   @Column()
   property_id: number;
 
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
+  /** Amount with numeric transformer */
+  @Column({
+    type: 'numeric',
+    precision: 12,
     scale: 2,
     transformer: {
       to: (value: number) => value,
-      from: (value: string) => parseFloat(value || '0')
-    }
+      from: (value: string) => parseFloat(value || '0'),
+    },
   })
   amount: number;
 
+  /** Payment cadence */
   @Column({ type: 'varchar', default: 'monthly' })
   cadence: 'monthly' | 'quarterly' | 'yearly';
 
+  /** Charge period */
   @Column({ type: 'date' })
   start_date: string;
 
   @Column({ type: 'date', nullable: true })
   end_date: string | null;
 
+  /** Timestamps */
   @CreateDateColumn()
   created_at: Date;
 
@@ -73,5 +97,3 @@ export class LeaseCharge {
   @DeleteDateColumn()
   deleted_at: Date | null;
 }
-
-

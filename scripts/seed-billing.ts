@@ -7,6 +7,8 @@ import { Unit } from '../src/properties/unit.entity';
 import { Lease } from '../src/tenancy/lease.entity';
 import { InvoicesService } from '../src/billing/invoices.service';
 import { PaymentsService } from '../src/billing/payments.service';
+import { AuditLog } from '../src/common/audit-log.entity';
+import { AuditLogService } from '../src/common/audit-log.service';
 
 async function main() {
   await AppDataSource.initialize();
@@ -23,15 +25,49 @@ async function main() {
 
   const lease = (await leaseRepo.save(leaseRepo.create({ portfolio_id: (portfolio as any).id, unit_id: (unit as any).id, start_date: new Date().toISOString().slice(0,10), end_date: new Date(Date.now() + 1000*60*60*24*30).toISOString().slice(0,10), rent: '1000.00', billing_day: 1, status: 'active' } as any))) as any;
 
-  const invoicesService = new InvoicesService(AppDataSource.getRepository((await import('../src/billing/invoice.entity')).Invoice), AppDataSource as any);
-  const paymentsService = new PaymentsService(AppDataSource.getRepository((await import('../src/billing/payment.entity')).Payment) as any, AppDataSource as any);
+  // For seeding purposes, we'll use a simplified approach
+  // Create mock services with minimal dependencies
+  const mockServices = {
+    sendEmail: () => Promise.resolve(),
+    generatePdf: () => Promise.resolve(Buffer.from('')),
+  };
+
+  // Import entities directly to avoid dynamic imports
+  const { Invoice } = await import('../src/billing/entities/invoice.entity');
+  const { Payment } = await import('../src/billing/payment.entity');
+
+  const invoicesService = new InvoicesService(
+    AppDataSource.getRepository(Invoice),
+    leaseRepo, // Reuse the lease repository we already have
+    portfolioRepo, // Reuse the portfolio repository we already have
+    mockServices as any, // Mock email service
+    mockServices as any, // Mock PDF service
+    AppDataSource,
+    { get: () => '' } as any // Mock config service
+  );
+
+  const auditLogService = new AuditLogService(
+    AppDataSource.getRepository(AuditLog)
+  );
+
+  const paymentsService = new PaymentsService(
+    AppDataSource.getRepository(Payment),
+    AppDataSource,
+    auditLogService
+  );
 
   console.log('Generating invoice for lease', lease.id);
   const invoice = await invoicesService.generateNextForLease(lease.id);
   console.log('Generated invoice', invoice);
 
   console.log('Recording payment for lease', lease.id);
-  const payment = await paymentsService.createForLease(lease.id, { amount: '1000.00', method: 'cash', at: new Date().toISOString().slice(0,10) });
+  const payment = await paymentsService.createForLease(lease.id, { 
+    amount: 1000.00, 
+    method: 'cash', 
+    received_at: new Date().toISOString().slice(0,10),
+    lease_id: lease.id,
+    user_id: 1 // Assuming user with ID 1 exists, or replace with appropriate user ID
+  });
   console.log('Recorded payment', payment);
 
   await AppDataSource.destroy();

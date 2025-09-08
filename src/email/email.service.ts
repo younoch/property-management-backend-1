@@ -26,12 +26,24 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
+    const isEmailEnabled = this.configService.get('EMAIL_ENABLED', 'true') === 'true';
+    
+    if (!isEmailEnabled) {
+      this.logger.warn('Email service is disabled by configuration');
+      return;
+    }
+
     const host = this.configService.get('SMTP_HOST');
     const port = this.configService.get('SMTP_PORT');
     const secure = this.configService.get('SMTP_SECURE') === 'true';
     const user = this.configService.get('SMTP_USER');
     const pass = this.configService.get('SMTP_PASSWORD');
-    this.from = this.configService.get('SMTP_FROM') || `"Lease Director" <${user}>`;
+    this.from = this.configService.get('DEFAULT_FROM_EMAIL') || `"Lease Director" <${user}>`;
+
+    if (!host || !port) {
+      this.logger.warn('SMTP configuration is incomplete. Email service will not be available.');
+      return;
+    }
 
     try {
       this.transporter = nodemailer.createTransport({
@@ -40,7 +52,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         secure,
         auth: user && pass ? { user, pass } : undefined,
         tls: {
-          // Do not fail on invalid certs
+          // Do not fail on invalid certs in development
           rejectUnauthorized: this.configService.get('NODE_ENV') === 'production',
         },
       });
@@ -60,14 +72,18 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async verifyConnection(): Promise<boolean> {
+  private async verifyConnection() {
     try {
-      const success = await this.transporter.verify();
+      if (!this.transporter) {
+        throw new Error('Email transporter is not initialized');
+      }
+      await this.transporter.verify();
       this.logger.log('SMTP Connection verified');
-      return success;
     } catch (error) {
-      this.logger.error('SMTP Connection verification failed', error);
-      throw error;
+      this.logger.error('SMTP Connection verification failed');
+      this.logger.error(error);
+      // Don't throw error, just log it
+      this.transporter = null;
     }
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { Payment } from './payment.entity';
@@ -7,6 +7,7 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentApplication } from './payment-application.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Lease } from '../tenancy/lease.entity';
+import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { AuditLogService, AuditAction } from '../common/audit-log.service';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class PaymentsService {
     @InjectRepository(Payment)
     private readonly repo: Repository<Payment>,
     private readonly dataSource: DataSource,
-    private readonly auditLogService: AuditLogService,
+    private readonly auditLogService: AuditLogService, // <- inject by type, no @Inject token needed
   ) {}
 
   async create(dto: CreatePaymentDto) {
@@ -142,14 +143,27 @@ export class PaymentsService {
       const paymentAppRepo = transactionalEntityManager.getRepository(PaymentApplication);
       const leaseRepo = transactionalEntityManager.getRepository(Lease);
 
-      // Get the lease to validate and get portfolio_id
+      // Get the lease with unit and portfolio
       const lease = await leaseRepo.findOne({ 
         where: { id: leaseId },
-        relations: ['unit', 'tenant']
+        relations: ['unit']
       });
       
       if (!lease) {
         throw new NotFoundException(`Lease with ID ${leaseId} not found`);
+      }
+      
+      // Get the primary tenant
+      const leaseTenant = await transactionalEntityManager.findOne(LeaseTenant, {
+        where: { 
+          lease_id: leaseId,
+          is_primary: true 
+        },
+        relations: ['tenant']
+      });
+
+      if (!leaseTenant) {
+        throw new NotFoundException(`Primary tenant not found for lease ${leaseId}`);
       }
       
       // Ensure portfolio_id is properly set
