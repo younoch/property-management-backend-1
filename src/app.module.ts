@@ -60,27 +60,25 @@ import { FeedbackModule } from './feedback/feedback.module';
       isGlobal: true,
       ttl: 300, // 5 minutes
     }),
-      TypeOrmModule.forRootAsync({
-        inject: [ConfigService],
-        useFactory: (config: ConfigService) => {
-          const isProduction = (config.get<string>('NODE_ENV') || process.env.NODE_ENV) === 'production';
-          const sslEnabled = isProduction && (config.get<string>('DB_SSL') === 'true');
-          return {
-            type: 'postgres',
-            host: config.get<string>('DB_HOST'),
-            port: config.get<number>('DB_PORT'),
-            username: config.get<string>('DB_USERNAME'),
-            password: config.get<string>('DB_PASSWORD'),
-            database: config.get<string>('DB_NAME'),
-            synchronize: config.get<boolean>('DB_SYNC', true),
-            autoLoadEntities: true,
-            ssl: sslEnabled ? { rejectUnauthorized: false } : false,
-            extra: sslEnabled
-              ? { sslmode: 'require' } // ✅ only add when SSL enabled
-              : {},
-          };
-        },
-      }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const isProduction = (config.get<string>('NODE_ENV') || process.env.NODE_ENV) === 'production';
+        return {
+          type: 'postgres',
+          host: config.get<string>('DB_HOST'),
+          port: Number(config.get<number>('DB_PORT') || 5432),
+          username: config.get<string>('DB_USERNAME'),
+          password: config.get<string>('DB_PASSWORD'),
+          database: config.get<string>('DB_NAME'),
+          synchronize: config.get<boolean>('DB_SYNC', true),
+          autoLoadEntities: true,
+          ssl: isProduction
+            ? { rejectUnauthorized: false } // ensures SSL is used without verifying the cert
+            : false,
+        };
+      },
+    }),    
     UsersModule,
     PortfoliosModule,
     PropertiesModule,
