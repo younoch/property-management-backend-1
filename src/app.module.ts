@@ -79,38 +79,22 @@ import { LeaseCharge } from './billing/lease-charge.entity';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const password = configService.get('DB_PASSWORD', 'postgres');
         const isProduction = configService.get('NODE_ENV') === 'production';
-        const host = configService.get('DB_HOST', 'localhost');
-        const port = parseInt(configService.get('DB_PORT', '5432'), 10);
-        const username = configService.get('DB_USERNAME', 'postgres');
-        const database = configService.get('DB_DATABASE', 'property_management');
-        
+    
         return {
           type: 'postgres',
-          host,
-          port,
-          username,
-          password,
-          database,
-          ssl: false,
-          extra: {
-            ssl: false
-          },
-          // Add driver options to disable SSL
-          driver: {
-            ssl: false
-          },
-          entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-          migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
+          url: configService.get<string>('DATABASE_URL'),
+          autoLoadEntities: true,
           synchronize: configService.get('DB_SYNC') === 'true',
           migrationsRun: configService.get('RUN_MIGRATIONS_ON_BOOT') === 'true',
-          autoLoadEntities: true,
-          logging: !isProduction
+          logging: !isProduction,
+          ssl: isProduction
+            ? { rejectUnauthorized: false }
+            : false, // disable SSL locally, enable in production
         };
       },
     }),
-
+    
     // JWT Module
     JwtModule.registerAsync({
       imports: [ConfigModule],
