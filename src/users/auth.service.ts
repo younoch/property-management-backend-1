@@ -3,6 +3,9 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { AccessTokenPayload, RefreshTokenPayload } from '../common/types/jwt.types';
+import { UserRole } from './enums/user-role.enum';
 import { UsersService } from './users.service';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -10,7 +13,11 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService, private configService: ConfigService) {}
+  constructor(
+    private usersService: UsersService, 
+    private configService: ConfigService,
+    private jwtService: JwtService
+  ) {}
 
   async signup(email: string, password: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
     // See if email is in use
@@ -46,17 +53,31 @@ export class AuthService {
   }
 
   issueLoginResponse(user: any) {
-    const payload = { sub: user.id, role: user.role };
-    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m'; // 15 minutes default
-    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d'; // 7 days default
+    const accessPayload: AccessTokenPayload = { 
+      sub: user.id.toString(), 
+      role: user.role as UserRole, 
+      type: 'access' 
+    };
+    
+    const refreshPayload: RefreshTokenPayload = {
+      ...accessPayload,
+      type: 'refresh'
+    };
 
-    const accessToken = jwt.sign(payload, this.configService.get<string>('JWT_ACCESS_SECRET') as string, {
-      expiresIn: accessExpiresIn,
+    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
+    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
+
+    const accessToken = this.jwtService.sign(accessPayload, {
+      secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: accessExpiresIn
     });
 
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || (this.configService.get<string>('JWT_ACCESS_SECRET') as string);
-    const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, refreshSecret, {
-      expiresIn: refreshExpiresIn,
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || 
+      this.configService.get<string>('JWT_ACCESS_SECRET');
+    
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn
     });
 
     // Return full user data excluding password_hash, including relationships
@@ -80,8 +101,9 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     try {
       // Verify the refresh token
-      const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || (this.configService.get<string>('JWT_ACCESS_SECRET') as string);
-      const payload = jwt.verify(refreshToken, refreshSecret) as { sub: number; role: string; type: string };
+      const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET') || 
+        this.configService.get<string>('JWT_ACCESS_SECRET');
+      const payload = this.jwtService.verify<RefreshTokenPayload>(refreshToken, { secret: refreshSecret });
       
       // Check if it's a refresh token
       if (payload.type !== 'refresh') {
@@ -89,7 +111,8 @@ export class AuthService {
       }
 
       // Get the user
-      const user = await this.usersService.findOne(payload.sub);
+      const userId = parseInt(payload.sub, 10);
+      const user = await this.usersService.findOne(userId);
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -101,10 +124,16 @@ export class AuthService {
 
       // Generate new access token
       const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m'; // 15 minutes default
-      const newAccessToken = jwt.sign(
-        { sub: user.id, role: user.role },
-        this.configService.get<string>('JWT_ACCESS_SECRET') as string,
-        { expiresIn: accessExpiresIn }
+      const newAccessToken = this.jwtService.sign(
+        { 
+          sub: payload.sub, 
+          role: payload.role,
+          type: 'access' 
+        } as AccessTokenPayload,
+        { 
+          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+          expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m' 
+        }
       );
 
       return {

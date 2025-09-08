@@ -1,10 +1,15 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
+// Remove direct jwt import as we're using JwtService
 import { ConfigService } from '@nestjs/config';
+import { AccessTokenPayload } from '../common/types/jwt.types';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService
+  ) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
@@ -19,10 +24,13 @@ export class AuthGuard implements CanActivate {
     }
     
     try {
-      const payload = jwt.verify(
+      const payload = this.jwtService.verify<AccessTokenPayload>(
         accessToken,
-        this.configService.get<string>('JWT_ACCESS_SECRET') as string,
-      ) as { sub: number; exp: number };
+        { secret: this.configService.get<string>('JWT_ACCESS_SECRET') }
+      );
+      
+      // Store user ID in request for later use
+      request.userId = parseInt(payload.sub, 10);
       
       if (!payload?.sub) {
         throw new UnauthorizedException({
@@ -38,14 +46,14 @@ export class AuthGuard implements CanActivate {
       }
       
       // Handle JWT verification errors
-      if (error instanceof jwt.JsonWebTokenError) {
+      if (error.name === 'JsonWebTokenError') {
         throw new UnauthorizedException({
           message: 'Invalid access token',
           errorType: 'INVALID_TOKEN'
         });
       }
       
-      if (error instanceof jwt.TokenExpiredError) {
+      if (error.name === 'TokenExpiredError') {
         // Check if refresh token is available for automatic refresh
         if (refreshToken) {
           throw new UnauthorizedException({

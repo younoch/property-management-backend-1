@@ -4,25 +4,32 @@ import {
   CallHandler,
   Injectable,
 } from '@nestjs/common';
-import { UsersService } from '../users.service';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../users.service';
+import { AccessTokenPayload } from '../../common/types/jwt.types';
 
 @Injectable()
 export class CurrentUserInterceptor implements NestInterceptor {
-  constructor(private usersService: UsersService, private configService: ConfigService) {}
+  constructor(
+    private usersService: UsersService, 
+    private configService: ConfigService,
+    private jwtService: JwtService
+  ) {}
 
   async intercept(context: ExecutionContext, handler: CallHandler) {
     const request = context.switchToHttp().getRequest();
     try {
       const token = request.cookies?.access_token || request.signedCookies?.access_token;
       if (token) {
-        const payload = jwt.verify(
+        const payload = this.jwtService.verify<AccessTokenPayload>(
           token,
-          this.configService.get<string>('JWT_ACCESS_SECRET') as string,
-        ) as { sub: number };
+          { secret: this.configService.get<string>('JWT_ACCESS_SECRET') }
+        );
+        
         if (payload?.sub) {
-          const user = await this.usersService.findOne(payload.sub);
+          const userId = parseInt(payload.sub, 10);
+          const user = await this.usersService.findOne(userId);
           if (user) {
             request.currentUser = user;
           }

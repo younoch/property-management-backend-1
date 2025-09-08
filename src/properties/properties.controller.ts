@@ -21,7 +21,8 @@ import { PaginatedPropertiesResponseDto } from './dto/paginated-properties.dto';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 import { ConfigService } from '@nestjs/config';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
+import { AccessTokenPayload } from '../common/types/jwt.types';
 
 @ApiTags('properties')
 @Controller('properties')
@@ -29,6 +30,7 @@ export class PropertiesGlobalController {
   constructor(
     private readonly propertiesService: PropertiesService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @ApiOperation({ summary: 'Get all properties (paginated + search)' })
@@ -87,6 +89,7 @@ export class PropertiesController {
   constructor(
     private readonly propertiesService: PropertiesService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @ApiOperation({ summary: 'Create a new property for a portfolio' })
@@ -104,12 +107,12 @@ export class PropertiesController {
     // Extract user ID from JWT token payload
     const accessToken = req.cookies?.access_token || req.signedCookies?.access_token;
     
-    const payload = jwt.verify(
+    const payload = this.jwtService.verify<AccessTokenPayload>(
       accessToken,
-      this.configService.get<string>('JWT_ACCESS_SECRET')
-    ) as { sub: number; exp: number };
+      { secret: this.configService.get<string>('JWT_ACCESS_SECRET') }
+    );
     
-    const userId = payload.sub;
+    const userId = parseInt(payload.sub, 10);
     
     return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: portfolioId }, userId);
   }
