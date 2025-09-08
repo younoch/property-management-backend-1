@@ -1,16 +1,17 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { join } from 'path';
-import * as pg from 'pg';
 import 'dotenv/config';
 
-// Import pg-native if available
-try {
-  const pgNative = require('pg-native');
-  // @ts-ignore - Assigning to read-only property
-  pg.native = pgNative;
-} catch (error) {
-  console.warn('pg-native not installed, falling back to JavaScript implementation');
+// Explicitly use the JavaScript implementation of pg
+const pg = require('pg');
+
+// Disable pg-native to prevent Pool constructor issues
+process.env.PG_USE_NATIVE = 'false';
+
+// Ensure we're using the correct Pool implementation
+if (!pg.Pool) {
+  throw new Error('pg.Pool is not available. Check your node-postgres installation.');
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -95,9 +96,30 @@ const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
   username: dbConfig.username,
   password: dbConfig.password,
   database: dbConfig.database,
+  
+  // SSL configuration
   ssl: dbConfig.ssl ? {
     rejectUnauthorized: false, // Required for Neon
   } : false,
+  
+  // Connection pool settings
+  extra: {
+    ...(dbConfig.ssl && { 
+      ssl: { 
+        rejectUnauthorized: false 
+      } 
+    }),
+    // Pool settings
+    max: 20,
+    min: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    // Statement timeout in milliseconds
+    statement_timeout: 10000
+  },
+  
+  // Entity and migration configuration
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
   synchronize: process.env.DB_SYNC === 'true',
@@ -105,50 +127,39 @@ const baseConfig: TypeOrmModuleOptions & PostgresConnectionOptions = {
   migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
   // @ts-ignore - autoLoadEntities is a valid option for TypeOrmModule.forRoot()
   autoLoadEntities: true,
-  // Connection options
-  extra: {
-    // Set the pg module
-    ...(pg.native ? { pgNative: pg.native } : {}),
-    // Pool configuration
-    max: 20,
-    min: 2,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-    // SSL configuration (enabled by default in production)
-    ...(isProduction || process.env.DB_SSL === 'true' ? {
-      ssl: {
-        rejectUnauthorized: false
-      }
-    } : {})
-  },
-  // Use native driver if available
-  ...(pg.native ? { driver: pg.native } : {}),
+  
   // Retry configuration
   retryAttempts: 10,
   retryDelay: 3000,
-  // Set statement timeout (in milliseconds)
-  // @ts-ignore - statement_timeout is a valid PostgreSQL option in extra
-  statement_timeout: 10000
 };
 
 // Production-specific configurations
 const productionConfig: Partial<PostgresConnectionOptions> = {
-  ...sslConfig,
+  // Use SSL in production
+  ssl: {
+    rejectUnauthorized: false
+  },
+  // Production connection pool settings
   extra: {
     ...sslConfig.extra,
+    // Pool settings
     max: 20,
     min: 2,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
-    // @ts-ignore - statement_timeout is a valid PostgreSQL option
-    statement_timeout: 10000,
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    // Statement timeout in milliseconds
+    statement_timeout: 10000
   }
 };
 
+// Merge configurations based on environment
 export const databaseConfig: TypeOrmModuleOptions = {
   ...baseConfig,
   ...(isProduction ? productionConfig : {
+    // Development pool settings (more relaxed)
     extra: {
+      ...baseConfig.extra,
       max: 10,
       min: 1,
       idleTimeoutMillis: 10000,
