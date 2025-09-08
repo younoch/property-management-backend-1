@@ -1,19 +1,24 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
-import * as dotenv from 'dotenv';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
-
-dotenv.config();
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
 
-const sslConfig = {
-  ssl: process.env.DB_SSL === 'true' ? {
+const sslConfig = process.env.DB_SSL === 'true' ? {
+  ssl: {
     rejectUnauthorized: false,
-  } : false,
-};
+  },
+  extra: {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  },
+} : {};
 
-export const dataSourceOptions: DataSourceOptions = {
+// Enable query logging in development and test environments
+const logging = !isProduction && !isTest;
+
+export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
@@ -23,10 +28,10 @@ export const dataSourceOptions: DataSourceOptions = {
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
   synchronize: process.env.DB_SYNC === 'true',
-  logging: !isProduction && !isTest ? ['query', 'error'] : ['error'],
+  logging: logging ? 'all' : ['error'],
   ...(isProduction ? sslConfig : {}),
   migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
+  autoLoadEntities: true,
 };
 
-const dataSource = new DataSource(dataSourceOptions);
-export default dataSource;
+export default databaseConfig;

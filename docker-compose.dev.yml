@@ -8,6 +8,14 @@ services:
       POSTGRES_DB: property_rental_management_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: rR%jrYKNqQdnYVQUkzuN
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      POSTGRES_HOST_AUTH_METHOD: trust
+    command: >
+      postgres 
+      -c ssl=off 
+      -c max_connections=100 
+      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem 
+      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     ports:
       - "5432:5432"
     volumes:

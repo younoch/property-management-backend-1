@@ -1,17 +1,31 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Inject, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-// Remove direct jwt import as we're using JwtService
 import { ConfigService } from '@nestjs/config';
+import { JwtModuleOptions } from '@nestjs/jwt/dist/interfaces/jwt-module-options.interface';
 import { AccessTokenPayload } from '../common/types/jwt.types';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly configService: ConfigService,
-    private readonly jwtService: JwtService
-  ) {}
+    @Optional()
+    @Inject('JWT_MODULE_OPTIONS')
+    private readonly jwtOptions: JwtModuleOptions,
+    @Optional()
+    @Inject(JwtService)
+    private readonly jwtService?: JwtService
+  ) {
+    if (!this.jwtService) {
+      this.jwtService = new JwtService({
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        signOptions: {
+          expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m')
+        }
+      });
+    }
+  }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const accessToken = request.cookies?.access_token || request.signedCookies?.access_token;
     const refreshToken = request.cookies?.refresh_token || request.signedCookies?.refresh_token;
@@ -24,9 +38,16 @@ export class AuthGuard implements CanActivate {
     }
     
     try {
-      const payload = this.jwtService.verify<AccessTokenPayload>(
+      // Get JWT secret from config
+      const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
+      if (!secret) {
+        throw new Error('JWT_ACCESS_SECRET is not configured');
+      }
+
+      // Verify token
+      const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
         accessToken,
-        { secret: this.configService.get<string>('JWT_ACCESS_SECRET') }
+        { secret }
       );
       
       // Store user ID in request for later use

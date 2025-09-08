@@ -1,7 +1,10 @@
 import { Module, ValidationPipe, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthGuard } from './guards/auth.guard';
+import { join } from 'path';
 // Import with require to avoid TypeScript module resolution issues
 const { ThrottlerModule } = require('@nestjs/throttler');
 const { WinstonModule } = require('nest-winston');
@@ -76,15 +79,50 @@ import { LeaseCharge } from './billing/lease-charge.entity';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // Import dataSourceOptions directly to avoid circular dependency
-        const { dataSourceOptions } = await import('./config/database');
+        const password = configService.get('DB_PASSWORD', 'postgres');
+        const isProduction = configService.get('NODE_ENV') === 'production';
+        const host = configService.get('DB_HOST', 'localhost');
+        const port = parseInt(configService.get('DB_PORT', '5432'), 10);
+        const username = configService.get('DB_USERNAME', 'postgres');
+        const database = configService.get('DB_DATABASE', 'property_management');
+        
         return {
-          ...dataSourceOptions,
+          type: 'postgres',
+          host,
+          port,
+          username,
+          password,
+          database,
+          ssl: false,
+          extra: {
+            ssl: false
+          },
+          // Add driver options to disable SSL
+          driver: {
+            ssl: false
+          },
+          entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
+          migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
+          synchronize: configService.get('DB_SYNC') === 'true',
+          migrationsRun: configService.get('RUN_MIGRATIONS_ON_BOOT') === 'true',
           autoLoadEntities: true,
+          logging: !isProduction
         };
       },
     }),
 
+    // JWT Module
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_ACCESS_SECRET'),
+        signOptions: { 
+          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m') 
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    
     // Feature Modules
     UsersModule,
     PropertiesModule,
@@ -107,12 +145,8 @@ import { LeaseCharge } from './billing/lease-charge.entity';
   providers: [
     AppService,
     {
-      provide: APP_PIPE,
-      useValue: new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
     {
       provide: APP_FILTER,
@@ -122,6 +156,14 @@ import { LeaseCharge } from './billing/lease-charge.entity';
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    }
   ],
 })
 export class AppModule implements NestModule {
