@@ -6,9 +6,9 @@ services:
     plan: free
     autoDeploy: true
     buildCommand: |
-      npm install -g pnpm@8.14.0
-      pnpm install --frozen-lockfile
-      pnpm run build
+      npm cache clean --force
+      npm install --legacy-peer-deps --prefer-offline --no-audit
+      npm run build
     startCommand: node dist/main.js
     healthCheckPath: /health
     instanceCount: 1
