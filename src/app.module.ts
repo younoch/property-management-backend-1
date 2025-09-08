@@ -75,27 +75,12 @@ import { LeaseCharge } from './billing/lease-charge.entity';
     // Database configuration
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const isProduction = config.get<string>('NODE_ENV') === 'production';
-        const entities = [
-          path.join(process.cwd(), 'dist/**/*.entity.js'),
-          path.join(process.cwd(), 'dist/portfolios/portfolio.entity.js')
-        ];
-        
-        console.log('Loading entities from paths:', entities);
-        
+      useFactory: async (configService: ConfigService) => {
+        // Import dataSourceOptions directly to avoid circular dependency
+        const { dataSourceOptions } = await import('./config/database');
         return {
-          type: 'postgres',
-          host: config.get<string>('DB_HOST'),
-          port: Number(config.get<number>('DB_PORT') || 5432),
-          username: config.get<string>('DB_USERNAME'),
-          password: config.get<string>('DB_PASSWORD'),
-          database: config.get<string>('DB_NAME'),
-          synchronize: config.get<boolean>('DB_SYNC', true),
-          entities: entities,
-          logging: ['error', 'warn', 'schema'],
-          logger: 'advanced-console',
-          ssl: isProduction ? { rejectUnauthorized: false } : false,
+          ...dataSourceOptions,
+          autoLoadEntities: true,
         };
       },
     }),

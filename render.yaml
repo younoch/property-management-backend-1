@@ -4,20 +4,46 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    autoDeploy: true
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
     envVars:
       # General Node / NestJS
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DB_TYPE
+        value: postgres
+      - key: DB_HOST
+        fromDatabase:
+          name: property-management-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: property-management-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: property-management-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: property-management-db
+          property: password
+      - key: DB_DATABASE
+        fromDatabase:
+          name: property-management-db
+          property: database
       - key: DB_SYNC
-        value: false
+        value: 'false'
       - key: DB_SSL
-        value: true
-      - key: ALLOWED_ORIGINS
-        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000,https://property-management-api-7yk4.onrender.com"
+        value: 'true'
       - key: RUN_MIGRATIONS_ON_BOOT
-        value: true
+        value: 'true'
 
       # JWT Configuration
       - key: JWT_ACCESS_SECRET
