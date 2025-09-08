@@ -1,14 +1,23 @@
-# ---------- Stage 1: deps (install all deps incl dev for build) ----------
-FROM node:22-alpine AS deps
+# ---------- Base Stage: Install build dependencies ----------
+FROM node:22-alpine AS base
 WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat python3 make g++
 
 # Copy package files
 COPY package*.json ./
 COPY .npmrc* ./
 
-# Clear npm cache and install all dependencies including devDependencies
-RUN npm cache clean --force && \
-    npm install --legacy-peer-deps
+# Install all dependencies including devDependencies
+RUN npm install --legacy-peer-deps
+
+# ---------- Stage 1: deps (copy node_modules from base) ----------
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY --from=base /app/node_modules ./node_modules
+COPY package*.json ./
+COPY .npmrc* ./
   
   # ---------- Stage 2: builder (compile TS -> JS) ----------
   FROM node:22-alpine AS builder
@@ -34,7 +43,8 @@ RUN npm cache clean --force && \
   # Copy manifest and install ONLY prod deps
   COPY package*.json ./
   RUN npm cache clean --force && \
-      npm install --omit=dev --legacy-peer-deps
+      npm install --omit=dev --legacy-peer-deps && \
+      npm cache clean --force
   
 # Copy compiled app
 COPY --from=builder /app/dist ./dist
