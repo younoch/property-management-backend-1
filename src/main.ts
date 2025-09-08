@@ -6,6 +6,14 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
+
+  // 🔎 Debug DB config on startup
+  console.log('🔎 Database Config (from ENV):');
+  console.log('   DB_HOST:', process.env.DB_HOST);
+  console.log('   DB_PORT:', process.env.DB_PORT);
+  console.log('   DB_NAME:', process.env.DB_NAME);
+  console.log('   DB_USERNAME:', process.env.DB_USERNAME);
+  console.log('   DB_SSL:', process.env.DB_SSL);
   
   // CORS configuration for production
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
