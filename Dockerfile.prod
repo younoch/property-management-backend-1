@@ -1,34 +1,25 @@
 # Build stage
-FROM node:18.20.2-alpine3.19 AS builder
+FROM node:18.20.2-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies including PostgreSQL client libraries
-RUN apk add --no-cache --virtual .build-deps \
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
-    postgresql-dev \
-    gcc \
-    musl-dev \
-    linux-headers \
-    postgresql-client \
     && npm install -g node-gyp
 
 # Copy package files first for better caching
 COPY package*.json ./
 COPY .npmrc ./
 
-# Install all dependencies without building native modules yet
+# Install all dependencies without native bindings
 RUN npm config set python python3 \
     && npm config set unsafe-perm true \
+    && npm config set pg_native false \
     && npm cache clean --force \
-    && npm install --legacy-peer-deps --prefer-offline --no-audit --no-optional \
-    && npm rebuild bcrypt --build-from-source
-
-# Clean up build dependencies after installation
-RUN apk del .build-deps \
-    && apk add --no-cache libpq
+    && npm install --legacy-peer-deps --prefer-offline --no-audit --no-optional
 
 # Copy source code
 COPY . .
@@ -37,15 +28,14 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18.20.2-alpine3.19
+FROM node:18.20.2-slim
 
 WORKDIR /app
 
 # Install runtime dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     tini \
-    libpq \
-    postgresql-client
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
