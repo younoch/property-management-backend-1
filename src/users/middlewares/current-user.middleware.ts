@@ -27,7 +27,7 @@ export class CurrentUserMiddleware implements NestMiddleware {
         const payload = jwt.verify(
           token,
           this.configService.get<string>('JWT_ACCESS_SECRET') as string,
-        ) as jwt.JwtPayload;
+        ) as { sub: string | number };
         const userId = typeof payload.sub === 'string' ? parseInt(payload.sub, 10) : payload.sub;
         if (userId) {
           const user = await this.usersService.findOne(userId);
