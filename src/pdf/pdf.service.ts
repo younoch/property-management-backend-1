@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { Readable } from 'stream';
-import { Invoice } from '../billing/invoice.entity';
+import { Invoice } from '../billing/entities/invoice.entity';
 
 export interface InvoicePdfData {
   id: number;

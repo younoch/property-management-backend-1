@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LeaseCharge } from './lease-charge.entity';
-import { Invoice } from './invoice.entity';
+import { Invoice } from './entities/invoice.entity';
 @Injectable()
 export class InvoiceGenerationScheduler {
   private readonly logger = new Logger(InvoiceGenerationScheduler.name);

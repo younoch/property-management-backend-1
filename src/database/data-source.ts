@@ -12,7 +12,7 @@ import { Tenant } from '../tenancy/tenant.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { LeaseCharge } from '../billing/lease-charge.entity';
-import { Invoice } from '../billing/invoice.entity';
+import { Invoice } from '../billing/entities/invoice.entity';
 import { PaymentApplication } from '../billing/payment-application.entity';
 import { Payment } from '../billing/payment.entity';
 import { MaintenanceRequest } from '../maintenance/maintenance-request.entity';

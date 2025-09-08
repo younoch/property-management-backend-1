@@ -1,16 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Invoice } from './entities/invoice.entity';
 import { Payment } from './payment.entity';
 import { PaymentApplication } from './payment-application.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
-// invoice scheduler removed in MVP
-import { InvoicesController, InvoicesGlobalController } from './invoices.controller';
-import { PaymentsController, PaymentsGlobalController } from './payments.controller';
 import { InvoiceEmailController } from './controllers/invoice-email.controller';
-import { InvoicesService } from './invoices.service';
-import { PaymentsService } from './payments.service';
 import { InvoiceEmailService } from './services/invoice-email.service';
 import { LeaseBillingController } from './leases-billing.controller';
 import { AuditLogModule } from '../common/audit-log.module';
@@ -18,32 +13,30 @@ import { LeaseToInvoiceMapper } from './lease-to-invoice.mapper';
 import { LeaseChargesModule } from './lease-charges.module';
 import { EmailModule } from '../email/email.module';
 import { PdfModule } from '../pdf/pdf.module';
+import { InvoicesModule } from './invoices.module';
+import { PaymentsModule } from './payments.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Invoice, 
-      Payment, 
-      PaymentApplication
+      Invoice,
+      Payment,
+      PaymentApplication,
+      Lease,
+      Portfolio
     ]),
-    TypeOrmModule.forFeature([Lease], 'default'),
-    TypeOrmModule.forFeature([Portfolio], 'default'),
+    forwardRef(() => InvoicesModule),
+    forwardRef(() => PaymentsModule),
     LeaseChargesModule,
     AuditLogModule,
     EmailModule,
     PdfModule,
   ],
   controllers: [
-    InvoicesController,
-    InvoicesGlobalController,
-    PaymentsController,
-    PaymentsGlobalController,
     LeaseBillingController,
     InvoiceEmailController,
   ],
   providers: [
-    InvoicesService,
-    PaymentsService,
     InvoiceEmailService,
     LeaseToInvoiceMapper
   ],

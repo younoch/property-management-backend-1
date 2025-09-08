@@ -62,7 +62,7 @@ import { FeedbackModule } from './feedback/feedback.module';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
+      useFactory: async (config: ConfigService) => {
         const isProduction = (config.get<string>('NODE_ENV') || process.env.NODE_ENV) === 'production';
         return {
           type: 'postgres',
@@ -72,22 +72,23 @@ import { FeedbackModule } from './feedback/feedback.module';
           password: config.get<string>('DB_PASSWORD'),
           database: config.get<string>('DB_NAME'),
           synchronize: config.get<boolean>('DB_SYNC', true),
-          autoLoadEntities: true,
+          entities: [
+            __dirname + '/**/*.entity{.ts,.js}',
+            __dirname + '/**/entities/*.entity{.ts,.js}'
+          ],
           ssl: isProduction
             ? { rejectUnauthorized: false } // ensures SSL is used without verifying the cert
             : false,
         };
       },
-    }),    
+    }),
     UsersModule,
     PortfoliosModule,
     PropertiesModule,
     UnitsModule,
     TenantsModule,
     LeasesModule,
-    InvoicesModule,
     BillingModule,
-    PaymentsModule,
     MaintenanceModule,
     DocumentsModule,
     LeaseChargesModule,
