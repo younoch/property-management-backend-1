@@ -6,8 +6,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY .npmrc* ./
 
-# Install all dependencies including devDependencies
-RUN npm ci --include=dev
+# Clear npm cache and install all dependencies including devDependencies
+RUN npm cache clean --force && \
+    npm install --legacy-peer-deps
   
   # ---------- Stage 2: builder (compile TS -> JS) ----------
   FROM node:22-alpine AS builder
@@ -32,7 +33,8 @@ RUN npm ci --include=dev
   
   # Copy manifest and install ONLY prod deps
   COPY package*.json ./
-  RUN npm ci --omit=dev
+  RUN npm cache clean --force && \
+      npm install --omit=dev --legacy-peer-deps
   
 # Copy compiled app
 COPY --from=builder /app/dist ./dist
