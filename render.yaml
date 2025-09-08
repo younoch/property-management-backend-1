@@ -22,6 +22,12 @@ services:
         value: 3000
       - key: HOST
         value: 0.0.0.0
+      - key: NODE_OPTIONS
+        value: '--max_old_space_size=1024'
+      - key: TZ
+        value: 'UTC'
+      - key: NPM_CONFIG_PRODUCTION
+        value: 'false'
       
       # Database Configuration - Using Neon
       - key: DATABASE_URL
@@ -36,21 +42,6 @@ services:
         value: postgres
       - key: TYPEORM_LOGGING
         value: 'true'
-      - key: NPM_CONFIG_PRODUCTION
-        value: 'false'
-      # Database configuration
-      - key: DATABASE_URL
-        fromDatabase:
-          name: property-management-db
-          property: connectionString
-      - key: DB_SYNC
-        value: 'false'
-      - key: RUN_MIGRATIONS_ON_BOOT
-        value: 'true'
-      - key: NODE_OPTIONS
-        value: '--max_old_space_size=1024'
-      - key: TZ
-        value: 'UTC'
 
       # JWT Configuration
       - key: JWT_ACCESS_SECRET
