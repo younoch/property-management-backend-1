@@ -4,14 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from './guards/auth.guard';
-import { join } from 'path';
-// Import with require to avoid TypeScript module resolution issues
-const { ThrottlerModule } = require('@nestjs/throttler');
-const { WinstonModule } = require('nest-winston');
-const { CacheModule } = require('@nestjs/cache-manager');
-const { ScheduleModule } = require('@nestjs/schedule');
-const cookieParser = require('cookie-parser');
-const path = require('path');
+import cookieParser from 'cookie-parser';
 
 // Controllers & Services
 import { AppController } from './app.controller';
@@ -40,74 +33,38 @@ import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
 
-// Entities
-import { Portfolio } from './portfolios/portfolio.entity';
-import { LeaseCharge } from './billing/lease-charge.entity';
+// Database config
+import { databaseConfig } from './config/database';
 
 @Module({
   imports: [
-    // Config
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       validate,
     }),
 
-    // Scheduling
-    ScheduleModule.forRoot(),
-
-    // Rate limiting
-    ThrottlerModule.forRoot([{
-      ttl: 60000,   // milliseconds (1 minute)
-      limit: 100,
-    }]),
-
-    // Logging
-    WinstonModule.forRoot(loggerConfig),
-
-    // Caching
-    CacheModule.register({
-      isGlobal: true,
-      ttl: 300, // seconds
-    }),
+    // Scheduling, Throttling, Logging, Caching
+    require('@nestjs/schedule').ScheduleModule.forRoot(),
+    require('@nestjs/throttler').ThrottlerModule.forRoot({ ttl: 60, limit: 100 }),
+    require('nest-winston').WinstonModule.forRoot(loggerConfig),
+    require('@nestjs/cache-manager').CacheModule.register({ isGlobal: true, ttl: 300 }),
 
     // Database
-    // Import Portfolio module first to ensure entities are loaded in correct order
-    PortfoliosModule,
-    
-    // Database configuration
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => {
-        const isProduction = configService.get('NODE_ENV') === 'production';
-    
-        return {
-          type: 'postgres',
-          url: configService.get<string>('DATABASE_URL'),
-          autoLoadEntities: true,
-          synchronize: configService.get('DB_SYNC') === 'true',
-          migrationsRun: configService.get('RUN_MIGRATIONS_ON_BOOT') === 'true',
-          logging: !isProduction,
-          ssl: isProduction
-            ? { rejectUnauthorized: false }
-            : false, // disable SSL locally, enable in production
-        };
-      },
-    }),
-    
-    // JWT Module
+    PortfoliosModule, // ensure entity load order
+    TypeOrmModule.forRoot(databaseConfig),
+
+    // JWT
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ACCESS_SECRET'),
-        signOptions: { 
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m') 
-        },
+        signOptions: { expiresIn: configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m') },
       }),
       inject: [ConfigService],
     }),
-    
-    // Feature Modules
+
+    // Feature modules
     UsersModule,
     PropertiesModule,
     UnitsModule,
@@ -128,31 +85,13 @@ import { LeaseCharge } from './billing/lease-charge.entity';
 
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
-    {
-      provide: APP_PIPE,
-      useValue: new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
-    }
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_PIPE, useValue: new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }) },
   ],
 })
 export class AppModule implements NestModule {
-  constructor(private readonly configService: ConfigService) {}
-
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(cookieParser()).forRoutes('*');
   }
