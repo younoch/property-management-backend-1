@@ -1,4 +1,5 @@
 .env.development
+.env.production
 .env.test
 .env.development.backup
 .env.production.backup
