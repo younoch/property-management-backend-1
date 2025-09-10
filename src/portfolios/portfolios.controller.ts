@@ -123,6 +123,7 @@ export class PortfoliosController {
   update(@Param('id') id: string, @Body() updateDto: UpdatePortfolioDto) {
     return this.portfoliosService.update(+id, updateDto);
   }
+  
 
   @ApiOperation({ summary: 'Delete portfolio by ID' })
   @ApiParam({ name: 'id', description: 'Portfolio ID' })
