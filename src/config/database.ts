@@ -10,7 +10,7 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
   ? {
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }, // SSL enabled for production
+      ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }, // Configurable SSL for production
       autoLoadEntities: true,
       synchronize: process.env.DB_SYNC === 'true',
       migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
@@ -25,7 +25,7 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      ssl: false, // explicitly disable SSL locally
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
       synchronize: process.env.DB_SYNC === 'true',
       migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',

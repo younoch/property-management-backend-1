@@ -19,11 +19,11 @@ export class InvoiceEmailService {
     private readonly emailService: EmailService,
     @Inject(forwardRef(() => PdfService))
     private readonly pdfService: PdfService,
-    @Inject('INVOICE_REPOSITORY')
+    @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
-    @Inject('LEASE_REPOSITORY')
+    @InjectRepository(Lease)
     private readonly leaseRepository: Repository<Lease>,
-    @Inject('PORTFOLIO_REPOSITORY')
+    @InjectRepository(Portfolio)
     private readonly portfolioRepository: Repository<Portfolio>,
     private readonly configService: ConfigService,
   ) {}

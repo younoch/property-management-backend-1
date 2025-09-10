@@ -3,7 +3,7 @@ import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // ✅ import here
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthGuard } from '@/guards/auth.guard';
 import { join } from 'path';
 const { ThrottlerModule } = require('@nestjs/throttler');
 const { WinstonModule } = require('nest-winston');
@@ -81,15 +81,23 @@ import { validate } from './config/env.validation';
           username: isProduction ? undefined : configService.get('DB_USERNAME'),
           password: isProduction ? undefined : configService.get('DB_PASSWORD'),
           database: isProduction ? undefined : configService.get('DB_NAME'),
-          url: isProduction ? configService.get('DATABASE_URL') : undefined,
-          ssl: isProduction ? { rejectUnauthorized: false } : false,
+          url: isProduction 
+            ? configService.get('DATABASE_URL')
+            : `postgres://${configService.get('DB_USERNAME')}:${configService.get('DB_PASSWORD')}@${configService.get('DB_HOST')}:${configService.get('DB_PORT')}/${configService.get('DB_NAME')}?sslmode=disable`,
+          ssl: false,
+          extra: {
+            ssl: false,
+            sslmode: 'disable',
+            sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
+            sslfactoryarg: 'org.postgresql.ssl.NonValidatingFactory',
+          },
           autoLoadEntities: true,
           synchronize: configService.get('DB_SYNC') === 'true',
           migrationsRun: configService.get('RUN_MIGRATIONS_ON_BOOT') === 'true',
           logging: true,
           entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-          migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
-        };
+           migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
+       };
       },
     }),
 
