@@ -2,12 +2,16 @@ const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+const isProd = process.env.NODE_ENV === 'production';
+
 module.exports = {
   entry: {
     main: './src/main.ts',
   },
   target: 'node',
-  mode: 'production',
+  mode: isProd ? 'production' : 'development',
+  devtool: isProd ? false : 'inline-source-map',
+  watch: !isProd,
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'main.js',

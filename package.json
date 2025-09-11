@@ -14,7 +14,7 @@
     "build": "webpack --config webpack.config.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:dev": "cross-env NODE_ENV=development nest start --watch --webpack --webpackPath webpack.config.js",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

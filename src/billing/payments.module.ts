@@ -4,9 +4,12 @@ import { DataSource } from 'typeorm';
 import { Payment } from './payment.entity';
 import { PaymentApplication } from './payment-application.entity';
 import { Invoice } from './entities/invoice.entity';
+import { Portfolio } from '../portfolios/portfolio.entity';
 import { PaymentsController, PaymentsGlobalController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { AuditLogModule } from '../common/audit-log.module';
+import { Lease } from '../tenancy/lease.entity';
+import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { BillingModule } from './billing.module';
 
 @Module({
@@ -15,35 +18,48 @@ import { BillingModule } from './billing.module';
       Payment,
       PaymentApplication,
       Invoice,
+      Lease,
+      Portfolio,
+      LeaseTenant,
     ]),
+    AuditLogModule,
     forwardRef(() => BillingModule),
-    forwardRef(() => AuditLogModule), // Provides AuditLogService
   ],
-  controllers: [PaymentsController, PaymentsGlobalController],
+  controllers: [
+    PaymentsController, 
+    PaymentsGlobalController
+  ],
   providers: [
     {
       provide: 'PAYMENT_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Payment),
-      inject: ['DATA_SOURCE'],
+      inject: [DataSource],
     },
     {
       provide: 'PAYMENT_APPLICATION_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(PaymentApplication),
-      inject: ['DATA_SOURCE'],
+      inject: [DataSource],
     },
     {
       provide: 'INVOICE_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Invoice),
-      inject: ['DATA_SOURCE'],
+      inject: [DataSource],
     },
-    PaymentsService, // Injects AuditLogService automatically
+    {
+      provide: 'LEASE_REPOSITORY',
+      useFactory: (dataSource: DataSource) => dataSource.getRepository(Lease),
+      inject: [DataSource],
+    },
+    {
+      provide: 'LEASE_TENANT_REPOSITORY',
+      useFactory: (dataSource: DataSource) => dataSource.getRepository(LeaseTenant),
+      inject: [DataSource],
+    },
+    PaymentsService,
   ],
   exports: [
     PaymentsService,
     TypeOrmModule,
-    'PAYMENT_REPOSITORY',
-    'PAYMENT_APPLICATION_REPOSITORY',
-    'INVOICE_REPOSITORY',
   ],
 })
 export class PaymentsModule {}

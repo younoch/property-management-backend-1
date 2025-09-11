@@ -1,15 +1,15 @@
 import { Module, ValidationPipe, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'; // ✅ import here
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from '@/guards/auth.guard';
 import { join } from 'path';
-const { ThrottlerModule } = require('@nestjs/throttler');
-const { WinstonModule } = require('nest-winston');
-const { CacheModule } = require('@nestjs/cache-manager');
-const { ScheduleModule } = require('@nestjs/schedule');
-const cookieParser = require('cookie-parser');
+import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { WinstonModule } from 'nest-winston';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
+import cookieParser from 'cookie-parser';
 
 // Controllers & Services
 import { AppController } from './app.controller';
@@ -37,6 +37,7 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
+import databaseConfig from './config/database';
 
 @Module({
   imports: [
@@ -52,9 +53,9 @@ import { validate } from './config/env.validation';
 
     // Rate limiting
     ThrottlerModule.forRoot({
-      ttl: 60, // seconds
+      ttl: 60,
       limit: 100,
-    }),
+    } as unknown as ThrottlerModuleOptions),
 
     // Logging
     WinstonModule.forRoot(loggerConfig),
@@ -62,45 +63,16 @@ import { validate } from './config/env.validation';
     // Caching
     CacheModule.register({
       isGlobal: true,
-      ttl: 300, // seconds
+      ttl: 300,
     }),
 
     // Feature modules
     PortfoliosModule,
 
+    // Database (combined local + production)
+    TypeOrmModule.forRoot(databaseConfig),
 
-    // Database
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
-        const isProduction = configService.get('NODE_ENV') === 'production';
-        return {
-          type: 'postgres',
-          host: isProduction ? undefined : configService.get('DB_HOST'),
-          port: isProduction ? undefined : parseInt(configService.get('DB_PORT') || '5432'),
-          username: isProduction ? undefined : configService.get('DB_USERNAME'),
-          password: isProduction ? undefined : configService.get('DB_PASSWORD'),
-          database: isProduction ? undefined : configService.get('DB_NAME'),
-          url: isProduction 
-            ? configService.get('DATABASE_URL')
-            : `postgres://${configService.get('DB_USERNAME')}:${configService.get('DB_PASSWORD')}@${configService.get('DB_HOST')}:${configService.get('DB_PORT')}/${configService.get('DB_NAME')}?sslmode=disable`,
-          ssl: false,
-          extra: {
-            ssl: false,
-            sslmode: 'disable',
-            sslfactory: 'org.postgresql.ssl.NonValidatingFactory',
-            sslfactoryarg: 'org.postgresql.ssl.NonValidatingFactory',
-          },
-          autoLoadEntities: true,
-          synchronize: configService.get('DB_SYNC') === 'true',
-          migrationsRun: configService.get('RUN_MIGRATIONS_ON_BOOT') === 'true',
-          logging: true,
-          entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-           migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
-       };
-      },
-    }),
-
+    // Other feature modules
     UsersModule,
     PropertiesModule,
     UnitsModule,
@@ -121,18 +93,9 @@ import { validate } from './config/env.validation';
 
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

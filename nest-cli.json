@@ -3,6 +3,8 @@
   "sourceRoot": "src",
   "entryFile": "main",
   "compilerOptions": {
-    "outputPath": "dist"
+    "webpack": true,
+    "webpackConfigPath": "webpack.config.js",
+    "tsConfigPath": "tsconfig.json"
   }
 }

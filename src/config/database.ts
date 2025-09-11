@@ -5,6 +5,7 @@ import 'dotenv/config';
 const isProduction = process.env.NODE_ENV === 'production';
 console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
 console.log('🌱 Using production DB?', isProduction);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD, typeof process.env.DB_PASSWORD);
 
 const databaseConfig: TypeOrmModuleOptions = isProduction
   ? {
@@ -23,7 +24,7 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT || '5432', 10),
       username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
+      password: process.env.DB_PASSWORD || 'rR%jrYKNqQdnYVQUkzuN',
       database: process.env.DB_NAME,
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,

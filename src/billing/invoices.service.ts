@@ -46,16 +46,21 @@ export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
   constructor(
-    @Inject('INVOICE_REPOSITORY')
+    @InjectRepository(Invoice)
     private readonly repo: Repository<Invoice>,
-    @Inject('LEASE_REPOSITORY')
+  
+    @InjectRepository(Lease)
     private readonly leaseRepo: Repository<Lease>,
-    @Inject('PORTFOLIO_REPOSITORY')
+  
+    @InjectRepository(Portfolio)
     private readonly portfolioRepo: Repository<Portfolio>,
+  
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
+  
     @Inject(forwardRef(() => PdfService))
     private readonly pdfService: PdfService,
+  
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
   ) {}
