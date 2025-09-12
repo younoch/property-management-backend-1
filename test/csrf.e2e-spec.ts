@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
 
 describe('CSRF Protection (e2e)', () => {
@@ -38,7 +38,8 @@ describe('CSRF Protection (e2e)', () => {
         })
         .expect(201);
 
-      jwtCookie = signupResponse.get('Set-Cookie');
+      const cookies = signupResponse.get('Set-Cookie');
+      jwtCookie = Array.isArray(cookies) ? cookies[0] : cookies;
       
       // Get CSRF token
       const csrfResponse = await request(app.getHttpServer())

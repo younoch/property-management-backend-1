@@ -1,5 +1,5 @@
 import { User } from '../../users/user.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export class UserFactory {
   static async create(overrides: Partial<User> = {}): Promise<User> {

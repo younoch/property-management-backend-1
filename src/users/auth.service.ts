@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AccessTokenPayload, RefreshTokenPayload } from '../common/types/jwt.types';
 import { UserRole } from './enums/user-role.enum';
 import { UsersService } from './users.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 

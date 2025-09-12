@@ -6,7 +6,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
 console.log('🌱 Using production DB?', isProduction);
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD, typeof process.env.DB_PASSWORD);
-
+const fileExtension = isProduction ? 'js' : 'ts';
 const databaseConfig: TypeOrmModuleOptions = isProduction
   ? {
       type: 'postgres',
@@ -16,8 +16,8 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
       synchronize: process.env.DB_SYNC === 'true',
       migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
       logging: false,
-      entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-      migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
+      entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
+      migrations: [join(__dirname, `../database/migrations/*.${fileExtension}`)],
     }
   : {
       type: 'postgres',
@@ -31,8 +31,8 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
       synchronize: process.env.DB_SYNC === 'true',
       migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
       logging: true,
-      entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-      migrations: [join(__dirname, '../database/migrations/*{.ts,.js}')],
+      entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
+      migrations: [join(__dirname, `../database/migrations/*.${fileExtension}`)],
     };
 
 console.log('📝 databaseConfig:', JSON.stringify(databaseConfig, null, 2));
