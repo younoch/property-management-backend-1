@@ -11,7 +11,7 @@ import {
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Notification } from '../notifications/notification.entity';
 
-@Entity()
+@Entity({ name: 'users' })
 @Index(['email'])
 export class User {
   @PrimaryGeneratedColumn()

@@ -30,7 +30,7 @@ const databaseConfig: TypeOrmModuleOptions = isProduction
       autoLoadEntities: true,
       synchronize: process.env.DB_SYNC === 'true',
       migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
-      logging: true,
+      logging: false,
       entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
       migrations: [join(__dirname, `../database/migrations/*.${fileExtension}`)],
     };
