@@ -17,10 +17,21 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
     
     if (!user || !user.role) {
-      throw new UnauthorizedException('User role not found');
+      // If no user or role, check if this is a public endpoint
+      const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+      
+      if (isPublic) {
+        return true;
+      }
+      
+      throw new UnauthorizedException('User not authenticated');
     }
 
     return requiredRoles.some((role) => user.role === role);

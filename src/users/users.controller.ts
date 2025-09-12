@@ -29,15 +29,16 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './user.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { CsrfGuard } from '../guards/csrf.guard';
-import { Response } from 'express';
-import { Res } from '@nestjs/common';
+import { CookieOptions, Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ErrorResponseDto, SuccessResponseDto } from '../common/dtos/api-response.dto';
 import { TokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
-import { CookieOptions } from 'express';
+import { Public } from '../common/decorators/public.decorator';
+import { Req, Res } from '@nestjs/common';
 
 @ApiTags('auth')
 @Controller('auth')
+@Public()
 export class UsersController {
   constructor(
     private usersService: UsersService,
@@ -451,18 +452,23 @@ export class UsersController {
     type: ErrorResponseDto
   })
   @Post('/refresh')
-  async refreshToken(@Body() body: RefreshTokenDto, @Res({ passthrough: true }) res: Response): Promise<any> {
-    // Get refresh token from request body or cookies
-    let refreshToken = body.refresh_token;
-    
-    // If not in body, try to get from cookies
-    if (!refreshToken) {
-      refreshToken = res.req.cookies?.refresh_token;
-    }
+  @Public()
+  async refreshToken(
+    @Body() body: RefreshTokenDto, 
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<any> {
+    // Get refresh token from request body, cookies, or Authorization header
+    let refreshToken = body.refresh_token || 
+                      req.cookies?.refresh_token || 
+                      req.signedCookies?.refresh_token ||
+                      (req.headers.authorization?.startsWith('Bearer ') ? 
+                        req.headers.authorization.split(' ')[1] : 
+                        null);
     
     if (!refreshToken) {
       throw new BadRequestException({
-        message: 'Refresh token is required',
+        message: 'Refresh token is required. Please sign in again.',
         errorType: 'REFRESH_TOKEN_REQUIRED'
       });
     }
@@ -474,19 +480,15 @@ export class UsersController {
       // Set new access token cookie
       const isProduction = process.env.NODE_ENV === 'production';
       const cookieDomain = process.env.COOKIE_DOMAIN;
-      const cookieHttpOnly = process.env.COOKIE_HTTP_ONLY !== 'false';
-      const cookieSameSite = (process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax')) as 'lax' | 'none' | 'strict';
-      const cookieSecure = process.env.COOKIE_SECURE === 'true' || isProduction;
-      
       const cookieOpts: any = {
-        httpOnly: cookieHttpOnly,
-        secure: cookieSecure,
-        sameSite: cookieSameSite,
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         path: '/',
+        ...(cookieDomain && { domain: cookieDomain })
       };
-      if (cookieDomain) cookieOpts.domain = cookieDomain;
       
-      // Set new access token cookie (15 minutes)
+      // Set access token cookie (15 minutes)
       res.cookie('access_token', result.access_token, {
         ...cookieOpts,
         maxAge: 15 * 60 * 1000, // 15 minutes

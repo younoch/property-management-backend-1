@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiSecurity } from '@nestjs/swagger
 import { Request, Response } from 'express';
 import { AuthGuard } from '../guards/auth.guard';
 import { CsrfService } from '../services/csrf.service';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('csrf')
 @Controller('csrf')
@@ -14,9 +15,9 @@ export class CsrfController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiSecurity('access_token')
   @Get('/token')
-  @UseGuards(AuthGuard)
+  @Public()
   async getCsrfToken(@Req() req: Request, @Res() res: Response) {
-    const userId = (req as any).currentUser?.id;
+    const userId = (req as any).user?.id || (req as any).currentUser?.id;
     
     if (!userId) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
@@ -52,19 +53,16 @@ export class CsrfController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiSecurity('access_token')
   @Post('/refresh')
-  @UseGuards(AuthGuard)
+  @Public()
   async refreshCsrfToken(@Req() req: Request, @Res() res: Response) {
-    const userId = (req as any).currentUser?.id;
+    // For refresh endpoint, we don't require authentication
+    // but we still want to use the user ID if available
+    const userId = (req as any).user?.id || (req as any).currentUser?.id;
     
-    if (!userId) {
-      return res.status(HttpStatus.UNAUTHORIZED).json({
-        message: 'User not authenticated'
-      });
-    }
-
-    // Generate new CSRF token
-    const csrfToken = this.csrfService.generateUserToken(userId);
-    const expiry = this.csrfService.getTokenExpiry();
+    // Generate token with user context or use a default user ID for anonymous users
+    const tokenSubject = userId || 0; // Use 0 for anonymous users
+    const csrfToken = this.csrfService.generateUserToken(tokenSubject);
+    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
     
     // Clear old token and set new one
     res.clearCookie('csrf_token', { path: '/' });

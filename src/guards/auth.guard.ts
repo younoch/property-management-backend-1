@@ -27,6 +27,23 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    const url = request.url;
+    
+    // Check for public routes that don't require authentication
+    const isPublicRoute = [
+      '/auth/signin',
+      '/auth/signup',
+      '/auth/refresh',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+      '/csrf/refresh',
+      '/csrf/token'  // Only the token endpoint is public
+    ].some(route => url.startsWith(route));
+    
+    if (isPublicRoute) {
+      return true;
+    }
+    
     const accessToken = request.cookies?.access_token || request.signedCookies?.access_token;
     const refreshToken = request.cookies?.refresh_token || request.signedCookies?.refresh_token;
     
@@ -50,15 +67,20 @@ export class AuthGuard implements CanActivate {
         { secret }
       );
       
-      // Store user ID in request for later use
-      request.userId = parseInt(payload.sub, 10);
-      
       if (!payload?.sub) {
         throw new UnauthorizedException({
           message: 'Invalid token payload',
           errorType: 'INVALID_TOKEN'
         });
       }
+      
+      // Store user information in request for later use
+      request.user = {
+        id: parseInt(payload.sub, 10),
+        role: payload.role // Make sure your JWT payload includes the role
+      };
+      // Keep backward compatibility
+      request.userId = request.user.id;
       
       return true;
     } catch (error) {

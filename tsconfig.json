@@ -16,7 +16,8 @@
     "types": ["node", "jest"],
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types"
+      "./src/types",
+      "./src/common/types"
     ],
     "paths": {
       "@/*": ["src/*"]
