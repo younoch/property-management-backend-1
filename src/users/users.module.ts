@@ -1,31 +1,23 @@
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+// src/users/users.module.ts
+import { Module, MiddlewareConsumer, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './users.controller';
 import { UsersManagementController } from './users.management.controller';
 import { UsersService } from './users.service';
-import { AuthService } from './auth.service';
 import { User } from './user.entity';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
-import { TokenRefreshInterceptor } from './interceptors/token-refresh.interceptor';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]), 
+    TypeOrmModule.forFeature([User]),
     ConfigModule,
-    JwtModule.register({
-      secret: process.env.JWT_ACCESS_SECRET,
-      signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' },
-    }),
+    forwardRef(() => AuthModule), // only needed if UsersService injects AuthService
   ],
   controllers: [UsersController, UsersManagementController],
-  providers: [
-    UsersService, 
-    AuthService, 
-    TokenRefreshInterceptor,
-    JwtService,
-  ],
+  providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {
   configure(consumer: MiddlewareConsumer) {

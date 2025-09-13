@@ -2,7 +2,6 @@ import { Module, ValidationPipe, MiddlewareConsumer, NestModule } from '@nestjs/
 import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from '@/guards/auth.guard';
 import { join } from 'path';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';

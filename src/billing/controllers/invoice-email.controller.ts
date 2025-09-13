@@ -1,3 +1,4 @@
+// src/billing/controllers/invoice-email.controller.ts
 import { 
   Controller, 
   Post, 
@@ -42,7 +43,7 @@ export class InvoiceEmailController {
   })
   @ApiResponse({ status: 200, description: 'Email sent successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized testr' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   @ApiResponse({ status: 500, description: 'Failed to send email' })
@@ -72,36 +73,4 @@ export class InvoiceEmailController {
     }
   }
 
-  @Post('send-test-email')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  @ApiOperation({ 
-    summary: 'Send a test invoice email', 
-    description: 'Sends a test invoice email to the specified email address with a sample invoice.' 
-  })
-  @ApiResponse({ status: 200, description: 'Test email sent successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid request or missing data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient permissions' })
-  async sendTestEmail(
-    @Body('email') email: string,
-    @Body('includeWatermark') includeWatermark: boolean = true,
-  ) {
-    if (!email) {
-      throw new BadRequestException('Email address is required');
-    }
-
-    try {
-      // This would typically use a test invoice ID or create a sample invoice
-      // For now, we'll just log and return a success message
-      this.logger.log(`Sending test invoice email to ${email}`);
-      
-      return {
-        success: true,
-        message: `Test invoice email sent to ${email}`,
-      };
-    } catch (error) {
-      this.logger.error(`Failed to send test invoice email: ${error.message}`, error.stack);
-      throw new BadRequestException('Failed to send test invoice email');
-    }
-  }
 }
