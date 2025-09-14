@@ -25,7 +25,7 @@ export class PortfolioMember {
   user_id: number;
 
   @Column({ type: 'varchar' })
-  role: 'owner' | 'admin' | 'manager' | 'viewer';
+  role: 'landlord' | 'admin' | 'manager' | 'viewer';
 
   @CreateDateColumn()
   created_at: Date;

@@ -34,7 +34,8 @@ export class ReportsController {
 
   @ApiOperation({ summary: 'Create a new car report' })
   @ApiResponse({ status: 201, description: 'Report created successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - No valid access token provided or token expired' })
+  @ApiResponse({ status: 403, description: 'Forbidden - CSRF token missing or invalid' })
   @ApiCookieAuth('access_token')
   @Post()
   @UseGuards(AuthGuard)

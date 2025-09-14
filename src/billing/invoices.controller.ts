@@ -98,56 +98,6 @@ export class InvoicesGlobalController {
     return this.invoicesService.update(id, dto);
   }
 
-  @ApiOperation({ 
-    summary: 'Send invoice via email',
-    description: 'Generates a PDF of the invoice and sends it to the tenant\'s email address'
-  })
-  @ApiParam({ 
-    name: 'id', 
-    description: 'Invoice ID to send',
-    example: 1
-  })
-  @ApiQuery({
-    name: 'email',
-    required: false,
-    description: 'Optional email address to send the invoice to (defaults to tenant\'s email)',
-    example: 'tenant@example.com'
-  })
-  @ApiOkResponse({ 
-    description: 'Invoice sent successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Invoice sent successfully' },
-        invoice: { $ref: '#/components/schemas/Invoice' }
-      }
-    }
-  })
-  @ApiBadRequestResponse({ 
-    description: 'No recipient email address available or invalid invoice',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: 'No recipient email address available' },
-        error: { type: 'string', example: 'Bad Request' }
-      }
-    }
-  })
-  @ApiNotFoundResponse({ description: 'Invoice not found' })
-  @Post(':id/send')
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
-  async sendInvoice(@Param('id', ParseIntPipe) id: number) {
-    const { success, message } = await this.invoicesService.sendInvoiceEmail(id);
-    const invoice = await this.invoicesService.findOne(id);
-    
-    return {
-      success,
-      message,
-      invoice
-    };
-  }
 
   @ApiOperation({ 
     summary: 'Delete invoice by ID',

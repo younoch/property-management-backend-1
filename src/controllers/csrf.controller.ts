@@ -12,7 +12,8 @@ export class CsrfController {
 
   @ApiOperation({ summary: 'Get CSRF token' })
   @ApiResponse({ status: 200, description: 'CSRF token generated successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - No valid access token provided or token expired' })
+  @ApiResponse({ status: 403, description: 'Forbidden - CSRF token missing or invalid' })
   @ApiSecurity('access_token')
   @Get('/token')
   @Public()
@@ -50,7 +51,8 @@ export class CsrfController {
 
   @ApiOperation({ summary: 'Refresh CSRF token' })
   @ApiResponse({ status: 200, description: 'CSRF token refreshed successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - No valid access token provided or token expired' })
+  @ApiResponse({ status: 403, description: 'Forbidden - CSRF token missing or invalid' })
   @ApiSecurity('access_token')
   @Post('/refresh')
   @Public()

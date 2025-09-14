@@ -643,7 +643,7 @@ export class UsersController {
     description: 'Unauthorized - No valid access token provided or token expired',
     schema: {
       example: {
-        message: 'Unauthorized',
+        message: 'Unauthorized | No valid access token provided or token expired',
         errorType: 'UNAUTHORIZED',
         statusCode: 401
       }
@@ -709,7 +709,7 @@ export class UsersController {
     description: 'Unauthorized - No valid access token provided or token expired',
     schema: {
       example: {
-        message: 'Unauthorized',
+        message: 'Unauthorized | No valid access token provided or token expired',
         errorType: 'UNAUTHORIZED',
         statusCode: 401
       }

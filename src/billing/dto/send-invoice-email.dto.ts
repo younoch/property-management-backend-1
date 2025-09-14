@@ -52,17 +52,29 @@ export class InvoiceItemDto {
 }
 
 export class SendInvoiceEmailDto {
-  @ApiProperty({ description: 'Email address of the recipient' })
+  @ApiProperty({
+    description: 'Email address of the recipient',
+    example: 'recipient@example.com',
+    required: true
+  })
   @IsEmail()
   @IsNotEmpty()
   recipient_email: string;
 
-  @ApiProperty({ description: 'Full name of the recipient', required: false })
+  @ApiProperty({
+    description: 'Full name of the recipient',
+    example: 'John Doe',
+    required: false
+  })
   @IsString()
   @IsOptional()
   recipient_name?: string;
 
-  @ApiProperty({ description: 'Phone number of the recipient', required: false })
+  @ApiProperty({
+    description: 'Phone number of the recipient',
+    example: '+1234567890',
+    required: false
+  })
   @IsString()
   @IsOptional()
   recipient_phone?: string;
