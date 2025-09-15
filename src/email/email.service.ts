@@ -19,7 +19,7 @@ export interface SendEmailWithAttachmentDto extends Omit<SendEmailDto, 'attachme
 
 @Injectable()
 export class EmailService implements OnModuleInit, OnModuleDestroy {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
   private readonly logger = new Logger(EmailService.name);
   private from: string;
 
@@ -27,7 +27,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const isEmailEnabled = this.configService.get('EMAIL_ENABLED', 'true') === 'true';
-    
+
     if (!isEmailEnabled) {
       this.logger.warn('Email service is disabled by configuration');
       return;
@@ -40,6 +40,8 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     const pass = this.configService.get('SMTP_PASSWORD');
     this.from = this.configService.get('DEFAULT_FROM_EMAIL') || `"Lease Director" <${user}>`;
 
+    const auth = user && pass ? { user, pass } : undefined;
+
     if (!host || !port) {
       this.logger.warn('SMTP configuration is incomplete. Email service will not be available.');
       return;
@@ -50,19 +52,23 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         host,
         port: parseInt(port, 10),
         secure,
-        auth: user && pass ? { user, pass } : undefined,
+        auth,
         tls: {
           // Do not fail on invalid certs in development
           rejectUnauthorized: this.configService.get('NODE_ENV') === 'production',
         },
       });
 
-      // Verify connection configuration
-      await this.verifyConnection();
-      this.logger.log('Email service initialized successfully');
+      this.logger.log(
+        `Email transport created → host=${host}, port=${port}, secure=${secure}, auth=${auth ? 'YES' : 'NO'}`
+      );
+
+      await this.verifyTransporter(this.transporter);
+
+      this.logger.log('Email service initialized successfully ✅');
     } catch (error) {
       this.logger.error('Failed to initialize email service', error);
-      throw error;
+      this.transporter = null;
     }
   }
 
@@ -72,25 +78,24 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async verifyConnection() {
-    try {
-      if (!this.transporter) {
-        throw new Error('Email transporter is not initialized');
+  private async verifyTransporter(transporter: nodemailer.Transporter) {
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        await transporter.verify();
+        this.logger.log('SMTP connection verified ✅');
+        return;
+      } catch (err) {
+        retries--;
+        this.logger.error(`SMTP verify failed, retries left: ${retries}`, err);
+        await new Promise((res) => setTimeout(res, 3000));
       }
-      await this.transporter.verify();
-      this.logger.log('SMTP Connection verified');
-    } catch (error) {
-      this.logger.error('SMTP Connection verification failed');
-      this.logger.error(error);
-      // Don't throw error, just log it
-      this.transporter = null;
     }
+    this.logger.warn('SMTP verification skipped after max retries');
   }
 
   /**
-   * Send an email
-   * @param sendEmailDto Email details
-   * @returns Promise with the result of the email sending operation
+   * Send a basic email
    */
   async sendEmail(sendEmailDto: SendEmailDto): Promise<SentMessageInfo> {
     if (!this.transporter) {
@@ -108,6 +113,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       cc: sendEmailDto.cc,
       bcc: sendEmailDto.bcc,
       replyTo: sendEmailDto.replyTo,
+      attachments: sendEmailDto.attachments,
     };
 
     try {
@@ -121,15 +127,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Send an email with a PDF attachment
-   * @param to Email recipient(s)
-   * @param subject Email subject
-   * @param text Email text content
-   * @param html Email HTML content
-   * @param pdfBuffer PDF file buffer
-   * @param filename Name for the attached PDF file
-   * @param options Additional email options
-   * @returns Promise<SentMessageInfo>
+   * Send an email with PDF attachment
    */
   async sendEmailWithPdf(
     to: string | string[],
@@ -163,6 +161,10 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       attachments: [attachment],
     });
   }
+
+  /**
+   * Send an email with custom attachment
+   */
   async sendEmailWithAttachment(
     to: string | string[],
     subject: string,
@@ -185,21 +187,20 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       invoiceNumber?: string;
     } = {}
   ): Promise<SentMessageInfo> {
-    const { 
-      tenantName = 'Valued Customer', 
-      dueDate, 
-      amountDue, 
+    const {
+      tenantName = 'Valued Customer',
+      dueDate,
+      amountDue,
       currency = '$',
-      invoiceNumber = '' 
+      invoiceNumber = '',
     } = options;
-    
-    const emailText = `Dear ${tenantName},\n\n` +
+
+    const emailText =
+      `Dear ${tenantName},\n\n` +
       (invoiceNumber ? `Please find attached your invoice #${invoiceNumber}.\n\n` : '') +
       (dueDate ? `Due Date: ${dueDate}\n` : '') +
       (amountDue ? `Amount Due: ${currency}${amountDue.toFixed(2)}\n\n` : '\n') +
-      'Thank you for your business.\n\n' +
-      'Best regards,\n' +
-      'Lease Director Team';
+      'Thank you for your business.\n\nBest regards,\nLease Director Team';
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
@@ -220,11 +221,13 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       cc: options.cc,
       bcc: options.bcc,
       replyTo: options.replyTo,
-      attachments: [{
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
-      }],
+      attachments: [
+        {
+          filename: attachment.filename,
+          content: attachment.content,
+          contentType: attachment.contentType,
+        },
+      ],
     });
   }
 }

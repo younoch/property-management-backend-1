@@ -42,7 +42,7 @@ export class InvoiceEmailService {
       // Fetch the invoice with relations
       const invoice = await this.invoiceRepository.findOne({
         where: { id: invoiceId },
-        relations: ['items', 'lease', 'portfolio'],
+        relations: ['lease', 'portfolio'],
       });
 
       if (!invoice) {

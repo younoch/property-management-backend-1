@@ -304,7 +304,7 @@ export class InvoicesService {
     
     return this.repo.find({ 
       where: { portfolio_id: portfolioId },
-      relations: ['lease', 'items'] // Include related data
+      relations: ['lease'] // Include related data
     });
   }
 
@@ -355,7 +355,6 @@ export class InvoicesService {
         billing_month: billingMonth,
         status: Not('void') // Exclude voided invoices
       },
-      relations: ['items'], // Include related items
       order: {
         created_at: 'DESC' // Get the most recent first
       }

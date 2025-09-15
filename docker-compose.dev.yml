@@ -10,12 +10,6 @@ services:
       POSTGRES_PASSWORD: rR%jrYKNqQdnYVQUkzuN
       POSTGRES_INITDB_ARGS: '--data-checksums'
       POSTGRES_HOST_AUTH_METHOD: trust
-    command: >
-      postgres 
-      -c ssl=off 
-      -c max_connections=100 
-      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem 
-      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     ports:
       - "5432:5432"
     volumes:
@@ -35,6 +29,28 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - property_dev_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: property_management_app_dev
+    env_file:
+      - .env.development
+    depends_on:
+      - postgres
+      - mailhog
+    networks:
+      - property_dev_network
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  # Mount current dir for hot reload
+      - /app/node_modules  # Avoid overwriting node_modules from container
+    restart: unless-stopped
+
 volumes:
   postgres_dev_data:
 
