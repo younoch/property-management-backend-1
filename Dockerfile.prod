@@ -35,11 +35,12 @@ FROM node:18.20.2-slim
 
 WORKDIR /app
 
-# Install runtime dependencies including Chromium and common libs for headless
+# Install runtime dependencies and Google Chrome Stable for Puppeteer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
-    chromium \
     ca-certificates \
+    curl \
+    gnupg \
     fonts-liberation \
     fonts-noto \
     fonts-noto-color-emoji \
@@ -60,6 +61,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxshmfence1 \
     libxi6 \
     libxtst6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://dl.google.com/linux/linux-signing-key.pub | gpg --dearmor -o /etc/apt/keyrings/google-linux-signing-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -70,8 +77,8 @@ ENV NODE_ENV=production
 ENV TZ=UTC
 ENV NPM_CONFIG_PRODUCTION=false
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-# Set the Chromium executable path for Puppeteer
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Set the Chrome executable path for Puppeteer
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # Copy package files
 COPY package*.json ./

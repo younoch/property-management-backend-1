@@ -67,22 +67,41 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
         executablePath = '/usr/bin/chromium';
       }
 
-      this.logger.log(`Initializing PDF Service with Chromium at: ${executablePath || 'auto-detect (may fail in prod)'}`);
-
-      this.browser = await puppeteer.launch({
-        headless: true,
+      const candidates = Array.from(new Set([
         executablePath,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-        ],
-      });
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+      ].filter(Boolean))) as string[];
+
+      let lastError: any = null;
+      for (const path of candidates) {
+        try {
+          this.logger.log(`Initializing PDF Service with Chromium at: ${path}`);
+          this.browser = await puppeteer.launch({
+            headless: true,
+            executablePath: path,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-accelerated-2d-canvas',
+              '--no-first-run',
+              '--no-zygote',
+              '--single-process',
+              '--disable-gpu',
+            ],
+          });
+          break; // success
+        } catch (err) {
+          lastError = err;
+          this.logger.warn(`Failed to launch Chromium at ${path}: ${err?.message || err}`);
+        }
+      }
+
+      if (!this.browser && lastError) {
+        throw lastError;
+      }
       this.logger.log('PDF Service initialized');
     } catch (error) {
       this.logger.error('Failed to initialize PDF Service', error as any);

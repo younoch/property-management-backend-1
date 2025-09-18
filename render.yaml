@@ -25,7 +25,7 @@ services:
         value: 'true'
       # Puppeteer/Chromium
       - key: PUPPETEER_EXECUTABLE_PATH
-        value: '/usr/bin/chromium'
+        value: '/usr/bin/google-chrome-stable'
       
       # Database Configuration - Using Neon
       - key: DATABASE_URL
