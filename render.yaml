@@ -19,7 +19,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: ""
       - key: HOST
         value: 0.0.0.0
       - key: NODE_OPTIONS
@@ -34,6 +34,8 @@ services:
         value: 'postgresql://neondb_owner:npg_L7XRIMNjGTo4@ep-morning-math-ad0chyet-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
       - key: DB_SYNC
         value: 'false'
+      - key: DB_SSL
+        value: 'true'
       - key: RUN_MIGRATIONS_ON_BOOT
         value: 'true'
       
