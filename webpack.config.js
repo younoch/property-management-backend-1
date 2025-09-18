@@ -11,7 +11,7 @@ module.exports = {
   target: 'node',
   mode: isProd ? 'production' : 'development',
   devtool: isProd ? false : 'inline-source-map',
-  watch: !isProd,
+  watch: process.env.WEBPACK_WATCH === 'true',
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'main.js',
