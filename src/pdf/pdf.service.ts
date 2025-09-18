@@ -58,9 +58,16 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      const executablePath =
+      // Resolve Chromium path from env or config. Default to system path in production images.
+      let executablePath =
         process.env.PUPPETEER_EXECUTABLE_PATH ||
         this.configService.get<string>('PUPPETEER_EXECUTABLE_PATH');
+
+      if (!executablePath && this.configService.get('NODE_ENV') === 'production') {
+        executablePath = '/usr/bin/chromium';
+      }
+
+      this.logger.log(`Initializing PDF Service with Chromium at: ${executablePath || 'auto-detect (may fail in prod)'}`);
 
       this.browser = await puppeteer.launch({
         headless: true,
