@@ -58,8 +58,13 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
+      const executablePath =
+        process.env.PUPPETEER_EXECUTABLE_PATH ||
+        this.configService.get<string>('PUPPETEER_EXECUTABLE_PATH');
+
       this.browser = await puppeteer.launch({
         headless: true,
+        executablePath,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -73,8 +78,12 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
       });
       this.logger.log('PDF Service initialized');
     } catch (error) {
-      this.logger.error('Failed to initialize PDF Service', error);
-      throw error;
+      this.logger.error('Failed to initialize PDF Service', error as any);
+      this.logger.warn(
+        'PDF Service is disabled. Ensure Chromium is installed and PUPPETEER_EXECUTABLE_PATH is set.'
+      );
+      this.browser = null;
+      // Do not throw here to allow the application to continue running without PDF support
     }
   }
 

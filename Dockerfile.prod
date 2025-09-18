@@ -3,6 +3,9 @@ FROM node:18.20.2-slim AS builder
 
 WORKDIR /app
 
+# Prevent Puppeteer from attempting to download Chromium during npm install
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -32,9 +35,12 @@ FROM node:18.20.2-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Install runtime dependencies including Chromium for Puppeteer
+RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
+    chromium \
+    fonts-liberation \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -44,6 +50,9 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 ENV NODE_ENV=production
 ENV TZ=UTC
 ENV NPM_CONFIG_PRODUCTION=false
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+# Set the Chromium executable path for Puppeteer
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Copy package files
 COPY package*.json ./

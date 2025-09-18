@@ -5,15 +5,8 @@ services:
     dockerfilePath: ./Dockerfile.prod
     plan: free
     autoDeploy: true
-    buildCommand: |
-      npm cache clean --force
-      npm install --legacy-peer-deps --prefer-offline --no-audit
-      npm run build
-    startCommand: node dist/main.js
     healthCheckPath: /health
     instanceCount: 1
-    env: node
-    nodeVersion: 18.20.2
     envVars:
       # General Node / NestJS
       - key: NODE_ENV
