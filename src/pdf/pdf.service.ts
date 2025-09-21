@@ -99,6 +99,29 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
+      // Fallback: try Puppeteer's bundled Chromium when no system executable is available
+      if (!this.browser) {
+        try {
+          this.logger.log('Initializing PDF Service with bundled Chromium');
+          this.browser = await puppeteer.launch({
+            headless: true,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-accelerated-2d-canvas',
+              '--no-first-run',
+              '--no-zygote',
+              '--single-process',
+              '--disable-gpu',
+            ],
+          });
+        } catch (err) {
+          lastError = err;
+          this.logger.warn(`Failed to launch bundled Chromium: ${err?.message || err}`);
+        }
+      }
+
       if (!this.browser && lastError) {
         throw lastError;
       }

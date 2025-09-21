@@ -1,8 +1,9 @@
 services:
   - type: web
     name: property-management-api
-    env: docker
-    dockerfilePath: ./Dockerfile.prod
+    env: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod:migrate
     plan: free
     autoDeploy: true
     healthCheckPath: /health
@@ -11,8 +12,6 @@ services:
       # General Node / NestJS
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: "8000"
       - key: HOST
         value: 0.0.0.0
       - key: NODE_OPTIONS
@@ -23,9 +22,7 @@ services:
         value: 'false'
       - key: EMAIL_ENABLED
         value: 'true'
-      # Puppeteer/Chromium
-      - key: PUPPETEER_EXECUTABLE_PATH
-        value: '/usr/bin/google-chrome-stable'
+      # Puppeteer/Chromium: using Puppeteer's bundled Chromium on Node runtime (no system Chrome required)
       
       # Database Configuration - Using Neon
       - key: DATABASE_URL
@@ -63,11 +60,11 @@ services:
       - key: COOKIE_DOMAIN
         value: ""
       - key: COOKIE_SECURE
-        value: true
+        value: 'true'
       - key: COOKIE_SAME_SITE
         value: "none"
       - key: COOKIE_HTTP_ONLY
-        value: true
+        value: 'true'
 
       # Frontend/Backend Domains
       - key: FRONTEND_DOMAIN

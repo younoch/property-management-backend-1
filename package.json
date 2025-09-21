@@ -19,6 +19,7 @@
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:prod:migrate": "npm run migration:run && npm run start:prod",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "cross-env NODE_ENV=test jest",
     "test:watch": "cross-env NODE_ENV=test jest --watch --maxWorkers=1",
@@ -28,7 +29,6 @@
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
-    "reset-db:prod:docker": "docker-compose -f docker-compose.prod.yml run --rm api npm run reset-db:prod",
     "reset-db:prod": "ts-node -r tsconfig-paths/register scripts/reset-db.prod.ts",
     "generate:env": "node generate-env.js"
   },
