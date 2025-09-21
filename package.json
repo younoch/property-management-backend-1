@@ -120,6 +120,11 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "../tsconfig.jest.json"
+      }
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
