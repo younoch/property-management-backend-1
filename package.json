@@ -32,7 +32,7 @@
     "reset-db:prod": "ts-node -r tsconfig-paths/register scripts/reset-db.prod.ts",
     "generate:env": "node generate-env.js"
   },
-  "resolutions": {
+  "overrides": {
     "is-arrayish": "^0.2.1"
   },
   "dependencies": {
