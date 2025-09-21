@@ -38,8 +38,10 @@ export const AppDataSource = new DataSource({
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
-  synchronize: true, // dev only
-  migrationsRun: false,
+  // Use synchronize only in non-production to avoid destructive/implicit schema changes
+  synchronize: process.env.NODE_ENV !== 'production',
+  // Ensure migrations auto-run in production boot flow
+  migrationsRun: process.env.NODE_ENV === 'production',
   migrationsTableName: 'migrations',
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   logging: true,
