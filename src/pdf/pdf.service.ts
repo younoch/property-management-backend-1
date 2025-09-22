@@ -53,7 +53,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
   private baseUrl: string;
 
   constructor(private configService: ConfigService) {
-    this.baseUrl = this.configService.get('APP_URL') || 'http://localhost:3000';
+    this.baseUrl = this.configService.get('APP_URL') || 'http://localhost:8000';
   }
 
   async onModuleInit() {
@@ -62,17 +62,11 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
       // This is important on platforms like Render where system Chrome is not available.
       const bundledPath = (puppeteer as any).executablePath?.() as string | undefined;
 
-      // Allow override via env if explicitly set
-      let configuredPath =
-        process.env.PUPPETEER_EXECUTABLE_PATH ||
-        this.configService.get<string>('PUPPETEER_EXECUTABLE_PATH');
-
       // Build candidate list with the most reliable first
       const candidates = Array.from(
         new Set(
           [
             bundledPath, // prefer bundled Chromium if available
-            configuredPath, // then any explicitly configured path
             // common system paths as fallbacks
             '/usr/bin/google-chrome-stable',
             '/usr/bin/chromium',

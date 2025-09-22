@@ -31,7 +31,8 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "migration:run:prod": "typeorm -d dist/database/data-source.js migration:run",
     "reset-db:prod": "ts-node -r tsconfig-paths/register scripts/reset-db.prod.ts",
-    "generate:env": "node generate-env.js"
+    "generate:env": "node generate-env.js",
+    "postinstall": "puppeteer browsers install chrome"
   },
   "overrides": {
     "is-arrayish": "^0.2.1"
