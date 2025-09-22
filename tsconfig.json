@@ -37,12 +37,12 @@
     "allowJs": true
   },
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    "test",
     "**/*.spec.ts",
     "**/*.test.ts"
   ]
