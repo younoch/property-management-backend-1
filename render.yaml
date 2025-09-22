@@ -8,3 +8,11 @@ services:
     autoDeploy: true
     healthCheckPath: /health
     instanceCount: 1
+    envVars:
+      # Non-sensitive hint for Puppeteer to persist Chromium under the project path
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/src/.cache/puppeteer
+
+      # IMPORTANT: All other environment variables (Database, JWT, CSRF, SMTP,
+      # CORS, Cookie settings, etc.) should be configured securely in the
+      # Render Dashboard (or Env Groups), not committed to source control.
