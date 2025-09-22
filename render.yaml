@@ -23,6 +23,8 @@ services:
       - key: EMAIL_ENABLED
         value: 'true'
       # Puppeteer/Chromium: using Puppeteer's bundled Chromium on Node runtime (no system Chrome required)
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/src/.cache/puppeteer
       
       # Database Configuration - Using Neon
       - key: DATABASE_URL
@@ -69,8 +71,8 @@ services:
       # Frontend/Backend Domains
       - key: FRONTEND_DOMAIN
         value: "property-manegment-frontend.vercel.app"
-      - key: BACKEND_DOMAIN
-        value: "property-management-api.onrender.com"
+      - key: ALLOWED_ORIGINS
+        value: "https://property-manegment-frontend.vercel.app,http://localhost:3000"
 
       # --- Neon Postgres Connection ---
       - key: DB_HOST

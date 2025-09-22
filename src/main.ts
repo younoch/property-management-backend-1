@@ -17,8 +17,11 @@ async function bootstrap() {
   console.log('   DB_SSL:', process.env.DB_SSL);
   
   // CORS configuration for production
-  const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',') 
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS
+        .split(',')
+        .map((o) => o.trim())
+        .filter((o) => !!o)
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
   
   // Enhanced CORS configuration for JWT cookies

@@ -52,9 +52,6 @@ class EnvironmentVariables {
   @IsString()
   FRONTEND_DOMAIN?: string;
 
-  @IsOptional()
-  @IsString()
-  BACKEND_DOMAIN?: string;
 
   @IsOptional()
   @IsString()
