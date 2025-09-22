@@ -58,21 +58,28 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      // Resolve Chromium path from env or config. Default to system path in production images.
-      let executablePath =
+      // Resolve Chromium path with a strong preference for Puppeteer's bundled Chromium
+      // This is important on platforms like Render where system Chrome is not available.
+      const bundledPath = (puppeteer as any).executablePath?.() as string | undefined;
+
+      // Allow override via env if explicitly set
+      let configuredPath =
         process.env.PUPPETEER_EXECUTABLE_PATH ||
         this.configService.get<string>('PUPPETEER_EXECUTABLE_PATH');
 
-      if (!executablePath && this.configService.get('NODE_ENV') === 'production') {
-        executablePath = '/usr/bin/chromium';
-      }
-
-      const candidates = Array.from(new Set([
-        executablePath,
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/chromium',
-        '/usr/bin/chromium-browser',
-      ].filter(Boolean))) as string[];
+      // Build candidate list with the most reliable first
+      const candidates = Array.from(
+        new Set(
+          [
+            bundledPath, // prefer bundled Chromium if available
+            configuredPath, // then any explicitly configured path
+            // common system paths as fallbacks
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+          ].filter(Boolean)
+        )
+      ) as string[];
 
       let lastError: any = null;
       for (const path of candidates) {
@@ -99,10 +106,10 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      // Fallback: try Puppeteer's bundled Chromium when no system executable is available
+      // Final fallback: try without explicit executable path (Puppeteer decides)
       if (!this.browser) {
         try {
-          this.logger.log('Initializing PDF Service with bundled Chromium');
+          this.logger.log('Initializing PDF Service with Puppeteer default executable');
           this.browser = await puppeteer.launch({
             headless: true,
             args: [
@@ -118,7 +125,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
           });
         } catch (err) {
           lastError = err;
-          this.logger.warn(`Failed to launch bundled Chromium: ${err?.message || err}`);
+          this.logger.warn(`Failed to launch Puppeteer default executable: ${err?.message || err}`);
         }
       }
 
