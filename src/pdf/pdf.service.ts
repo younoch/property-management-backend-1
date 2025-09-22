@@ -5,6 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { Readable } from 'stream';
 import { Invoice } from '../billing/entities/invoice.entity';
+import * as ejs from 'ejs';
+import { readFileSync } from 'fs';
+import * as path from 'path';
 
 export interface InvoicePdfData {
   id: number;
@@ -51,6 +54,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
   private browser: puppeteer.Browser | null = null;
   private readonly logger = new Logger(PdfService.name);
   private baseUrl: string;
+  private invoiceTemplateHtml: string | null = null;
 
   constructor(private configService: ConfigService) {
     this.baseUrl = this.configService.get('APP_URL') || 'http://localhost:8000';
@@ -156,7 +160,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     const page = await this.browser.newPage();
     
     try {
-      // Generate HTML for the invoice
+      // Generate HTML for the invoice via EJS template
       const html = this.generateInvoiceHtml(invoice);
       
       // Set the content and wait for any resources to load
@@ -188,20 +192,9 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
   }
 
   private generateInvoiceHtml(invoice: InvoicePdfData): string {
-    // Format date
-    const formatDate = (dateInput: string | Date) => {
-      try {
-        const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-        return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, yyyy');
-      } catch (e) {
-        console.error('Error formatting date:', e);
-        return 'N/A';
-      }
-    };
-
     // Ensure items is an array
     const items = Array.isArray(invoice.items) ? invoice.items : [];
-    
+
     // Calculate totals
     const subtotal = items.reduce((sum, item) => sum + (item.amount || 0), 0);
     const taxTotal = items.reduce((sum, item) => sum + (item.tax_amount || 0), 0);
@@ -209,168 +202,58 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     const amountPaid = 'amount_paid' in invoice ? invoice.amount_paid || 0 : 0;
     const amountDue = total - amountPaid;
 
-    // Generate items HTML
-    const itemsHtml = items.map(item => `
-      <tr>
-        <td>${item.name || ''}</td>
-        <td>${item.description || ''}</td>
-        <td>${item.qty || 1}</td>
-        <td>$${(item.unit_price || 0).toFixed(2)}</td>
-        <td>${item.tax_rate ? `${item.tax_rate}%` : '-'}</td>
-        <td>$${(item.amount || 0).toFixed(2)}</td>
-      </tr>
-    `).join('');
+    // Determine currency symbol (default to $)
+    const currencySymbol = '$';
 
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Invoice #${invoice.invoice_number}</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-          .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-          .logo { max-width: 200px; margin-bottom: 20px; }
-          .invoice-info { margin-bottom: 30px; }
-          .invoice-details { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-            margin-bottom: 30px; 
-          }
-          .from-to { display: flex; justify-content: space-between; margin-bottom: 30px; }
-          .from, .to { flex: 1; }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 30px;
-          }
-          th, td { 
-            border: 1px solid #ddd; 
-            padding: 8px; 
-            text-align: left; 
-          }
-          th { 
-            background-color: #f5f5f5; 
-            font-weight: bold; 
-          }
-          .totals { 
-            float: right; 
-            width: 300px; 
-            margin-top: 20px;
-          }
-          .totals table { width: 100%; }
-          .status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-transform: capitalize;
-            background-color: #f0f0f0;
-          }
-          .status-paid { background-color: #d4edda; color: #155724; }
-          .status-overdue { background-color: #f8d7da; color: #721c24; }
-          .status-pending { background-color: #fff3cd; color: #856404; }
-          .footer { 
-            margin-top: 50px; 
-            text-align: center; 
-            color: #777; 
-            font-size: 0.9em;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div>
-              <h1>INVOICE</h1>
-              <div class="status status-${invoice.status}">${invoice.status.replace('_', ' ')}</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">
-            ${invoice.portfolio.name || 'Lease Director'}
-          </div>
-          ${invoice.portfolio.address ? `<div>${invoice.portfolio.address}</div>` : ''}
-          ${invoice.portfolio.phone ? `<div>${invoice.portfolio.phone}</div>` : ''}
-          ${invoice.portfolio.email ? `<div>${invoice.portfolio.email}</div>` : ''}
-            </div>
-          </div>
+    // Support email fallbacks: portfolio.email -> SUPPORT_EMAIL env -> default
+    const supportEmail =
+      invoice.portfolio?.email || this.configService.get('SUPPORT_EMAIL') || 'support@leasedirector.com';
 
-          <div class="invoice-info">
-            <div><strong>Invoice #:</strong> ${invoice.invoice_number}</div>
-            <div><strong>Issue Date:</strong> ${formatDate(invoice.issue_date)}</div>
-            ${invoice.due_date ? `<div><strong>Due Date:</strong> ${formatDate(invoice.due_date)}</div>` : ''}
-          </div>
+    const helpers = {
+      formatDate: (dateInput: string | Date) => {
+        try {
+          const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+          return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, yyyy');
+        } catch (e) {
+          this.logger.error('Error formatting date in template', e as any);
+          return 'N/A';
+        }
+      },
+    };
 
-          <div class="from-to">
-            <div class="from">
-              <h3>From:</h3>
-              <div>${invoice.portfolio.name || 'Lease Director'}</div>
-              ${invoice.portfolio.address ? `<div>${invoice.portfolio.address}</div>` : ''}
-              ${invoice.portfolio.phone ? `<div>${invoice.portfolio.phone}</div>` : ''}
-              ${invoice.portfolio.email ? `<div>${invoice.portfolio.email}</div>` : ''}
-            </div>
-            <div class="to">
-              <h3>To:</h3>
-              <div>${invoice.lease.tenant_name || 'Tenant'}</div>
-              ${invoice.lease.property_address ? `<div>${invoice.lease.property_address}</div>` : ''}
-              ${invoice.lease.tenant_email ? `<div>${invoice.lease.tenant_email}</div>` : ''}
-              ${invoice.lease.tenant_phone ? `<div>${invoice.lease.tenant_phone}</div>` : ''}
-            </div>
-          </div>
+    // Load template (cached) and render
+    const template = this.loadInvoiceTemplate();
+    return ejs.render(template, {
+      invoice,
+      totals: { subtotal, taxTotal, total, amountPaid, amountDue },
+      currencySymbol,
+      supportEmail,
+      helpers,
+    });
+  }
 
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Description</th>
-                <th>Qty</th>
-                <th>Unit Price</th>
-                <th>Tax</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
+  private loadInvoiceTemplate(): string {
+    if (this.invoiceTemplateHtml) return this.invoiceTemplateHtml;
 
-          <div class="totals">
-            <table>
-              <tr>
-                <td><strong>Subtotal:</strong></td>
-                <td>$${subtotal.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td><strong>Tax:</strong></td>
-                <td>$${taxTotal.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td><strong>Total:</strong></td>
-                <td>$${total.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td><strong>Amount Paid:</strong></td>
-                <td>$${amountPaid.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td><strong>Amount Due:</strong></td>
-                <td>$${amountDue.toFixed(2)}</td>
-              </tr>
-            </table>
-          </div>
+    // Try dist path first (when compiled)
+    const distPath = path.join(__dirname, 'templates', 'invoice.ejs');
+    // Fallback to src path for development
+    const srcPath = path.join(process.cwd(), 'src', 'pdf', 'templates', 'invoice.ejs');
 
-          <div style="clear: both;"></div>
+    let resolvedPath = distPath;
+    try {
+      this.invoiceTemplateHtml = readFileSync(resolvedPath, 'utf8');
+      return this.invoiceTemplateHtml;
+    } catch (_) {
+      resolvedPath = srcPath;
+    }
 
-          <div class="footer">
-            <p>Thank you for your business!</p>
-            <p>If you have any questions about this invoice, please contact us at support@leasedirector.com</p>
-            <p>Invoice generated on ${format(new Date(), 'MMM dd, yyyy')}</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    try {
+      this.invoiceTemplateHtml = readFileSync(resolvedPath, 'utf8');
+      return this.invoiceTemplateHtml;
+    } catch (err) {
+      this.logger.error(`Failed to load invoice template from ${resolvedPath}`, err as any);
+      throw new Error('Invoice template not found');
+    }
   }
 }

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice #<%= invoice.invoice_number %></title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f9f9f9; }
+    .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #007bff; padding-bottom: 15px; margin-bottom: 30px; }
+    .logo img { max-height: 60px; }
+    .invoice-title { font-size: 2em; text-transform: uppercase; color: #333; }
+
+    /* Status badge */
+    .status { display: inline-block; padding: 6px 12px; border-radius: 5px; font-weight: bold; text-transform: capitalize; font-size: 0.9em; }
+    .status-paid { background: #d4edda; color: #155724; }
+    .status-overdue { background: #f8d7da; color: #721c24; }
+    .status-pending { background: #fff3cd; color: #856404; }
+
+    /* Invoice info */
+    .invoice-info { display: flex; justify-content: space-between; background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 30px; font-size: 0.95em; }
+
+    /* From / To */
+    .from-to { display: flex; justify-content: space-between; gap: 40px; margin-bottom: 30px; }
+    .from, .to { flex: 1; background: #f9fafb; padding: 15px; border-radius: 6px; }
+    h3 { margin-top: 0; color: #007bff; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #e5e7eb; padding: 10px; }
+    th { background: #f3f4f6; font-weight: 600; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6) { text-align: right; }
+
+    /* Totals */
+    .totals { margin-left: auto; width: 350px; }
+    .totals table { border: none; }
+    .totals td { border: none; padding: 8px; }
+    .totals tr:last-child td { font-weight: bold; font-size: 1.1em; background: #f1f5f9; }
+
+    /* Footer */
+    .footer { margin-top: 40px; text-align: center; color: #666; font-size: 0.9em; border-top: 1px solid #eee; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <img src="https://www.pngmart.com/files/23/Free-Logos-Transparent-PNG.png" alt="Company Logo">
+      </div>
+      <div style="text-align:right;">
+        <div class="invoice-title">Invoice</div>
+        <div class="status status-<%= invoice.status %>"><%= (invoice.status || '').replace('_', ' ') %></div>
+      </div>
+    </div>
+
+    <!-- Invoice Info -->
+    <div class="invoice-info">
+      <div><strong>Invoice #:</strong> <%= invoice.invoice_number %></div>
+      <div><strong>Issue Date:</strong> <%= helpers.formatDate(invoice.issue_date) %></div>
+      <% if (invoice.due_date) { %>
+        <div><strong>Due Date:</strong> <%= helpers.formatDate(invoice.due_date) %></div>
+      <% } %>
+    </div>
+
+    <!-- From / To -->
+    <div class="from-to">
+      <div class="from">
+        <h3>From</h3>
+        <p><%= invoice.portfolio?.name || 'Lease Director' %></p>
+        <% if (invoice.portfolio?.address) { %><p><%= invoice.portfolio.address %></p><% } %>
+        <% if (invoice.portfolio?.phone) { %><p><%= invoice.portfolio.phone %></p><% } %>
+        <% if (invoice.portfolio?.email) { %><p><%= invoice.portfolio.email %></p><% } %>
+      </div>
+      <div class="to">
+        <h3>To</h3>
+        <p><%= invoice.lease?.tenant_name || 'Tenant' %></p>
+        <% if (invoice.lease?.property_address) { %><p><%= invoice.lease.property_address %></p><% } %>
+        <% if (invoice.lease?.tenant_email) { %><p><%= invoice.lease.tenant_email %></p><% } %>
+        <% if (invoice.lease?.tenant_phone) { %><p><%= invoice.lease.tenant_phone %></p><% } %>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Unit Price</th>
+          <th>Tax</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (invoice.items || []).forEach(function(item) { %>
+          <tr>
+            <td><%= item.name || '' %></td>
+            <td><%= item.description || '' %></td>
+            <td><%= item.qty || 1 %></td>
+            <td><%= currencySymbol %><%= (item.unit_price || 0).toFixed(2) %></td>
+            <td><%= item.tax_rate ? (item.tax_rate + '%') : '-' %></td>
+            <td><%= currencySymbol %><%= (item.amount || 0).toFixed(2) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+      <table>
+        <tr><td>Subtotal:</td><td style="text-align:right;"><%= currencySymbol %><%= totals.subtotal.toFixed(2) %></td></tr>
+        <tr><td>Tax:</td><td style="text-align:right;"><%= currencySymbol %><%= totals.taxTotal.toFixed(2) %></td></tr>
+        <tr><td>Total:</td><td style="text-align:right;"><%= currencySymbol %><%= totals.total.toFixed(2) %></td></tr>
+        <tr><td>Amount Paid:</td><td style="text-align:right;"><%= currencySymbol %><%= totals.amountPaid.toFixed(2) %></td></tr>
+        <tr><td>Amount Due:</td><td style="text-align:right;"><%= currencySymbol %><%= totals.amountDue.toFixed(2) %></td></tr>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Thank you for your business!</p>
+      <p>If you have any questions about this invoice, contact us at <%= supportEmail %></p>
+      <p>Generated on <%= helpers.formatDate(new Date()) %></p>
+    </div>
+
+  </div>
+</body>
+</html>
