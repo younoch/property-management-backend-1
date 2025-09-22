@@ -60,7 +60,7 @@ services:
 
       # Cookie Configuration
       - key: COOKIE_DOMAIN
-        value: ""
+        value: "property-management-backend-y2cw.onrender.com"
       - key: COOKIE_SECURE
         value: 'true'
       - key: COOKIE_SAME_SITE
