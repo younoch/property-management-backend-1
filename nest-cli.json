@@ -5,6 +5,9 @@
   "compilerOptions": {
     "webpack": false,
     "tsConfigPath": "tsconfig.json",
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      { "include": "src/pdf/templates/**/*", "outDir": "dist/pdf/templates" }
+    ]
   }
 }

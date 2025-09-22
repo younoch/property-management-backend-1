@@ -209,11 +209,14 @@ export class InvoiceEmailService {
     try {
       await this.invoiceRepository.update(
         { id: invoiceId },
-        { 
-          isIssued: true,
-          sentAt: () => 'CURRENT_TIMESTAMP',
-          status: 'sent',
-        } as any, // Type assertion to avoid type issues with status
+        {
+          // Align with Invoice entity column names
+          is_issued: true,
+          sent_at: () => 'CURRENT_TIMESTAMP',
+          // Do not set status here: valid statuses are
+          // 'draft' | 'open' | 'partially_paid' | 'paid' | 'void' | 'overdue'
+          // Let business logic determine status separately.
+        } as any,
       );
       this.logger.log(`Invoice ${invoiceId} marked as sent`);
     } catch (error) {
