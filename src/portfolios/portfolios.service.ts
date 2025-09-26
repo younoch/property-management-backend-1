@@ -45,32 +45,58 @@ export class PortfoliosService {
     const limit = query.limit ?? 10;
     const search = (query.search ?? '').trim();
 
-    const where: any[] = [];
+    const queryBuilder = this.portfoliosRepository
+      .createQueryBuilder('portfolio')
+      .leftJoinAndSelect('portfolio.landlord', 'landlord')
+      .leftJoinAndSelect('portfolio.properties', 'properties')
+      .leftJoinAndSelect('properties.units', 'units')
+      .select([
+        'portfolio',
+        'landlord.id',
+        'landlord.name',
+        'landlord.email',
+        'landlord.phone',
+        'landlord.created_at',
+        'landlord.updated_at',
+        'properties',
+        'units'
+      ])
+      .orderBy('portfolio.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
     if (search) {
-      where.push(
-        { name: ILike(`%${search}%`) },
-        { subscription_plan: ILike(`%${search}%`) },
-        { status: ILike(`%${search}%`) },
-        { provider_customer_id: ILike(`%${search}%`) },
+      queryBuilder.where(
+        '(portfolio.name ILIKE :search OR portfolio.subscription_plan ILIKE :search OR portfolio.status ILIKE :search OR portfolio.provider_customer_id ILIKE :search)',
+        { search: `%${search}%` }
       );
     }
 
-    const [data, total] = await this.portfoliosRepository.findAndCount({
-      where: where.length ? where : undefined,
-      relations: ['landlord', 'properties', 'properties.units'],
-      order: { created_at: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return { data, total, page, limit };
   }
 
   async findOne(id: number): Promise<Portfolio> {
-    const portfolio = await this.portfoliosRepository.findOne({
-      where: { id },
-      relations: ['landlord', 'properties', 'properties.units'],
-    });
+    const portfolio = await this.portfoliosRepository
+      .createQueryBuilder('portfolio')
+      .leftJoinAndSelect('portfolio.landlord', 'landlord')
+      .leftJoinAndSelect('portfolio.properties', 'properties')
+      .leftJoinAndSelect('properties.units', 'units')
+      .select([
+        'portfolio',
+        'landlord.id',
+        'landlord.name',
+        'landlord.email',
+        'landlord.phone',
+        'landlord.created_at',
+        'landlord.updated_at',
+        'properties',
+        'units'
+      ])
+      .where('portfolio.id = :id', { id })
+      .getOne();
+
     if (!portfolio) {
       throw new NotFoundException(`Portfolio with ID ${id} not found`);
     }
@@ -82,23 +108,35 @@ export class PortfoliosService {
     const limit = query.limit ?? 10;
     const search = (query.search ?? '').trim();
 
-    let where: any | any[] = { landlord_id: landlordId };
+    const queryBuilder = this.portfoliosRepository
+      .createQueryBuilder('portfolio')
+      .leftJoinAndSelect('portfolio.landlord', 'landlord')
+      .leftJoinAndSelect('portfolio.properties', 'properties')
+      .leftJoinAndSelect('properties.units', 'units')
+      .select([
+        'portfolio',
+        'landlord.id',
+        'landlord.name',
+        'landlord.email',
+        'landlord.phone',
+        'landlord.created_at',
+        'landlord.updated_at',
+        'properties',
+        'units'
+      ])
+      .where('portfolio.landlord_id = :landlordId', { landlordId })
+      .orderBy('portfolio.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
     if (search) {
-      where = [
-        { landlord_id: landlordId, name: ILike(`%${search}%`) },
-        { landlord_id: landlordId, subscription_plan: ILike(`%${search}%`) },
-        { landlord_id: landlordId, status: ILike(`%${search}%`) },
-        { landlord_id: landlordId, provider_customer_id: ILike(`%${search}%`) },
-      ];
+      queryBuilder.andWhere(
+        '(portfolio.name ILIKE :search OR portfolio.subscription_plan ILIKE :search OR portfolio.status ILIKE :search OR portfolio.provider_customer_id ILIKE :search)',
+        { search: `%${search}%` }
+      );
     }
 
-    const [data, total] = await this.portfoliosRepository.findAndCount({
-      where,
-      relations: ['landlord', 'properties', 'properties.units'],
-      order: { created_at: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return { data, total, page, limit };
   }
