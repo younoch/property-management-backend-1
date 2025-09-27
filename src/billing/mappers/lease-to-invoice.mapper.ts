@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Lease } from '../tenancy/lease.entity';
-import { InvoiceItem, InvoiceItemType } from './entities/invoice.entity';
+import { Lease } from '../../tenancy/lease.entity';
+import { InvoiceItem, InvoiceItemType } from '../entities/invoice.entity';
 
 export interface LeaseInvoiceItem extends Omit<InvoiceItem, 'amount'> {
   id: string;

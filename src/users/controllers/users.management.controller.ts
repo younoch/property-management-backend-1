@@ -11,13 +11,13 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
-import { UsersService } from './users.service';
-import { UpdateUserDto } from './dtos/update-user.dto';
-import { User } from './user.entity';
-import { AuthGuard } from '../guards/auth.guard';
-import { CsrfGuard } from '../guards/csrf.guard';
-import { Serialize } from '../interceptors/serialize.interceptor';
-import { UserDto, UserResponseDto } from './dtos/user.dto';
+import { UsersService } from '../users.service';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { User } from '../user.entity';
+import { AuthGuard } from '../../guards/auth.guard';
+import { CsrfGuard } from '../../guards/csrf.guard';
+import { Serialize } from '../../interceptors/serialize.interceptor';
+import { UserDto, UserResponseDto } from '../dto/user.dto';
 
 @ApiTags('users')
 @Controller('users')

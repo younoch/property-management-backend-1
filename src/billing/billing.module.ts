@@ -6,8 +6,8 @@ import { ConfigModule } from '@nestjs/config';
 // Controllers and services
 import { InvoiceEmailController } from './controllers/invoice-email.controller';
 import { InvoiceEmailService } from './services/invoice-email.service';
-import { LeaseBillingController } from './leases-billing.controller';
-import { LeaseToInvoiceMapper } from './lease-to-invoice.mapper';
+import { LeaseBillingController } from './controllers/leases-billing.controller';
+import { LeaseToInvoiceMapper } from './mappers/lease-to-invoice.mapper';
 
 // Modules
 import { AuditLogModule } from '../common/audit-log.module';

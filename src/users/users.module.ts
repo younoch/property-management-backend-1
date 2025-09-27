@@ -3,7 +3,7 @@ import { Module, MiddlewareConsumer, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersController } from './users.controller';
-import { UsersManagementController } from './users.management.controller';
+import { UsersManagementController } from './controllers/users.management.controller';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';

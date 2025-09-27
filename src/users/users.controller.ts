@@ -16,14 +16,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { UpdateUserDto } from './dtos/update-user.dto';
-import { SigninDto } from './dtos/signin.dto';
-import { SigninResponseDto, SigninDataDto } from './dtos/signin-response.dto';
-import { RefreshTokenDto, RefreshTokenResponseDto } from './dtos/refresh-token.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { SigninDto } from './dto/signin.dto';
+import { SigninResponseDto, SigninDataDto } from './dto/signin-response.dto';
+import { RefreshTokenDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
-import { UserDto, UserResponseDto } from './dtos/user.dto';
+import { UserDto, UserResponseDto } from './dto/user.dto';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './user.entity';
@@ -120,7 +120,7 @@ export class UsersController {
       }
 
       // Check if user account is active
-      if (!user.is_active) {
+      if (!user.isActive) {
         throw new ForbiddenException({
           message: 'User account is deactivated',
           errorType: 'ACCOUNT_DEACTIVATED'
@@ -188,7 +188,7 @@ export class UsersController {
   async completeOnboarding(@CurrentUser() user: User) {
     try {
       // Check if onboarding is already completed
-      if (!user.requires_onboarding) {
+      if (!user.requiresOnboarding) {
         throw new BadRequestException({
           message: 'Onboarding already completed',
           errorType: 'ONBOARDING_ALREADY_COMPLETED'
@@ -197,15 +197,15 @@ export class UsersController {
 
       // Update user to mark onboarding as completed
       const updatedUser = await this.usersService.update(user.id, {
-        requires_onboarding: false,
-        onboarding_completed_at: new Date()
+        requiresOnboarding: false,
+        onboardingCompletedAt: new Date()
       });
 
       return {
         success: true,
         message: 'Onboarding completed successfully',
-        requires_onboarding: updatedUser.requires_onboarding,
-        onboarding_completed_at: updatedUser.onboarding_completed_at
+        requiresOnboarding: updatedUser.requiresOnboarding,
+        onboardingCompletedAt: updatedUser.onboardingCompletedAt
       };
     } catch (error) {
       // Re-throw HTTP exceptions as they are already properly formatted
