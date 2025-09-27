@@ -4,26 +4,68 @@ export class RemovePortfolioRelations1759058558000 implements MigrationInterface
     name = 'RemovePortfolioRelations1759058558000';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Drop foreign key constraints first
-        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_lease_charge_portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "payment" DROP CONSTRAINT "FK_payment_portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_maintenance_request_portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "work_order" DROP CONSTRAINT "FK_work_order_portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "document" DROP CONSTRAINT "FK_document_portfolio_id"`);
+        // Helper function to safely drop a constraint if it exists
+        const dropConstraintIfExists = async (table: string, constraint: string) => {
+            const constraintExists = await queryRunner.query(`
+                SELECT 1 FROM information_schema.table_constraints 
+                WHERE table_name = '${table}' AND constraint_name = '${constraint}'
+            `);
+            if (constraintExists && constraintExists.length > 0) {
+                await queryRunner.query(`ALTER TABLE "${table}" DROP CONSTRAINT "${constraint}"`);
+                console.log(`Dropped constraint ${constraint} from ${table}`);
+            } else {
+                console.log(`Constraint ${constraint} does not exist on ${table}, skipping`);
+            }
+        };
 
-        // Drop portfolio_id columns
-        await queryRunner.query(`ALTER TABLE "lease_charge" DROP COLUMN "portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "payment" DROP COLUMN "portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP COLUMN "portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "work_order" DROP COLUMN "portfolio_id"`);
-        await queryRunner.query(`ALTER TABLE "document" DROP COLUMN "portfolio_id"`);
+        // Drop foreign key constraints if they exist
+        await dropConstraintIfExists('lease_charge', 'FK_lease_charge_portfolio_id');
+        await dropConstraintIfExists('payment', 'FK_payment_portfolio_id');
+        await dropConstraintIfExists('maintenance_request', 'FK_maintenance_request_portfolio_id');
+        await dropConstraintIfExists('work_order', 'FK_work_order_portfolio_id');
+        await dropConstraintIfExists('document', 'FK_document_portfolio_id');
 
-        // Drop indexes
-        await queryRunner.query(`DROP INDEX "IDX_lease_charge_portfolio_id"`);
-        await queryRunner.query(`DROP INDEX "IDX_payment_portfolio_id"`);
-        await queryRunner.query(`DROP INDEX "IDX_maintenance_request_portfolio_id"`);
-        await queryRunner.query(`DROP INDEX "IDX_work_order_portfolio_id"`);
-        await queryRunner.query(`DROP INDEX "IDX_document_portfolio_id"`);
+        // Helper function to safely drop a column if it exists
+        const dropColumnIfExists = async (table: string, column: string) => {
+            const columnExists = await queryRunner.query(`
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = '${table}' AND column_name = '${column}'
+            `);
+            if (columnExists && columnExists.length > 0) {
+                await queryRunner.query(`ALTER TABLE "${table}" DROP COLUMN "${column}"`);
+                console.log(`Dropped column ${column} from ${table}`);
+            } else {
+                console.log(`Column ${column} does not exist on ${table}, skipping`);
+            }
+        };
+
+        // Drop portfolio_id columns if they exist
+        await dropColumnIfExists('lease_charge', 'portfolio_id');
+        await dropColumnIfExists('payment', 'portfolio_id');
+        await dropColumnIfExists('maintenance_request', 'portfolio_id');
+        await dropColumnIfExists('work_order', 'portfolio_id');
+        await dropColumnIfExists('document', 'portfolio_id');
+
+        // Helper function to safely drop an index if it exists
+        const dropIndexIfExists = async (indexName: string) => {
+            const indexExists = await queryRunner.query(`
+                SELECT 1 FROM pg_indexes 
+                WHERE indexname = '${indexName}'
+            `);
+            if (indexExists && indexExists.length > 0) {
+                await queryRunner.query(`DROP INDEX "${indexName}"`);
+                console.log(`Dropped index ${indexName}`);
+            } else {
+                console.log(`Index ${indexName} does not exist, skipping`);
+            }
+        };
+
+        // Drop indexes if they exist
+        await dropIndexIfExists('IDX_lease_charge_portfolio_id');
+        await dropIndexIfExists('IDX_payment_portfolio_id');
+        await dropIndexIfExists('IDX_maintenance_request_portfolio_id');
+        await dropIndexIfExists('IDX_work_order_portfolio_id');
+        await dropIndexIfExists('IDX_document_portfolio_id');
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
