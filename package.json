@@ -30,7 +30,8 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "migration:run:prod": "typeorm -d dist/database/data-source.js migration:run",
-    "reset-db:prod": "npm run build && node -r tsconfig-paths/register dist/scripts/reset-db.prod.js",
+    "build:reset-script": "tsc -p tsconfig.build.json scripts/reset-db.prod.ts --outDir dist/scripts",
+    "reset-db:prod": "npm run build:reset-script && node -r tsconfig-paths/register dist/scripts/reset-db.prod.js",
     "generate:env": "node generate-env.js",
     "postinstall": "puppeteer browsers install chrome"
   },
