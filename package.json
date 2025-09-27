@@ -30,7 +30,7 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "migration:run:prod": "typeorm -d dist/database/data-source.js migration:run",
-    "reset-db:prod": "npx ts-node -r tsconfig-paths/register scripts/reset-db.prod.ts",
+    "reset-db:prod": "npm run build && node -r tsconfig-paths/register dist/scripts/reset-db.prod.js",
     "generate:env": "node generate-env.js",
     "postinstall": "puppeteer browsers install chrome"
   },
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "^2.1.0",
