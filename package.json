@@ -19,6 +19,7 @@
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:prod:with-migrations": "node -e \"require('dotenv/config'); const { execSync } = require('child_process'); try { console.log('Running migrations...'); execSync('npx typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts --transaction all', { stdio: 'inherit' }); } catch (error) { console.error('Migration failed, but continuing with server start...'); }\" && node dist/main",
     "start:prod:migrate": "npm run migration:run:prod && npm run start:prod",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "cross-env NODE_ENV=test jest",
