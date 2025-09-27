@@ -1,24 +1,70 @@
-# Property & Rental Management for Small Landlords
+# 🏠 Property & Rental Management System
 
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+A comprehensive backend application for managing properties, tenants, and rental operations with secure authentication and modern security features.
 
-<p align="center">
-  <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-  <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-  <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-  <a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-  <a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-  <a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-  <a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-  <a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-  <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
+## 📚 Documentation Hub
 
-A comprehensive NestJS application for managing properties, tenants, and rental operations with secure authentication and modern security features.
+### 📋 Table of Contents
+- [🚀 Project Overview](#-project-overview)
+- [⚙️ System Architecture](#-system-architecture)
+- [🚀 Getting Started](#-getting-started)
+- [🔧 Configuration](#-configuration)
+- [🗄️ Database Management](#-database-management)
+- [🚀 Deployment](#-deployment)
+- [🔍 API Documentation](#-api-documentation)
+- [🧪 Testing](#-testing)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+## 🚀 Project Overview
+
+This project is a backend system for property and rental management, built with NestJS and PostgreSQL. It provides a robust API for managing properties, tenants, leases, and more.
+
+### Key Features
+- **User Management**: Multi-role authentication and authorization
+- **Property Management**: Comprehensive property and unit tracking
+- **Lease Management**: Handle rental agreements and terms
+- **Document Management**: Store and manage property-related documents
+- **Reporting**: Generate reports on properties, tenants, and financials
+
+### Project Structure
+```
+property-management-backend/
+├── src/
+│   ├── common/           # Shared modules and utilities
+│   ├── config/           # Configuration files
+│   ├── database/         # Database configuration and migrations
+│   ├── modules/          # Feature modules
+│   └── main.ts           # Application entry point
+├── test/                 # Test files
+├── .env.example          # Example environment variables
+└── *.md                  # Documentation files
+```
+
+## ⚙️ System Architecture
+
+### Tech Stack
+- **Backend Framework**: [NestJS](https://nestjs.com/)
+- **Database**: PostgreSQL
+- **ORM**: TypeORM
+- **Authentication**: JWT with CSRF protection
+- **API Documentation**: Swagger/OpenAPI
+- **Testing**: Jest
+- **Containerization**: Docker (optional)
+
+### Documentation Files
+- [📄 Database Reset Guide](./DATABASE-RESET.md) - Instructions for resetting and managing databases
+- [🚀 Deployment Guide](./DEPLOYMENT.md) - Step-by-step deployment instructions
+- [🏗️ Project Modules](./PROPERTY_MANAGEMENT_MODULES.md) - Detailed module documentation
+- [🔄 Database Migrations](./src/database/migrations/README.md) - Database migration guide
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js >= 18.0.0
+- PostgreSQL >= 14.0
+- npm >= 8.0.0
+- TypeScript >= 4.0.0
 
 ## 🚀 Features
 
@@ -81,8 +127,9 @@ fetch('/auth/signout', {
 
 ### Prerequisites
 - Node.js >= 18.0.0
-- PostgreSQL >= 12.0
-- pnpm >= 8.0.0
+- PostgreSQL >= 14.0
+- npm >= 8.0.0
+- TypeScript >= 4.0.0
 
 ### Quick Start
 ```bash
@@ -91,13 +138,13 @@ git clone <repository-url>
 cd property-management-backend
 
 # Install dependencies
-pnpm install
+npm install
 
-# Generate environment configuration
-pnpm run generate:env
+# Copy .env.example to .env and update values
+cp .env.example .env
 
 # Start development server
-pnpm run start:dev
+npm run start:dev
 ```
 
 ## ⚙️ Configuration
@@ -107,30 +154,147 @@ pnpm run start:dev
 #### Required
 - `JWT_ACCESS_SECRET`: Secret for signing access JWTs
 - `CSRF_SECRET`: Secret for CSRF token generation
-- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`: Database configuration
+- `DB_HOST`: Database host (default: localhost)
+- `DB_PORT`: Database port (default: 5432)
+- `DB_USERNAME`: Database username
+- `DB_PASSWORD`: Database password
+- `DB_NAME`: Database name
+- `NODE_ENV`: Environment (development/production/test)
 
 #### Optional
 - `JWT_ACCESS_EXPIRES_IN`: Access token TTL (default: 15m)
 - `CSRF_TOKEN_EXPIRY_HOURS`: CSRF token expiry (default: 24h)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed frontend domains
-- `NODE_ENV`: Environment (development/production)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed frontend domains (default: 'http://localhost:3000,http://localhost:3001,http://localhost:5173')
+- `DB_SSL`: Enable/disable SSL for database connection (default: false)
+- `DB_SYNC`: Auto-sync database schema (default: false in production, true in development)
+- `RUN_MIGRATIONS_ON_BOOT`: Run pending migrations on application start (default: true)
+- `USE_SQLITE_FOR_TESTS`: Use SQLite for tests (default: false)
 
 ### Example Configuration
 ```bash
-# .env.development
+# .env
 NODE_ENV=development
-JWT_ACCESS_SECRET=your-dev-secret
-CSRF_SECRET=your-csrf-secret
+
+# JWT Configuration
+JWT_ACCESS_SECRET=your-secure-jwt-secret
+JWT_ACCESS_EXPIRES_IN=15m
+
+# CSRF Configuration
+CSRF_SECRET=your-secure-csrf-secret
 CSRF_TOKEN_EXPIRY_HOURS=24
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# CORS Configuration
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:5173
+
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=password
-DB_NAME=property_management_dev
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_secure_password
+DB_NAME=property_management
+DB_SSL=false
+DB_SYNC=true
+
+# Application Settings
+PORT=3000
+RUN_MIGRATIONS_ON_BOOT=true
+
+# Test Configuration (when NODE_ENV=test)
+USE_SQLITE_FOR_TESTS=false
 ```
 
-## 📚 API Documentation
+## 🛠️ Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run start` | Start the application in production mode |
+| `npm run start:dev` | Start in development mode with watch mode |
+| `npm run build` | Compile TypeScript to JavaScript |
+| `npm run test` | Run unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:cov` | Run tests with coverage |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run lint` | Lint the codebase |
+| `npm run format` | Format code using Prettier |
+| `npm run migration:generate` | Generate a new migration |
+| `npm run migration:run` | Run pending migrations |
+| `npm run migration:revert` | Revert the last migration |
+| `npm run migration:run:prod` | Run migrations in production |
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+### Test Configuration
+- Test files use `.spec.ts` suffix for unit tests
+- E2E tests use `.e2e-spec.ts` suffix
+- Test utilities and fixtures are in the `test/` directory
+
+## 🔍 API Documentation
+
+### Interactive Documentation
+Run the application and visit:
+- Swagger UI: `http://localhost:3000/api` (development)
+- JSON Schema: `http://localhost:3000/api-json`
+
+### Authentication
+All protected routes require a valid JWT token in the `Authorization` header.
+
+### Rate Limiting
+- API is rate limited to 100 requests per minute per IP address
+- Authentication endpoints have stricter rate limits
+
+## 🗄️ Database Management
+
+### Migrations
+See the [Database Migrations Guide](./src/database/migrations/README.md) for detailed instructions on managing database schema changes.
+
+### Resetting the Database
+For development and testing, you can reset the database using the [Database Reset Guide](./DATABASE-RESET.md).
+
+## 🚀 Deployment
+
+### Production Deployment
+Refer to the [Deployment Guide](./DEPLOYMENT.md) for detailed instructions on deploying to production environments.
+
+### Environment Variables
+Required environment variables are documented in the [Configuration Guide](#-configuration) section.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Code Style
+- Follow the [TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
+- Use ESLint and Prettier for consistent code formatting
+- Write meaningful commit messages
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Additional Resources
+
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [TypeORM Documentation](https://typeorm.io/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Jest Documentation](https://jestjs.io/)
+- [Docker Documentation](https://docs.docker.com/)
 
 ### Authentication Endpoints
 - `POST /auth/signup` - Register new user

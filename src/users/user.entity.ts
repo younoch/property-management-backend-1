@@ -45,6 +45,9 @@ export class User {
   @Column({ type: 'timestamp', nullable: true })
   onboarding_completed_at: Date | null;
 
+  @Column({ type: 'varchar', length: 10, default: 'en' })
+  language: string;
+
   @CreateDateColumn()
   created_at: Date;
 

@@ -66,10 +66,17 @@ export class User {
   role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 
   @Column({ nullable: true })
+  @IsOptional()
   profile_image_url: string;
 
   @Column({ default: true })
   is_active: boolean;
+
+  @Column({ default: true })
+  requires_onboarding: boolean;
+
+  @Column({ type: 'varchar', length: 10, default: 'en' })
+  language: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -89,12 +96,26 @@ export class User {
 ### Portfolio Entity
 ```typescript
 @Entity()
+@Index(['landlord'])
+@Index(['status'])
 export class Portfolio {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
+  @IsNotEmpty()
   name: string;
+  
+  @Column()
+  @IsNotEmpty()
+  subscription_plan: string;
+  
+  @Column()
+  @IsNotEmpty()
+  status: string;
+  
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'landlord_id' })
@@ -124,9 +145,14 @@ export class Portfolio {
 ### Property Entity
 ```typescript
 @Entity()
+@Index(['city', 'state'])
+@Index(['property_type'])
 export class Property {
   @PrimaryGeneratedColumn()
   id: number;
+  
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
@@ -142,6 +168,7 @@ export class Property {
   address_line1: string;
 
   @Column({ nullable: true })
+  @IsOptional()
   address_line2: string;
 
   @Column()

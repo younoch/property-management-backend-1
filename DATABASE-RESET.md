@@ -1,23 +1,163 @@
-# Database Reset Guide
+# Database Reset and Management Guide
 
-This document provides instructions for resetting the production database on Render.
+This document provides instructions for managing and resetting the database in different environments (development, staging, production).
 
 ## Prerequisites
 
-- Access to the Render dashboard
-- Admin privileges for the project
-- Database credentials (stored in Render environment variables)
+### For All Environments:
+- Database credentials (username, password, host, port, database name)
+- Appropriate permissions to modify the database
+- Backup of important data (recommended before any reset)
 
-## How to Reset the Database
+### For Production:
+- Maintenance window scheduled (if applicable)
+- Backups verified and tested
+- Team members notified
 
-### Method 1: Using Render Dashboard (Recommended)
+## Environment-Specific Reset Procedures
 
-1. Go to your Render dashboard (https://dashboard.render.com/)
-2. Navigate to your web service
-3. Click on the "Manual Deploy" button
-4. Select "Deploy latest commit"
-5. In the environment variables section, add or update:
+### 1. Development Environment
+
+#### Using Migration Reset (Recommended for Development)
+```bash
+# Reset the database and run all migrations
+npm run migration:reset
+
+# Or for a fresh start
+npm run schema:drop
+npm run migration:run
+```
+
+#### Using Script (Alternative)
+```bash
+# Run the reset script
+node scripts/reset-db.js
+
+# Or using ts-node for TypeScript
+npx ts-node scripts/reset-db.ts
+```
+
+### 2. Staging/Production Environment
+
+#### Method 1: Using Database Management Tools
+1. **Using psql (PostgreSQL CLI):**
+   ```bash
+   # Connect to the database
+   PGPASSWORD=your_password psql -h your_host -U your_username -d your_database
+   
+   # Drop and recreate the database
+   DROP DATABASE your_database;
+   CREATE DATABASE your_database;
+   \q
+   
+   # Run migrations
+   npm run migration:run:prod
    ```
+
+2. **Using pgAdmin or DBeaver:**
+   - Connect to your database
+   - Right-click on the database → Delete/Drop
+   - Create a new database with the same name
+   - Run migrations
+
+#### Method 2: Using Backup and Restore
+```bash
+# Create a backup (before reset)
+pg_dump -h your_host -U your_username -d your_database > backup_$(date +%Y%m%d).sql
+
+# Restore from backup (if needed)
+psql -h your_host -U your_username -d your_database < backup_file.sql
+```
+
+## Data Seeding (Optional)
+
+After resetting, you may want to seed the database with initial data:
+
+```bash
+# Run seeders
+npm run seed:run
+
+# Or run specific seeder
+npm run seed:run -- --seeder=InitialDataSeeder
+```
+
+## Post-Reset Verification
+
+1. Verify database structure:
+   ```bash
+   # Check tables
+   psql -h your_host -U your_username -d your_database -c "\dt"
+   
+   # Check migrations status
+   psql -h your_host -U your_username -d your_database -c "SELECT * FROM migrations;"
+   ```
+
+2. Run application tests:
+   ```bash
+   npm test
+   ```
+
+3. Perform manual testing of critical paths
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection Issues**
+   - Verify database credentials
+   - Check if the database server is running
+   - Verify network connectivity
+
+2. **Permission Errors**
+   - Ensure the database user has necessary permissions
+   - Check if the user has DROP/CREATE privileges
+
+3. **Migration Failures**
+   - Check for syntax errors in migration files
+   - Verify the order of migrations
+   - Check for data dependencies between tables
+
+## Security Considerations
+
+- Never include database credentials in version control
+- Use environment variables for sensitive information
+- Limit database access to authorized personnel only
+- Always backup before performing destructive operations
+
+## Backup and Recovery
+
+### Creating Backups
+```bash
+# Full database backup
+pg_dump -h your_host -U your_username -d your_database -F c -b -v -f backup_$(date +%Y%m%d).backup
+
+# Schema-only backup
+pg_dump -h your_host -U your_username -d your_database --schema-only > schema_$(date +%Y%m%d).sql
+```
+
+### Restoring from Backup
+```bash
+# Restore from custom format backup
+pg_restore -h your_host -U your_username -d your_database backup_file.backup
+
+# Restore from plain SQL backup
+psql -h your_host -U your_username -d your_database < backup_file.sql
+```
+
+## Maintenance Schedule
+
+| Task | Frequency | Notes |
+|------|-----------|-------|
+| Full Backup | Daily | Keep for 7 days |
+| Schema Backup | Weekly | Keep for 1 month |
+| Database Vacuum | Weekly | During low traffic |
+| Performance Analysis | Monthly | Check for slow queries |
+
+## Emergency Contacts
+
+- **Database Administrator**: [Name] - [Email/Phone]
+- **Backup Contact**: [Name] - [Email/Phone]
+- **Support**: [Support Email/Phone]
    RESET_DB=true
    ```
 6. Click "Deploy latest commit"

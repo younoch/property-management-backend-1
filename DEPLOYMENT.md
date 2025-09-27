@@ -6,9 +6,12 @@ This guide will help you deploy the Property Management Backend to production wi
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
-- A domain name (for CORS configuration)
-- PostgreSQL database (or use the included PostgreSQL container)
+- Node.js 18+ and npm 8+
+- PostgreSQL 14+ database
+- PM2 (for process management in production)
+- Nginx (recommended for reverse proxy)
+- A domain name with DNS configured
+- SSL certificate (recommended, e.g., from Let's Encrypt)
 
 ## Step 1: Environment Configuration
 
@@ -23,16 +26,28 @@ This guide will help you deploy the Property Management Backend to production wi
    ```
 
    **Required configurations:**
-   - `ALLOWED_ORIGINS`: Your frontend domain(s) separated by commas
-   - `DB_PASSWORD`: A secure database password
-- `JWT_ACCESS_SECRET`: Strong secret used to sign JWT access tokens
+   - `NODE_ENV=production`
+   - `PORT=8000` (or your preferred port)
+   - `ALLOWED_ORIGINS`: Your frontend domain(s) separated by commas (e.g., `https://yourdomain.com,https://www.yourdomain.com`)
    - `DB_HOST`: Your database host (use `postgres` if using Docker)
+   - `DB_PORT=5432` (default PostgreSQL port)
+   - `DB_USERNAME`: Database username
+   - `DB_PASSWORD`: A secure database password
+   - `DB_NAME`: Database name
+   - `JWT_ACCESS_SECRET`: Strong secret used to sign JWT access tokens
+   - `JWT_REFRESH_SECRET`: Strong secret used for refresh tokens
+   - `COOKIE_KEY`: Secret key for signing cookies
+   - `DEFAULT_LANGUAGE=en` (default language for new users)
+   - `ENABLE_SWAGGER=false` (disable in production)
 
    **Example:**
    ```env
+   # Server Configuration
    NODE_ENV=production
    PORT=8000
    ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
+   
+   # Database Configuration
    DB_HOST=postgres
    DB_PORT=5432
    DB_USERNAME=postgres
@@ -40,49 +55,199 @@ This guide will help you deploy the Property Management Backend to production wi
    DB_NAME=property_rental_management_prod
    DB_SYNC=false
    DB_SSL=false
+   
+   # Authentication
+   JWT_ACCESS_SECRET=your-jwt-access-secret-key-here
+   JWT_REFRESH_SECRET=your-jwt-refresh-secret-key-here
+   JWT_ACCESS_EXPIRES_IN=15m
+   JWT_REFRESH_EXPIRES_IN=7d
+   
+   # Security
    COOKIE_KEY=my-super-secret-cookie-key-123456789
+   COOKIE_SECURE=true
+   COOKIE_HTTP_ONLY=true
+   
+   # Application Settings
+   DEFAULT_LANGUAGE=en
+   ENABLE_SWAGGER=false
+   RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
+   RATE_LIMIT_MAX=100  # 100 requests per window per IP
    ```
 
-## Step 2: Deploy with Docker
+## Step 2: Deploy the Application
 
-### Option A: Using the deployment script (Recommended)
+### 1. Install Dependencies
 ```bash
-./deploy.sh
+# Install production dependencies
+npm ci --only=production
+
+# Build the application
+npm run build
+
+# Install PM2 globally (if not already installed)
+npm install -g pm2
 ```
 
-### Option B: Manual deployment
+### 2. Configure the Application
+
+1. **Set up environment variables** in `.env` file (created in Step 1)
+2. **Update the following settings** in your `.env` file:
+   ```
+   NODE_ENV=production
+   PORT=3000
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USERNAME=your_db_user
+   DB_PASSWORD=your_secure_password
+   DB_NAME=property_management
+   ```
+
+### 3. Start the Application
+
+#### Option A: Using PM2 (Recommended for Production)
 ```bash
-# Build and start services
-docker-compose -f docker-compose.prod.yml up --build -d
+# Start the application with PM2
+pm2 start dist/main.js --name="property-management"
 
-# Check service status
-docker-compose -f docker-compose.prod.yml ps
+# Save the PM2 process list
+pm2 save
 
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
+# Generate startup script
+pm2 startup
+
+# Start PM2 on system boot
+pm2 save
 ```
+
+#### Option B: Direct Node.js Execution
+```bash
+# Start the application directly
+node dist/main.js
+
+# Or using npm
+npm run start:prod
+```
+
+### 4. Set Up Nginx as Reverse Proxy (Recommended)
+
+1. Install Nginx:
+   ```bash
+   # For Ubuntu/Debian
+   sudo apt update
+   sudo apt install nginx
+   ```
+
+2. Create a new Nginx configuration file at `/etc/nginx/sites-available/property-management`:
+   ```nginx
+   server {
+       listen 80;
+       server_name yourdomain.com www.yourdomain.com;
+
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+
+3. Enable the site and restart Nginx:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/property-management /etc/nginx/sites-enabled/
+   sudo nginx -t  # Test configuration
+   sudo systemctl restart nginx
+   ```
 
 ## Step 3: Verify Deployment
 
-1. **Check if the API is running:**
+1. **Check application health:**
    ```bash
-   curl http://localhost:8000/health
+   # Basic health check
+   curl -i http://localhost:3000/health
+   
+   # Or if using Nginx
+   curl -i http://yourdomain.com/health
+   
+   # Detailed health check (if implemented)
+   curl -i http://localhost:3000/health/detailed
    ```
 
 2. **Test CORS configuration:**
    ```bash
-   curl -H "Origin: https://yourdomain.com" \
-        -H "Access-Control-Request-Method: GET" \
-        -H "Access-Control-Request-Headers: Content-Type" \
-        -X OPTIONS http://localhost:8000/users
+   # Test CORS preflight request
+   curl -i -X OPTIONS \
+     -H "Origin: https://yourdomain.com" \
+     -H "Access-Control-Request-Method: GET" \
+     -H "Access-Control-Request-Headers: Content-Type,Authorization" \
+     http://localhost:3000/api/users/me
+   ```
+
+3. **Verify API endpoints:**
+   ```bash
+   # Test public endpoint
+   curl -i http://localhost:3000/api/public/status
+   
+   # Test protected endpoint (requires valid JWT)
+   curl -i -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     http://localhost:3000/api/users/me
+   ```
+
+4. **Check application logs:**
+   ```bash
+   # View PM2 logs
+   pm2 logs property-management --lines 100
+   
+   # Follow logs in real-time
+   pm2 logs property-management --lines 100 --raw
+   
+   # View Nginx access logs
+   sudo tail -f /var/log/nginx/access.log
+   
+   # View Nginx error logs
+   sudo tail -f /var/log/nginx/error.log
    ```
 
 ## Step 4: Database Migrations
 
-If you have database migrations, run them:
-```bash
-docker-compose -f docker-compose.prod.yml exec app npm run migration:run
-```
+### Running Migrations in Production
+
+1. **Run pending migrations:**
+   ```bash
+   # Run all pending migrations
+   npm run migration:run
+   
+   # Or use the production-specific command
+   NODE_ENV=production npm run migration:run:prod
+   ```
+
+2. **Verify applied migrations:**
+   ```bash
+   # Connect to the database using psql
+   psql -U your_db_user -d your_database_name -c "SELECT * FROM migrations;"
+   
+   # Or using the application's migration status command (if available)
+   npm run migration:show
+   ```
+
+3. **Reverting migrations (if needed):**
+   ```bash
+   # Revert the last applied migration
+   npm run migration:revert
+   
+   # For production
+   NODE_ENV=production npm run migration:revert
+   ```
+
+### Migration Best Practices
+- Always backup your database before running migrations in production
+- Test migrations in a staging environment first
+- Run migrations during maintenance windows if possible
+- Monitor the application after applying migrations
+- Have a rollback plan in case of failures
+- Consider using a migration tool like `db-migrate` or `knex` for more complex scenarios
 
 ## 🔧 Configuration Details
 
