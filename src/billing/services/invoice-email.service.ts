@@ -8,8 +8,6 @@ import { format } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
 import { Lease } from '../../tenancy/lease.entity';
-import { Portfolio } from '../../portfolios/portfolio.entity';
-
 @Injectable()
 export class InvoiceEmailService {
   private readonly logger = new Logger(InvoiceEmailService.name);
@@ -23,8 +21,6 @@ export class InvoiceEmailService {
     private readonly invoiceRepository: Repository<Invoice>,
     @InjectRepository(Lease)
     private readonly leaseRepository: Repository<Lease>,
-    @InjectRepository(Portfolio)
-    private readonly portfolioRepository: Repository<Portfolio>,
     private readonly configService: ConfigService,
   ) {}
 
@@ -42,7 +38,7 @@ export class InvoiceEmailService {
       // Fetch the invoice with relations
       const invoice = await this.invoiceRepository.findOne({
         where: { id: invoiceId },
-        relations: ['lease', 'portfolio'],
+        relations: ['lease'],
       });
 
       if (!invoice) {
@@ -55,16 +51,8 @@ export class InvoiceEmailService {
         relations: ['tenant', 'property'],
       });
 
-      const portfolio = invoice.portfolio || await this.portfolioRepository.findOne({
-        where: { id: invoice.portfolio_id },
-      });
-
       if (!lease) {
         throw new BadRequestException('Associated lease not found for the invoice');
-      }
-
-      if (!portfolio) {
-        throw new BadRequestException('Associated portfolio not found for the invoice');
       }
 
       // Prepare invoice data for PDF generation with type assertion
@@ -95,15 +83,6 @@ export class InvoiceEmailService {
           tenant_name: sendInvoiceEmailDto.recipient_name || 'Tenant',
           tenant_email: sendInvoiceEmailDto.recipient_email,
           tenant_phone: sendInvoiceEmailDto.recipient_phone,
-          property_address: sendInvoiceEmailDto.property_address,
-        },
-        portfolio: {
-          id: portfolio.id,
-          name: portfolio.name || 'Portfolio',
-          address: portfolio.address || '',
-          phone: portfolio.phone || '',
-          email: portfolio.email || this.configService.get('SMTP_FROM_EMAIL'),
-          currency: portfolio.currency || 'USD',
         },
         sent_at: new Date(),
         // Store custom fields including notes and watermark preference
@@ -140,11 +119,10 @@ export class InvoiceEmailService {
 
       // Prepare email content
       const amountDue = invoice.total_amount - (invoice.amount_paid || 0);
-      const subject = `Invoice #${invoiceData.invoice_number} from ${invoiceData.portfolio.name}`;
+      const subject = `Invoice #${invoiceData.invoice_number} from Your Property Management`;
       
       const text = this.getEmailText({
         invoiceNumber: invoiceData.invoice_number,
-        portfolioName: invoiceData.portfolio.name,
         amountDue,
         dueDate: invoiceData.due_date,
         additionalNotes: sendInvoiceEmailDto.message,
@@ -152,11 +130,10 @@ export class InvoiceEmailService {
 
       const html = this.getEmailHtml({
         invoiceNumber: invoiceData.invoice_number,
-        portfolioName: invoiceData.portfolio.name,
         amountDue,
         dueDate: invoiceData.due_date,
         additionalNotes: sendInvoiceEmailDto.message,
-        currency: invoiceData.portfolio.currency || 'USD',
+        currency: 'USD',
       });
 
       // Prepare email options
@@ -175,7 +152,7 @@ export class InvoiceEmailService {
         cc: sendInvoiceEmailDto.cc_emails,
         bcc: sendInvoiceEmailDto.bcc_emails,
         replyTo: sendInvoiceEmailDto.reply_to,
-        from: invoiceData.portfolio.email || this.configService.get('SMTP_FROM'),
+        from: this.configService.get('SMTP_FROM'),
       };
 
       // Send the email with PDF attachment
@@ -231,13 +208,11 @@ export class InvoiceEmailService {
    */
   private getEmailText({
     invoiceNumber,
-    portfolioName,
     amountDue,
     dueDate,
     additionalNotes,
   }: {
     invoiceNumber: string;
-    portfolioName: string;
     amountDue: number;
     dueDate: string | Date;
     additionalNotes?: string;
@@ -252,7 +227,7 @@ export class InvoiceEmailService {
       currency: 'USD',
     }).format(amountDue);
 
-    let text = `Invoice #${invoiceNumber} from ${portfolioName}\n\n`;
+    let text = `Invoice #${invoiceNumber} from Your Property Management\n\n`;
     text += `Amount Due: ${formattedAmount}\n`;
     text += `Due Date: ${formattedDueDate}\n\n`;
     
@@ -272,14 +247,12 @@ export class InvoiceEmailService {
    */
   private getEmailHtml({
     invoiceNumber,
-    portfolioName,
     amountDue,
     dueDate,
     additionalNotes,
     currency = 'USD',
   }: {
     invoiceNumber: string;
-    portfolioName: string;
     amountDue: number;
     dueDate: string | Date;
     additionalNotes?: string;
@@ -329,7 +302,7 @@ export class InvoiceEmailService {
         <div class="container">
           <div class="header">
             <h2>Invoice #${invoiceNumber}</h2>
-            <p>From: ${portfolioName}</p>
+            <p>From: Your Property Management</p>
           </div>
           
           <div class="content">
@@ -346,7 +319,7 @@ export class InvoiceEmailService {
             
             <p>Thank you for your business!</p>
             
-            <p>Best regards,<br>${portfolioName}</p>
+            <p>Best regards,<br>Your Property Management Team</p>
           </div>
           
           <div class="footer">

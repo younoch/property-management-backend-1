@@ -1,24 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, OneToMany, DeleteDateColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Portfolio } from '../portfolios/portfolio.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
 
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'ach' | 'mobile';
 
 @Entity()
-@Index(['portfolio_id'])
 @Index(['lease_id'])
 export class Payment {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
-
-  @Column()
-  portfolio_id: number;
 
   @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lease_id' })

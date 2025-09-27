@@ -20,9 +20,6 @@ export class DocumentsService {
     return this.repo.find();
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.repo.find({ where: { portfolio_id: portfolioId } });
-  }
 
   async findOne(id: number) {
     const d = await this.repo.findOne({ where: { id } });

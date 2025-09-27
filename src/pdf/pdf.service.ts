@@ -36,7 +36,7 @@ export interface InvoicePdfData {
     tenant_phone?: string;
     property_address?: string;
   };
-  portfolio: {
+  portfolio?: {
     id: number;
     name: string;
     address?: string;

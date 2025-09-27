@@ -139,5 +139,3 @@ export class PortfoliosController {
     return this.portfoliosService.remove(+id);
   }
 }
-
-

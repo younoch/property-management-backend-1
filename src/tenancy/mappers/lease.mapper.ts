@@ -3,7 +3,6 @@ import { Lease } from '../lease.entity';
 import { LeaseResponseDto } from '../dto/lease-response.dto';
 import { LeaseTenantResponseDto } from '../dto/lease-tenant-response.dto';
 import { LeaseTenant } from '../lease-tenant.entity';
-import { PortfolioShortDto } from '../../portfolios/dto/portfolio-short.dto';
 import { PropertyShortDto } from '../../properties/dto/property-short.dto';
 import { UnitShortDto } from '../../properties/dto/unit-short.dto';
 
@@ -48,14 +47,6 @@ export class LeaseMapper {
       return isNaN(num) ? defaultValue : num;
     };
 
-    // Map portfolio information if available
-    const portfolio = lease.portfolio ? {
-      id: lease.portfolio.id,
-      name: lease.portfolio.name || '',
-      subscription_plan: lease.portfolio.subscription_plan || 'free',
-      status: lease.portfolio.status || 'active'
-    } : null;
-
     // Map unit information if available
     const unit = lease.unit ? {
       id: lease.unit.id,
@@ -78,8 +69,6 @@ export class LeaseMapper {
     return {
       id: lease.id,
       unit_id: lease.unit_id,
-      portfolio_id: lease.portfolio_id,
-      portfolio,
       unit,
       property,
       start_date: lease.start_date,

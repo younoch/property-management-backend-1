@@ -1,19 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { Portfolio } from '../portfolios/portfolio.entity';
 import { MaintenanceRequest } from './maintenance-request.entity';
 
 @Entity()
-@Index(['portfolio_id'])
 export class WorkOrder {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
-
-  @Column()
-  portfolio_id: number;
 
   @ManyToOne(() => MaintenanceRequest, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'request_id' })

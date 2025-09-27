@@ -4,8 +4,7 @@ import { DataSource } from 'typeorm';
 import { Payment } from './payment.entity';
 import { PaymentApplication } from './payment-application.entity';
 import { Invoice } from './entities/invoice.entity';
-import { Portfolio } from '../portfolios/portfolio.entity';
-import { PaymentsController, PaymentsGlobalController } from './payments.controller';
+import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { AuditLogModule } from '../common/audit-log.module';
 import { Lease } from '../tenancy/lease.entity';
@@ -19,17 +18,21 @@ import { BillingModule } from './billing.module';
       PaymentApplication,
       Invoice,
       Lease,
-      Portfolio,
       LeaseTenant,
     ]),
     AuditLogModule,
     forwardRef(() => BillingModule),
   ],
   controllers: [
-    PaymentsController, 
-    PaymentsGlobalController
+    PaymentsController
   ],
   providers: [
+    PaymentsService,
+    {
+      provide: 'DATA_SOURCE',
+      useFactory: (dataSource: DataSource) => dataSource,
+      inject: [DataSource],
+    },
     {
       provide: 'PAYMENT_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Payment),

@@ -57,8 +57,7 @@ export class InvoiceGenerationScheduler {
 
       // Check if invoice already exists for lease+month to avoid duplicates
       const existing = await this.invoiceRepo.createQueryBuilder('i')
-        .where('i.portfolio_id = :portfolio', { portfolio: charge.portfolio_id })
-        .andWhere('i.lease_id = :lease', { lease: charge.lease_id })
+        .where('i.lease_id = :lease', { lease: charge.lease_id })
         .andWhere('i.issue_date = :issueDate', { issueDate })
         .getOne();
       if (existing) continue;
@@ -88,7 +87,6 @@ export class InvoiceGenerationScheduler {
       const total = parseFloat((subtotal + tax).toFixed(2));
 
       const invoice = this.invoiceRepo.create({
-        portfolio_id: charge.portfolio_id,
         lease_id: charge.lease_id,
         issue_date: issueDate,
         due_date: dueDate,

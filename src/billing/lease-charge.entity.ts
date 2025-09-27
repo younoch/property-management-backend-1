@@ -13,28 +13,13 @@ import { Lease } from '../tenancy/lease.entity';
 import { Unit } from '../properties/unit.entity';
 import { Property } from '../properties/property.entity';
 
-// Using a simple interface to avoid circular dependency
-interface IPortfolio {
-  id: number;
-  // Add other necessary properties here
-}
-
 @Entity()
-@Index(['portfolio_id'])
 @Index(['lease_id'])
 @Index(['unit_id'])
 @Index(['property_id'])
 export class LeaseCharge {
   @PrimaryGeneratedColumn()
   id: number;
-
-  /** Portfolio relation */
-  @ManyToOne('Portfolio', 'leaseCharges', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: IPortfolio;
-
-  @Column()
-  portfolio_id: number;
 
   /** Lease relation */
   @ManyToOne(() => Lease, { onDelete: 'CASCADE' })

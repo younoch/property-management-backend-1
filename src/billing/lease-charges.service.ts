@@ -27,23 +27,20 @@ export class LeaseChargesService {
       this.unitRepo.findOne({ where: { id: dto.unit_id } }),
       this.propertyRepo.findOne({ where: { id: dto.property_id } }),
       this.leaseRepo.findOne({ 
-        where: { id: dto.lease_id },
-        relations: ['portfolio']
+        where: { id: dto.lease_id }
       })
     ]);
 
     if (!unit) throw new NotFoundException('Unit not found');
     if (!property) throw new NotFoundException('Property not found');
     if (!lease) throw new NotFoundException('Lease not found');
-    if (!lease.portfolio) throw new NotFoundException('Portfolio not found for lease');
 
     // Generate name based on unit and property
     const name = `${unit.label} - ${property.name}`;
 
     const charge = this.repo.create({
       ...dto,
-      name,
-      portfolio_id: lease.portfolio.id // Set portfolio_id from lease
+      name
     });
 
     return this.repo.save(charge);
@@ -51,21 +48,21 @@ export class LeaseChargesService {
 
   async findAll() {
     return this.repo.find({
-      relations: ['unit', 'property', 'portfolio', 'lease']
+      relations: ['unit', 'property', 'lease']
     });
   }
 
   findByLease(leaseId: number) {
     return this.repo.find({ 
       where: { lease_id: leaseId },
-      relations: ['unit', 'property', 'portfolio']
+      relations: ['unit', 'property']
     });
   }
 
   async findOne(id: number) {
     const charge = await this.repo.findOne({ 
       where: { id },
-      relations: ['unit', 'property', 'portfolio', 'lease']
+      relations: ['unit', 'property', 'lease']
     });
     if (!charge) throw new NotFoundException('Lease charge not found');
     return charge;

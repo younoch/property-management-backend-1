@@ -3,10 +3,6 @@ import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString
 import { PaymentMethod } from '../payment.entity';
 
 export class CreatePaymentDto {
-  @ApiProperty({ example: 1, required: false, description: 'Will be taken from URL if not provided' })
-  @IsOptional()
-  @IsInt()
-  portfolio_id?: number;
 
   @ApiProperty({ example: 1, description: 'ID of the lease this payment is for' })
   @IsInt()

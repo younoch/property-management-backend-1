@@ -21,12 +21,8 @@ export class UnitsService {
     return this.unitsRepo.find();
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.unitsRepo.find({ where: { portfolio_id: portfolioId } });
-  }
-
-  findByProperty(portfolioId: number, propertyId: number) {
-    return this.unitsRepo.find({ where: { portfolio_id: portfolioId, property_id: propertyId } });
+  findByProperty(propertyId: number) {
+    return this.unitsRepo.find({ where: { property_id: propertyId } });
   }
 
   async findOne(id: number) {

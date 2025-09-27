@@ -24,9 +24,7 @@ export class MaintenanceService {
     return this.reqRepo.find();
   }
 
-  findRequestsByPortfolio(portfolioId: number) {
-    return this.reqRepo.find({ where: { portfolio_id: portfolioId } });
-  }
+  // Removed findRequestsByPortfolio method as portfolio relation no longer exists
 
   async findRequest(id: number) {
     const r = await this.reqRepo.findOne({ where: { id } });
@@ -55,9 +53,7 @@ export class MaintenanceService {
     return this.woRepo.find();
   }
 
-  findWorkOrdersByPortfolio(portfolioId: number) {
-    return this.woRepo.find({ where: { portfolio_id: portfolioId } });
-  }
+  // Removed findWorkOrdersByPortfolio method as portfolio relation no longer exists
 
   async findWorkOrder(id: number) {
     const w = await this.woRepo.findOne({ where: { id } });

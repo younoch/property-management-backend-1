@@ -5,18 +5,37 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 import { Unit } from '../properties/unit.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('units')
-@Controller('units')
-export class UnitsGlobalController {
+@Controller('properties/:propertyId/units')
+export class UnitsController {
   constructor(private readonly unitsService: UnitsService) {}
+
+  @ApiOperation({ summary: 'Create a new unit for a property' })
+  @ApiResponse({ status: 201, description: 'Unit created successfully', type: Unit })
+  @Post()
+  @UseGuards(AuthGuard)
+  create(
+    @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Body() createUnitDto: CreateUnitDto,
+  ) {
+    return this.unitsService.create({ ...createUnitDto, property_id: propertyId });
+  }
 
   @ApiOperation({ summary: 'Get all units' })
   @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
   @Get()
   findAll() {
     return this.unitsService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Get all units for a property' })
+  @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
+  @Get()
+  findByProperty(
+    @Param('propertyId', ParseIntPipe) propertyId: number,
+  ) {
+    return this.unitsService.findByProperty(propertyId);
   }
 
   @ApiOperation({ summary: 'Get unit by ID' })
@@ -31,7 +50,7 @@ export class UnitsGlobalController {
   @ApiParam({ name: 'id', description: 'Unit ID' })
   @ApiResponse({ status: 200, description: 'Unit updated successfully', type: Unit })
   @Patch(':id')
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  @UseGuards(AuthGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() updateUnitDto: UpdateUnitDto) {
     return this.unitsService.update(id, updateUnitDto);
   }
@@ -43,34 +62,6 @@ export class UnitsGlobalController {
   @UseGuards(AuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.unitsService.remove(id);
-  }
-}
-
-@ApiTags('units')
-@Controller('portfolios/:portfolioId/properties/:propertyId/units')
-export class UnitsController {
-  constructor(private readonly unitsService: UnitsService) {}
-
-  @ApiOperation({ summary: 'Create a new unit for a property' })
-  @ApiResponse({ status: 201, description: 'Unit created successfully', type: Unit })
-  @Post()
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-    @Body() createUnitDto: CreateUnitDto,
-  ) {
-    return this.unitsService.create({ ...createUnitDto, portfolio_id: portfolioId, property_id: propertyId });
-  }
-
-  @ApiOperation({ summary: 'Get all units for a property' })
-  @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
-  @Get()
-  findByProperty(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-  ) {
-    return this.unitsService.findByProperty(portfolioId, propertyId);
   }
 }
 

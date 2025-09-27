@@ -23,7 +23,6 @@ import {
   format,
   differenceInDays
 } from 'date-fns';
-import { Portfolio } from '../../portfolios/portfolio.entity';
 import { Lease } from '../../tenancy/lease.entity';
 import { PaymentApplication } from '../../billing/payment-application.entity';
 
@@ -58,7 +57,6 @@ const decimal = (value: number | string, decimals: number = 2): number => {
 };
 
 @Entity('invoices')
-@Index(['portfolio_id'])
 @Index(['lease_id'])
 @Index(['due_date'])
 @Index(['status', 'due_date'])
@@ -70,21 +68,6 @@ export class Invoice {
   @PrimaryGeneratedColumn()
   @ApiProperty({ description: 'Unique identifier for the invoice' })
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  @ApiProperty({ 
-    type: () => Portfolio, 
-    description: 'The portfolio this invoice belongs to' 
-  })
-  portfolio: Portfolio;
-
-  @Column({ name: 'portfolio_id' })
-  @ApiProperty({ 
-    description: 'ID of the portfolio this invoice belongs to',
-    example: 1
-  })
-  portfolio_id: number;
 
   @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'lease_id' })

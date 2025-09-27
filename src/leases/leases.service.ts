@@ -44,12 +44,8 @@ export class LeasesService {
     return this.repo.find();
   }
 
-  findByPortfolio(portfolioId: number) {
-    return this.repo.find({ where: { portfolio_id: portfolioId } });
-  }
-
-  async findByUnit(portfolioId: number, unitId: number): Promise<Lease[]> {
-    return this.repo.find({ where: { portfolio_id: portfolioId, unit_id: unitId } });
+  async findByUnit(unitId: number): Promise<Lease[]> {
+    return this.repo.find({ where: { unit_id: unitId } });
   }
 
   /**
@@ -171,13 +167,10 @@ export class LeasesService {
    * End a lease on the provided date. If the provided date equals the lease's end_date,
    * mark the unit as 'vacant'. Runs in a transaction.
    */
-  async endLease(portfolioId: number, leaseId: number, endDate: string) {
-    // load lease and ensure it belongs to portfolio
+  async endLease(leaseId: number, endDate: string) {
+    // load lease
     const lease = await this.repo.findOne({ where: { id: leaseId } });
     if (!lease) throw new NotFoundException('Lease not found');
-    if (lease.portfolio_id !== portfolioId) {
-      throw new BadRequestException('Lease does not belong to the provided portfolio');
-    }
 
     // perform transaction: update lease end_date and status; if endDate equals lease.end_date (or we set it), update unit.status to 'vacant'
     await this.dataSource.transaction(async (manager) => {

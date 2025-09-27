@@ -20,10 +20,6 @@ export class PaymentsService {
   ) {}
 
   async create(dto: CreatePaymentDto) {
-    if (!dto.portfolio_id) {
-      throw new Error('Portfolio ID is required');
-    }
-    
     return this.dataSource.transaction(async (transactionalEntityManager) => {
       const invoiceRepo = transactionalEntityManager.getRepository(Invoice);
       const paymentAppRepo = transactionalEntityManager.getRepository(PaymentApplication);
@@ -32,10 +28,8 @@ export class PaymentsService {
 
       // Create payment with proper type casting
       const paymentData: Partial<Payment> = {
-        portfolio: { id: Number(dto.portfolio_id) } as any,
         lease: { id: Number(dto.lease_id) } as any,
         lease_id: Number(dto.lease_id),
-        portfolio_id: Number(dto.portfolio_id),
         amount: parseFloat(dto.amount.toString()),
         method: dto.method || 'cash',
         reference: dto.reference || null,
@@ -112,7 +106,7 @@ export class PaymentsService {
           entityId: savedPayment.id,
           action: AuditAction.CREATE,
           userId: dto.user_id,
-          portfolioId: dto.portfolio_id,
+          // Removed portfolio reference
           metadata,
           description: `Created payment #${savedPayment.id}`
         });
@@ -166,14 +160,8 @@ export class PaymentsService {
         throw new NotFoundException(`Primary tenant not found for lease ${leaseId}`);
       }
       
-      // Ensure portfolio_id is properly set
-      if (!lease.portfolio_id && lease.unit) {
-        lease.portfolio_id = lease.unit.portfolio_id;
-      }
-
       // Create payment with proper type casting
       const paymentData: Partial<Payment> = {
-        portfolio: { id: lease.portfolio_id } as any,
         lease: { id: leaseId } as any,
         amount: parseFloat(dto.amount.toString()),
         method: dto.method || 'cash',
@@ -192,7 +180,6 @@ export class PaymentsService {
           entityId: savedPayment.id,
           action: AuditAction.CREATE,
           userId: dto.user_id,
-          portfolioId: lease.portfolio_id,
           metadata: {
             amount: savedPayment.amount,
             method: savedPayment.method,
@@ -242,7 +229,7 @@ export class PaymentsService {
             entityId: savedApp.id,
             action: AuditAction.PAYMENT,
             userId: dto.user_id,
-            portfolioId: lease.portfolio_id,
+            // Removed portfolio reference
             metadata: {
               paymentId: savedPayment.id,
               invoiceId: invoice.id,
@@ -274,15 +261,6 @@ export class PaymentsService {
     });
   }
 
-  async findByPortfolio(portfolioId: number) {
-    return this.repo.find({ 
-      where: { 
-        portfolio: { id: portfolioId } 
-      },
-      relations: ['portfolio', 'lease']
-    });
-  }
-
   async findOne(id: number) {
     const payment = await this.repo.findOne({ where: { id } });
     if (!payment) throw new NotFoundException('Payment not found');
@@ -311,7 +289,7 @@ export class PaymentsService {
       entityId: updatedPayment.id,
       action: AuditAction.UPDATE,
       userId: dto.user_id,
-      portfolioId: payment.portfolio_id,
+      // Removed portfolio reference
       metadata: {
         updatedFields: updatableFields.filter(field => dto[field] !== undefined),
         previousValues: updatableFields.reduce((acc, field) => {
@@ -337,7 +315,7 @@ export class PaymentsService {
         entityId: payment.id,
         action: AuditAction.DELETE,
         userId,
-        portfolioId: payment.portfolio_id,
+        // Removed portfolio_id reference as it's no longer part of the Payment entity
         metadata: {
           amount: payment.amount,
           method: payment.method,

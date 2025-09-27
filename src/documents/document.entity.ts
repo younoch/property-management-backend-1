@@ -1,19 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { Portfolio } from '../portfolios/portfolio.entity';
 
 @Entity()
-@Index(['portfolio_id'])
 @Index(['subject_type', 'subject_id'])
 export class Document {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
-
-  @Column()
-  portfolio_id: number;
 
   @Column()
   subject_type: string;

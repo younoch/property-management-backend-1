@@ -11,7 +11,6 @@ import {
   Index,
   JoinColumn,
 } from 'typeorm';
-import { Portfolio } from '../portfolios/portfolio.entity';
 import { Unit } from '../properties/unit.entity';
 import { Tenant } from './tenant.entity';
 import { LeaseTenant } from './lease-tenant.entity';
@@ -27,19 +26,11 @@ export type LeaseStatus = 'draft' | 'active' | 'ended' | 'evicted' | 'broken';
 // };
 
 @Entity()
-@Index(['portfolio_id'])
 @Index(['unit_id'])
 @Index(['status'])
 export class Lease {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE', eager: true })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
-
-  @Column()
-  portfolio_id: number;
 
   @ManyToOne(() => Unit, { onDelete: 'RESTRICT', eager: true })
   @JoinColumn({ name: 'unit_id' })

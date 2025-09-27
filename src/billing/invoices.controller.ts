@@ -19,36 +19,12 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { Invoice } from './entities/invoice.entity';
 import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @ApiTags('billing-invoices')
 @ApiBearerAuth()
 @Controller('invoices')
-export class InvoicesGlobalController {
+export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
-
-  @ApiOperation({ 
-    summary: 'Get all invoices',
-    description: 'Retrieves a list of all invoices across all portfolios (admin only)'
-  })
-  @ApiQuery({
-    name: 'billing_month',
-    required: false,
-    description: 'Filter invoices by billing month (YYYY-MM format)',
-    example: '2025-09'
-  })
-  @ApiOkResponse({ 
-    description: 'Invoices retrieved successfully', 
-    type: [Invoice] 
-  })
-  @Get()
-  @UseGuards(AuthGuard)
-  async findAll(@Query('billing_month') billingMonth?: string) {
-    if (billingMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {
-      throw new BadRequestException('Invalid billing month format. Use YYYY-MM');
-    }
-    return this.invoicesService.findAll(billingMonth);
-  }
 
   @ApiOperation({ 
     summary: 'Get invoice by ID',
@@ -90,7 +66,7 @@ export class InvoicesGlobalController {
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiConflictResponse({ description: 'Invoice with this billing month already exists for the lease' })
   @Patch(':id')
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  @UseGuards(AuthGuard)
   update(
     @Param('id', ParseIntPipe) id: number, 
     @Body() dto: UpdateInvoiceDto
@@ -117,88 +93,78 @@ export class InvoicesGlobalController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.invoicesService.remove(id);
   }
-}
 
-@ApiTags('billing-invoices')
-@ApiBearerAuth()
-@Controller('portfolios/:portfolioId/invoices')
-export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
-
+  @Post()
+  @UseGuards(AuthGuard)
   @ApiOperation({ 
     summary: 'Create a new invoice',
-    description: 'Creates a new invoice for the specified portfolio. The billing_month must be unique per lease.'
+    description: 'Creates a new invoice'
   })
-  @ApiParam({ 
-    name: 'portfolioId', 
-    description: 'ID of the portfolio to create the invoice for',
-    example: 1
-  })
-  @ApiBody({ 
-    type: CreateInvoiceDto,
-    description: 'Invoice data to create',
-    required: true
-  })
+  @ApiBody({ type: CreateInvoiceDto })
   @ApiCreatedResponse({ 
-    description: 'Invoice created successfully',
-    type: Invoice
+    description: 'Invoice created successfully', 
+    type: Invoice 
   })
-  @ApiBadRequestResponse({ 
-    description: 'Invalid input data or missing required fields' 
-  })
-  @ApiConflictResponse({ 
-    description: 'An invoice already exists for this lease and billing month' 
-  })
-  @Post()
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number, 
-    @Body() dto: CreateInvoiceDto
-  ) {
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiNotFoundResponse({ description: 'Lease not found' })
+  @ApiConflictResponse({ description: 'Invoice already exists for this lease and billing month' })
+  async create(@Body() dto: CreateInvoiceDto) {
     return this.invoicesService.create(dto);
   }
-  
-  @ApiOperation({
-    summary: 'Find invoices by lease and billing month',
-    description: 'Finds invoices for a specific lease and billing month (YYYY-MM format)'
+
+  @Get('by-lease')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ 
+    summary: 'Get invoice by lease and billing month',
+    description: 'Retrieves an invoice for the specified lease and billing month'
   })
-  @ApiParam({ 
-    name: 'portfolioId',
-    description: 'ID of the portfolio',
-    example: 1
+  @ApiQuery({ 
+    name: 'leaseId', 
+    required: true, 
+    description: 'ID of the lease',
+    type: Number 
   })
-  @ApiQuery({
-    name: 'leaseId',
-    required: true,
-    description: 'ID of the lease to filter by',
-    example: 1
-  })
-  @ApiQuery({
-    name: 'billingMonth',
-    required: true,
+  @ApiQuery({ 
+    name: 'billingMonth', 
+    required: true, 
     description: 'Billing month in YYYY-MM format',
-    example: '2025-09'
+    example: '2025-09' 
   })
-  @ApiOkResponse({
-    description: 'List of invoices matching the criteria',
-    type: [Invoice]
+  @ApiOkResponse({ 
+    description: 'Invoice found', 
+    type: Invoice 
   })
-  @Get('by-lease-month')
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
-  findByLeaseAndMonth(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+  @ApiNotFoundResponse({ description: 'Invoice not found' })
+  async findByLeaseAndMonth(
     @Query('leaseId', ParseIntPipe) leaseId: number,
     @Query('billingMonth') billingMonth: string
   ) {
-    return this.invoicesService.findByLeaseAndMonth(portfolioId, leaseId, billingMonth);
+    if (!billingMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {
+      throw new BadRequestException('Valid billing month (YYYY-MM) is required');
+    }
+    return this.invoicesService.findByLeaseAndMonth(leaseId, billingMonth);
   }
 
-  @ApiOperation({ summary: 'Get all invoices for a portfolio' })
-  @ApiResponse({ status: 200, description: 'Invoices retrieved successfully', type: [Invoice] })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
-    return this.invoicesService.findByPortfolio(portfolioId);
+  @UseGuards(AuthGuard)
+  @ApiOperation({ 
+    summary: 'Get all invoices',
+    description: 'Retrieves all invoices'
+  })
+  @ApiQuery({
+    name: 'billing_month',
+    required: false,
+    description: 'Filter invoices by billing month (YYYY-MM format)',
+    example: '2025-09'
+  })
+  @ApiOkResponse({ 
+    description: 'Invoices retrieved successfully', 
+    type: [Invoice] 
+  })
+  async findAll(@Query('billing_month') billingMonth?: string) {
+    if (billingMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {
+      throw new BadRequestException('Invalid billing month format. Use YYYY-MM');
+    }
+    return this.invoicesService.findAll(billingMonth);
   }
 }
-
-

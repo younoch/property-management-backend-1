@@ -166,10 +166,7 @@ export class PortfoliosService {
           .execute();
       }
 
-      // 3. Delete all leases in this portfolio
-      await this.leaseRepository.delete({ portfolio_id: id });
-
-      // 4. Delete all tenants in this portfolio
+      // 3. Delete all tenants in this portfolio
       await this.tenantRepository.delete({ portfolio_id: id });
 
       // 5. Finally, delete the portfolio

@@ -1,22 +1,13 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { Portfolio } from '../portfolios/portfolio.entity';
 import { Property } from '../properties/property.entity';
 import { Unit } from '../properties/unit.entity';
 import { Tenant } from '../tenancy/tenant.entity';
 
 @Entity()
-@Index(['portfolio_id'])
 @Index(['status'])
 export class MaintenanceRequest {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'portfolio_id' })
-  portfolio: Portfolio;
-
-  @Column()
-  portfolio_id: number;
 
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })

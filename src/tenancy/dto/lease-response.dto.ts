@@ -1,24 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LeaseStatus } from '../lease.entity';
 import { LeaseTenantResponseDto } from './lease-tenant-response.dto';
-import { PortfolioShortDto } from '../../portfolios/dto/portfolio-short.dto';
 import { PropertyShortDto } from '../../properties/dto/property-short.dto';
 import { UnitShortDto } from '../../properties/dto/unit-short.dto';
 
 export class LeaseResponseDto {
   @ApiProperty({ description: 'Lease ID' })
   id: number;
-
-  @ApiProperty({ description: 'Portfolio ID' })
-  portfolio_id: number;
-
-  @ApiProperty({ 
-    type: PortfolioShortDto,
-    description: 'Portfolio information',
-    required: false,
-    nullable: true
-  })
-  portfolio?: PortfolioShortDto | null;
 
   @ApiProperty({ description: 'Unit ID' })
   unit_id: number;
