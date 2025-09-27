@@ -43,7 +43,7 @@ export class AuthService {
       throw new NotFoundException('user not found');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
       throw new BadRequestException('The password you entered is incorrect. Please try again or reset your password if needed.');
@@ -87,12 +87,14 @@ export class AuthService {
       name: user.name,
       phone: user.phone,
       role: user.role,
-      profileImageUrl: user.profileImageUrl,
-      isActive: user.isActive,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      ownedPortfolios: user.ownedPortfolios || [],
+profile_image_url: user.profile_image_url,
+      is_active: user.is_active,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      owned_portfolios: user.owned_portfolios || [],
       notifications: user.notifications || [],
+      requires_onboarding: user.requires_onboarding,
+      onboarding_completed_at: user.onboarding_completed_at,
       accessToken,
       refreshToken,
     };
@@ -117,8 +119,8 @@ export class AuthService {
         throw new NotFoundException('User not found');
       }
 
-      // Check if user is active
-      if (!user.isActive) {
+      // Check if user account is active
+      if (!user.is_active) {
         throw new BadRequestException('Your account has been deactivated. Please contact support for assistance.');
       }
 
@@ -144,10 +146,10 @@ export class AuthService {
           name: user.name,
           phone: user.phone,
           role: user.role,
-          profile_image_url: user.profileImageUrl,
-          is_active: user.isActive,
-          created_at: user.createdAt,
-          updated_at: user.updatedAt,
+          profile_image_url: user.profile_image_url,
+          is_active: user.is_active,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
           owned_portfolios: user.owned_portfolios || [],
           notifications: user.notifications || [],
         }

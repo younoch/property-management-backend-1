@@ -7,16 +7,16 @@ import { User } from './user.entity';
 export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
-  create(email: string, passwordHash: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
+  create(email: string, password_hash: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
     const user = this.repo.create({ 
       email, 
-      passwordHash, 
+      password_hash, 
       name, 
       phone, 
       role,
-      isActive: true,
-      requiresOnboarding: true, // New users need to complete onboarding
-      onboardingCompletedAt: null // Will be set when onboarding is completed
+      is_active: true,
+      requires_onboarding: true, // New users need to complete onboarding
+      onboarding_completed_at: null // Will be set when onboarding is completed
     });
 
     return this.repo.save(user);

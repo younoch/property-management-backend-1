@@ -27,32 +27,32 @@ export class User {
   phone: string;
 
   @Column({ name: 'password_hash' })
-  passwordHash: string;
+  password_hash: string;
 
   // Role is required for proper access control
   @Column()
   role: 'super_admin' | 'landlord' | 'manager' | 'tenant';
 
   @Column({ name: 'profile_image_url', nullable: true })
-  profileImageUrl: string;
+  profile_image_url: string;
 
   @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  is_active: boolean;
 
   @Column({ name: 'requires_onboarding', default: true })
-  requiresOnboarding: boolean;
+  requires_onboarding: boolean;
 
   @Column({ name: 'onboarding_completed_at', type: 'timestamp', nullable: true })
-  onboardingCompletedAt: Date | null;
+  onboarding_completed_at: Date | null;
 
   @Column({ type: 'varchar', length: 10, default: 'en' })
   language: string;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updated_at: Date;
 
   // Legacy fields removed for production readiness
 

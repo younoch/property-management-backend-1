@@ -27,6 +27,15 @@ export class CreateUserDto {
   phone?: string;
 
   @ApiProperty({
+    description: 'Whether the user needs to complete onboarding',
+    example: true,
+    default: true,
+    required: false
+  })
+  @IsOptional()
+  requires_onboarding?: boolean = true;
+
+  @ApiProperty({
     description: 'User password (minimum 6 characters)',
     example: 'password123',
     minLength: 6,

@@ -9,8 +9,8 @@ export class UserFactory {
     user.email = 'test@example.com';
     // Use a test password that gets hashed dynamically
     const testPassword = process.env.TEST_PASSWORD || 'testpassword123';
-    user.passwordHash = await bcrypt.hash(testPassword, 12);
-    user.isActive = true;
+    user.password_hash = await bcrypt.hash(testPassword, 12);
+    user.is_active = true;
     user.role = 'landlord' as any;
     
     Object.assign(user, overrides);
