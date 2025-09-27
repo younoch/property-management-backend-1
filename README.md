@@ -50,7 +50,6 @@ property-management-backend/
 - **Authentication**: JWT with CSRF protection
 - **API Documentation**: Swagger/OpenAPI
 - **Testing**: Jest
-- **Containerization**: Docker (optional)
 
 ### Documentation Files
 - [📄 Database Reset Guide](./DATABASE-RESET.md) - Instructions for resetting and managing databases
@@ -117,11 +116,15 @@ fetch('/auth/signout', {
 });
 ```
 
-### JWT Authentication
-- **HttpOnly Cookies**: Prevents XSS attacks
-- **Secure Flag**: Enforced in production for HTTPS-only transmission
-- **SameSite Policy**: Properly configured for cross-origin requests
-- **Automatic Expiry**: Configurable token lifetime
+```bash
+cp .env.example .env
+```
+
+### Configuration Files
+- `.env` - Environment variables (not versioned)
+- `.env.example` - Example environment variables
+
+For production configuration, see the [Deployment Guide](./DEPLOYMENT.md).
 
 ## 🛠️ Installation
 
@@ -147,68 +150,14 @@ cp .env.example .env
 npm run start:dev
 ```
 
-## ⚙️ Configuration
-
-### Environment Variables
-
-#### Required
-- `JWT_ACCESS_SECRET`: Secret for signing access JWTs
-- `CSRF_SECRET`: Secret for CSRF token generation
-- `DB_HOST`: Database host (default: localhost)
-- `DB_PORT`: Database port (default: 5432)
-- `DB_USERNAME`: Database username
-- `DB_PASSWORD`: Database password
-- `DB_NAME`: Database name
-- `NODE_ENV`: Environment (development/production/test)
-
-#### Optional
-- `JWT_ACCESS_EXPIRES_IN`: Access token TTL (default: 15m)
-- `CSRF_TOKEN_EXPIRY_HOURS`: CSRF token expiry (default: 24h)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed frontend domains (default: 'http://localhost:3000,http://localhost:3001,http://localhost:5173')
-- `DB_SSL`: Enable/disable SSL for database connection (default: false)
-- `DB_SYNC`: Auto-sync database schema (default: false in production, true in development)
-- `RUN_MIGRATIONS_ON_BOOT`: Run pending migrations on application start (default: true)
-- `USE_SQLITE_FOR_TESTS`: Use SQLite for tests (default: false)
-
-### Example Configuration
-```bash
-# .env
-NODE_ENV=development
-
-# JWT Configuration
-JWT_ACCESS_SECRET=your-secure-jwt-secret
-JWT_ACCESS_EXPIRES_IN=15m
-
-# CSRF Configuration
-CSRF_SECRET=your-secure-csrf-secret
-CSRF_TOKEN_EXPIRY_HOURS=24
-
-# CORS Configuration
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:5173
-
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=your_db_username
-DB_PASSWORD=your_secure_password
-DB_NAME=property_management
-DB_SSL=false
-DB_SYNC=true
-
-# Application Settings
-PORT=3000
-RUN_MIGRATIONS_ON_BOOT=true
-
-# Test Configuration (when NODE_ENV=test)
-USE_SQLITE_FOR_TESTS=false
-```
-
-## 🛠️ Available Scripts
+## ⚙️ Available Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run start` | Start the application in production mode |
 | `npm run start:dev` | Start in development mode with watch mode |
+| `npm run start:prod` | Start in production mode (no migrations) |
+| `npm run start:prod:migrate` | Start in production mode with migrations |
 | `npm run build` | Compile TypeScript to JavaScript |
 | `npm run test` | Run unit tests |
 | `npm run test:watch` | Run tests in watch mode |
@@ -240,6 +189,7 @@ npm run test:cov
 - Test files use `.spec.ts` suffix for unit tests
 - E2E tests use `.e2e-spec.ts` suffix
 - Test utilities and fixtures are in the `test/` directory
+- Test database is automatically created and destroyed during tests
 
 ## 🔍 API Documentation
 
@@ -257,11 +207,14 @@ All protected routes require a valid JWT token in the `Authorization` header.
 
 ## 🗄️ Database Management
 
-### Migrations
-See the [Database Migrations Guide](./src/database/migrations/README.md) for detailed instructions on managing database schema changes.
+### Development
+- Run migrations: `npm run migration:run`
+- Reset database: `npm run schema:drop && npm run migration:run`
 
-### Resetting the Database
-For development and testing, you can reset the database using the [Database Reset Guide](./DATABASE-RESET.md).
+For detailed database operations, see the [Database Reset Guide](./DATABASE-RESET.md).
+
+### Production
+In production, the database is managed through Render's PostgreSQL service. See the [Deployment Guide](./DEPLOYMENT.md) for details.
 
 ## 🚀 Deployment
 
@@ -294,8 +247,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [TypeORM Documentation](https://typeorm.io/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Jest Documentation](https://jestjs.io/)
-- [Docker Documentation](https://docs.docker.com/)
-
 ### Authentication Endpoints
 - `POST /auth/signup` - Register new user
 - `POST /auth/signin` - User login
@@ -430,14 +381,15 @@ pnpm test:e2e --testNamePattern="CORS Configuration"
 
 ## 🚀 Deployment
 
-### Docker
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
+### Deploy to Render.com
+This application is configured for seamless deployment to [Render.com](https://render.com). For detailed deployment instructions, see the [Deployment Guide](./DEPLOYMENT.md).
 
-# Production deployment
-docker-compose -f docker-compose.prod.yml up -d
-```
+Key deployment features:
+- Automatic SSL certificate provisioning
+- Built-in PostgreSQL database support
+- Automatic deployments from Git
+- Zero-downtime deployments
+- Custom domain support
 
 ### Environment-Specific Configs
 - `.env.development` - Development environment

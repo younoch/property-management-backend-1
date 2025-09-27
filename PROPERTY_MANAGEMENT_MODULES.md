@@ -415,10 +415,14 @@ pnpm run migration:revert
 - Production: `.env.production`
 - Test: `.env.test`
 
-### Docker Support
-- Multi-stage builds for production
-- Docker Compose for development
-- Health checks and monitoring
+### Deployment Features
+- Automated deployments via GitHub integration
+- Built-in health checks and monitoring
+- Automatic SSL certificate provisioning
+- Zero-downtime deployments
+- Custom domain support
+
+For detailed deployment instructions, see the [Deployment Guide](./DEPLOYMENT.md).
 
 ## 📚 Additional Resources
 

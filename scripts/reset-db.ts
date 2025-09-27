@@ -2,7 +2,6 @@ import { DataSource } from 'typeorm';
 import * as path from 'path';
 import { execSync } from 'child_process';
 
-// Database configuration - using docker-compose.dev.yml credentials
 const DB_CONFIG = {
   host: 'localhost',
   port: 5432,

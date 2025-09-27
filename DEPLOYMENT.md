@@ -1,35 +1,24 @@
-# Property Management Backend - Deployment Guide
+# Property Management Backend - Production Deployment Guide
 
-## 🚀 Production Deployment
+## 🚀 Overview
 
-This guide will help you deploy the Property Management Backend to production with proper CORS configuration and environment setup.
+This guide provides step-by-step instructions for deploying the Property Management Backend to production on Render.com.
 
 ## Prerequisites
 
-- Node.js 18+ and npm 8+
-- PostgreSQL 14+ database
-- PM2 (for process management in production)
-- Nginx (recommended for reverse proxy)
-- A domain name with DNS configured
-- SSL certificate (recommended, e.g., from Let's Encrypt)
+- A [Render.com](https://render.com) account
+- A GitHub repository with your code
+- A domain name (optional, for custom domain setup)
+- PostgreSQL 14+ database (or use Render's PostgreSQL service)
 
 ## Step 1: Environment Configuration
 
-1. **Copy the production environment template:**
-   ```bash
-   cp env.production.example .env
-   ```
-
-2. **Edit the `.env` file with your production values:**
-   ```bash
-   nano .env
-   ```
-
-   **Required configurations:**
-   - `NODE_ENV=production`
-   - `PORT=8000` (or your preferred port)
-   - `ALLOWED_ORIGINS`: Your frontend domain(s) separated by commas (e.g., `https://yourdomain.com,https://www.yourdomain.com`)
-   - `DB_HOST`: Your database host (use `postgres` if using Docker)
+1. **Set up environment variables in Render:**
+   - Go to your Render Dashboard
+   - Navigate to your web service
+   - Click on "Environment" tab
+   - Add the following required variables:
+   - `DB_HOST`: Your database host (e.g., `localhost` or your database server IP)
    - `DB_PORT=5432` (default PostgreSQL port)
    - `DB_USERNAME`: Database username
    - `DB_PASSWORD`: A secure database password
@@ -48,11 +37,11 @@ This guide will help you deploy the Property Management Backend to production wi
    ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
    
    # Database Configuration
-   DB_HOST=postgres
+   DB_HOST=localhost
    DB_PORT=5432
-   DB_USERNAME=postgres
-   DB_PASSWORD=my-secure-password-123
-   DB_NAME=property_rental_management_prod
+   DB_USERNAME=your_db_username
+   DB_PASSWORD=your_secure_password
+   DB_NAME=property_management_prod
    DB_SYNC=false
    DB_SSL=false
    
@@ -74,92 +63,62 @@ This guide will help you deploy the Property Management Backend to production wi
    RATE_LIMIT_MAX=100  # 100 requests per window per IP
    ```
 
-## Step 2: Deploy the Application
+## Step 2: Deploy to Render.com
 
-### 1. Install Dependencies
-```bash
-# Install production dependencies
-npm ci --only=production
+### 1. Push to GitHub
+Ensure your code is pushed to a GitHub repository that Render can access.
 
-# Build the application
-npm run build
+### 2. Create a New Web Service on Render
+1. Go to your [Render Dashboard](https://dashboard.render.com/)
+2. Click "New +" and select "Web Service"
+3. Connect your GitHub repository
+4. Configure the service:
+   - **Name**: `property-management-api` (or your preferred name)
+   - **Region**: Choose the closest to your users
+   - **Branch**: `main` (or your production branch)
+   - **Build Command**: `npm install --include=dev && npm run build`
+   - **Start Command**: `npm run start:prod:migrate`
+   - **Plan**: Free (or select a paid plan for production)
 
-# Install PM2 globally (if not already installed)
-npm install -g pm2
+### 3. Configure Environment Variables
+In the Render Dashboard, go to your service's "Environment" tab and add these variables:
+
+#### Required Variables
 ```
-
-### 2. Configure the Application
-
-1. **Set up environment variables** in `.env` file (created in Step 1)
-2. **Update the following settings** in your `.env` file:
-   ```
-   NODE_ENV=production
-   PORT=3000
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_USERNAME=your_db_user
+NODE_ENV=production
+PORT=10000
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_USERNAME=your_db_user
    DB_PASSWORD=your_secure_password
    DB_NAME=property_management
    ```
 
-### 3. Start the Application
+### 4. Database Setup
 
-#### Option A: Using PM2 (Recommended for Production)
-```bash
-# Start the application with PM2
-pm2 start dist/main.js --name="property-management"
+1. **Create a PostgreSQL Database**
+   - In Render Dashboard, create a new PostgreSQL database
+   - Note the connection details (host, port, username, password, database name)
 
-# Save the PM2 process list
-pm2 save
-
-# Generate startup script
-pm2 startup
-
-# Start PM2 on system boot
-pm2 save
-```
-
-#### Option B: Direct Node.js Execution
-```bash
-# Start the application directly
-node dist/main.js
-
-# Or using npm
-npm run start:prod
-```
-
-### 4. Set Up Nginx as Reverse Proxy (Recommended)
-
-1. Install Nginx:
-   ```bash
-   # For Ubuntu/Debian
-   sudo apt update
-   sudo apt install nginx
+2. **Update Environment Variables**
+   Update these variables in your Render service settings:
+   ```
+   DB_HOST=your-render-db-host
+   DB_PORT=5432
+   DB_USERNAME=your_render_db_user
+   DB_PASSWORD=your_secure_password
+   DB_NAME=your_database_name
    ```
 
-2. Create a new Nginx configuration file at `/etc/nginx/sites-available/property-management`:
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com www.yourdomain.com;
+3. **Run Migrations**
+   The `start:prod:migrate` script will automatically run any pending migrations on startup.
 
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
+### 5. Custom Domain Setup (Optional)
 
-3. Enable the site and restart Nginx:
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/property-management /etc/nginx/sites-enabled/
-   sudo nginx -t  # Test configuration
-   sudo systemctl restart nginx
-   ```
+1. In your Render service settings, go to the "Custom Domains" tab
+2. Add your domain (e.g., `api.yourdomain.com`)
+3. Update your DNS settings to point to the provided Render DNS target
+4. Render will automatically provision and renew SSL certificates
 
 ## Step 3: Verify Deployment
 
@@ -197,17 +156,9 @@ npm run start:prod
 
 4. **Check application logs:**
    ```bash
-   # View PM2 logs
-   pm2 logs property-management --lines 100
-   
-   # Follow logs in real-time
-   pm2 logs property-management --lines 100 --raw
-   
-   # View Nginx access logs
-   sudo tail -f /var/log/nginx/access.log
-   
-   # View Nginx error logs
-   sudo tail -f /var/log/nginx/error.log
+   # View logs in Render Dashboard
+   # Go to your service in the Render Dashboard
+   # Click on the "Logs" tab
    ```
 
 ## Step 4: Database Migrations
@@ -262,52 +213,49 @@ The application is configured to handle CORS requests with the following setting
 ### Security Features
 - **Swagger Documentation**: Disabled in production
 - **Security Headers**: X-Powered-By and Date headers removed
-- **Non-root User**: Application runs as non-root user in Docker
-- **Health Checks**: Built-in health monitoring
+- **Health Checks**: Built-in health monitoring endpoint at `/health`
 
 ### Environment Variables
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `NODE_ENV` | Environment mode | Yes | `production` |
-| `PORT` | Application port | No | `8000` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | Yes | - |
-| `DB_HOST` | Database host | Yes | - |
+| `NODE_ENV` | Must be `production` | Yes | - |
+| `PORT` | Application port | Yes | `10000` (Render default) |
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed origins | Yes | - |
+| `DB_HOST` | Database host from Render | Yes | - |
 | `DB_PORT` | Database port | Yes | `5432` |
-| `DB_USERNAME` | Database username | Yes | - |
-| `DB_PASSWORD` | Database password | Yes | - |
-| `DB_NAME` | Database name | Yes | - |
-| `DB_SYNC` | Auto-sync database | No | `false` |
-| `DB_SSL` | Use SSL for database | No | `false` |
+| `DB_USERNAME` | Database user from Render | Yes | - |
+| `DB_PASSWORD` | Database password from Render | Yes | - |
+| `DB_NAME` | Database name from Render | Yes | - |
+| `JWT_SECRET` | Secret for JWT token signing | Yes | - |
 | `COOKIE_KEY` | Session cookie secret | Yes | - |
+| `ENABLE_SWAGGER` | Enable API documentation | No | `false` |
 
-## 🛠️ Management Commands
+> **Note:** For security, all secrets should be managed through Render's environment variables, not committed to source control.
+
+## 🛠️ Management in Render
 
 ### View Logs
-```bash
-# All services
-docker-compose -f docker-compose.prod.yml logs -f
+1. Go to your service in the Render Dashboard
+2. Click on the "Logs" tab to view real-time logs
+3. Use the search and filter options to find specific log entries
 
-# Specific service
-docker-compose -f docker-compose.prod.yml logs -f app
-```
+### Restart Service
+1. In the Render Dashboard, go to your service
+2. Click the "Manual Deploy" button
+3. Select "Deploy latest commit" to restart with the latest code
 
-### Restart Services
-```bash
-docker-compose -f docker-compose.prod.yml restart
-```
+### Environment Variables
+1. In the Render Dashboard, go to your service
+2. Click on the "Environment" tab
+3. Add, edit, or remove environment variables as needed
+4. Click "Save Changes" to apply
 
-### Stop Services
-```bash
-docker-compose -f docker-compose.prod.yml down
-```
-
-### Update Application
-```bash
-# Pull latest changes and rebuild
-git pull
-docker-compose -f docker-compose.prod.yml up --build -d
-```
+### Scale Your Service
+1. In the Render Dashboard, go to your service
+2. Click on the "Manual Deploy" button
+3. Adjust the instance count and resources as needed
+4. Click "Save Changes" to apply
 
 ## 🔍 Troubleshooting
 
@@ -317,12 +265,25 @@ docker-compose -f docker-compose.prod.yml up --build -d
 3. **Check Credentials**: Frontend must include `credentials: 'include'` in requests
 
 ### Database Connection Issues
-1. **Check Database Status**: `docker-compose -f docker-compose.prod.yml ps`
-2. **View Database Logs**: `docker-compose -f docker-compose.prod.yml logs postgres`
-3. **Verify Environment Variables**: Ensure DB_* variables are correct
+1. **Check Database Status**: 
+   - Go to your database service in Render Dashboard
+   - Check the "Logs" tab for any connection errors
+   - Verify the database is in "Available" status
+
+2. **Verify Environment Variables**:
+   - Check that all DB_* variables are correctly set in Render
+   - Ensure the database user has proper permissions
 
 ### Application Issues
-1. **Check Application Logs**: `docker-compose -f docker-compose.prod.yml logs app`
+1. **Check Application Logs**:
+   - Go to your web service in Render Dashboard
+   - Check the "Logs" tab for errors
+   - Look for deployment failures or runtime errors
+
+2. **Check Build Logs**:
+   - In the Render Dashboard, go to your service
+   - Click on the "Deploys" tab
+   - Check the build logs for any compilation or dependency issues
 2. **Verify Port Binding**: Ensure port 8000 is not in use
 3. **Check Health Endpoint**: `curl http://localhost:8000/health`
 
@@ -344,10 +305,10 @@ docker-compose -f docker-compose.prod.yml up --build -d
 1. **Use Strong Passwords**: Generate secure passwords for database and cookies
 2. **Enable SSL**: Use HTTPS in production
 3. **Limit CORS Origins**: Only include necessary domains
-4. **Regular Updates**: Keep Docker images and dependencies updated
+4. **Regular Updates**: Keep dependencies updated
 5. **Monitor Logs**: Set up log monitoring for security events
 6. **Backup Database**: Implement regular database backups
-7. **Use Secrets Management**: Consider using Docker secrets for sensitive data
+7. **Use Environment Variables**: Store sensitive data in environment variables
 
 ## 📞 Support
 

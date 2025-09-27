@@ -1,53 +1,63 @@
 # Database Reset and Management Guide
 
-This document provides instructions for managing and resetting the database in different environments (development, staging, production).
+This document provides instructions for managing and resetting the database in different environments.
 
-## Prerequisites
+## ⚠️ Important Notes
 
-### For All Environments:
-- Database credentials (username, password, host, port, database name)
-- Appropriate permissions to modify the database
-- Backup of important data (recommended before any reset)
+1. **Backup Your Data**
+   - Always create a backup before performing any destructive operations
+   - In production, coordinate with your team and schedule a maintenance window
 
-### For Production:
-- Maintenance window scheduled (if applicable)
-- Backups verified and tested
-- Team members notified
+2. **Environment Variables**
+   - Ensure your `.env` file is properly configured with the correct database credentials
+   - For production, use Render's environment variables
+
+3. **Permissions**
+   - You need appropriate database permissions to perform these operations
+   - The database user must have permissions to create/drop databases and tables
 
 ## Environment-Specific Reset Procedures
 
+## 🔄 Reset Database
+
 ### 1. Development Environment
 
-#### Using Migration Reset (Recommended for Development)
+#### Using Migration Commands
 ```bash
-# Reset the database and run all migrations
-npm run migration:reset
-
-# Or for a fresh start
+# Drop and recreate database schema
 npm run schema:drop
+
+# Run all migrations
 npm run migration:run
+
+# Or combined (reset and migrate)
+npm run migration:reset
 ```
 
-#### Using Script (Alternative)
+#### Using Reset Script
 ```bash
-# Run the reset script
-node scripts/reset-db.js
-
-# Or using ts-node for TypeScript
+# Run the TypeScript reset script
 npx ts-node scripts/reset-db.ts
 ```
 
 ### 2. Staging/Production Environment
 
-#### Method 1: Using Database Management Tools
-1. **Using psql (PostgreSQL CLI):**
-   ```bash
-   # Connect to the database
-   PGPASSWORD=your_password psql -h your_host -U your_username -d your_database
-   
-   # Drop and recreate the database
-   DROP DATABASE your_database;
-   CREATE DATABASE your_database;
+⚠️ **Warning**: Proceed with extreme caution in production environments. Always have a verified backup.
+
+#### Using Render PostgreSQL
+1. **Via Render Dashboard:**
+   - Go to your PostgreSQL instance in Render Dashboard
+   - Use the "Reset Database" option (destroys all data)
+   - Re-run migrations after reset
+
+#### Using psql (Advanced)
+```bash
+# Connect to your Render database
+PGPASSWORD=your_render_db_password psql -h your_render_db_host -U your_render_db_user -d your_database
+
+# Drop and recreate (requires additional permissions)
+DROP DATABASE your_database;
+CREATE DATABASE your_database;
    \q
    
    # Run migrations
