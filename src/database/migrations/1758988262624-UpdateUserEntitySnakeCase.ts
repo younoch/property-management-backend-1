@@ -4,12 +4,42 @@ export class UpdateUserEntitySnakeCase1758988262624 implements MigrationInterfac
     name = 'UpdateUserEntitySnakeCase1758988262624'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "property" DROP CONSTRAINT "FK_property_portfolio"`);
-        await queryRunner.query(`ALTER TABLE "portfolio" DROP CONSTRAINT "FK_portfolio_user"`);
-        await queryRunner.query(`ALTER TABLE "tenant" DROP CONSTRAINT "FK_tenant_portfolio"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_PROPERTY_PORTFOLIO_ID"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_PORTFOLIO_USER_ID"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_TENANT_PORTFOLIO_ID"`);
+        // Drop constraints only if they exist
+        const propertyTable = await queryRunner.getTable('property');
+        const portfolioTable = await queryRunner.getTable('portfolio');
+        const tenantTable = await queryRunner.getTable('tenant');
+
+        // Drop property constraint if it exists
+        if (propertyTable) {
+            const propertyFk = propertyTable.foreignKeys.find(fk => fk.name === 'FK_property_portfolio');
+            if (propertyFk) {
+                await queryRunner.query(`ALTER TABLE "property" DROP CONSTRAINT "FK_property_portfolio"`);
+            }
+        }
+
+        // Drop portfolio constraint if it exists
+        if (portfolioTable) {
+            const portfolioFk = portfolioTable.foreignKeys.find(fk => fk.name === 'FK_portfolio_user');
+            if (portfolioFk) {
+                await queryRunner.query(`ALTER TABLE "portfolio" DROP CONSTRAINT "FK_portfolio_user"`);
+            }
+        }
+
+        // Drop tenant constraint if it exists
+        if (tenantTable) {
+            const tenantFk = tenantTable.foreignKeys.find(fk => fk.name === 'FK_tenant_portfolio');
+            if (tenantFk) {
+                await queryRunner.query(`ALTER TABLE "tenant" DROP CONSTRAINT "FK_tenant_portfolio"`);
+            }
+        }
+        // Drop indexes only if they exist
+        try {
+            await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_PROPERTY_PORTFOLIO_ID"`);
+            await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_PORTFOLIO_USER_ID"`);
+            await queryRunner.query(`DROP INDEX IF EXISTS "public"."IDX_TENANT_PORTFOLIO_ID"`);
+        } catch (error) {
+            console.log('Error dropping indexes, continuing...', error.message);
+        }
         await queryRunner.query(`CREATE TABLE "unit" ("id" SERIAL NOT NULL, "property_id" integer NOT NULL, "label" character varying NOT NULL, "bedrooms" integer, "bathrooms" integer, "sqft" integer, "market_rent" numeric(12,2), "status" character varying NOT NULL DEFAULT 'vacant', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_d16001384f6d95251d979076a57" UNIQUE ("property_id", "label"), CONSTRAINT "PK_4252c4be609041e559f0c80f58a" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_ffd1df4d8c19a8bd49fcd8af71" ON "unit" ("property_id") `);
         await queryRunner.query(`CREATE TABLE "lease_tenant" ("lease_id" integer NOT NULL, "tenant_id" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "is_primary" boolean NOT NULL DEFAULT false, "moved_in_date" date, "moved_out_date" date, "relationship" character varying(255), CONSTRAINT "PK_b5f56ce129b079a8b45f3250081" PRIMARY KEY ("lease_id", "tenant_id"))`);
