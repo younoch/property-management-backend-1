@@ -120,7 +120,7 @@ export class UsersController {
       }
 
       // Check if user account is active
-      if (!user.isActive) {
+      if (!user.is_active) {
         throw new ForbiddenException({
           message: 'User account is deactivated',
           errorType: 'ACCOUNT_DEACTIVATED'
@@ -188,7 +188,7 @@ export class UsersController {
   async completeOnboarding(@CurrentUser() user: User) {
     try {
       // Check if onboarding is already completed
-      if (!user.requiresOnboarding) {
+      if (!user.requires_onboarding) {
         throw new BadRequestException({
           message: 'Onboarding already completed',
           errorType: 'ONBOARDING_ALREADY_COMPLETED'
@@ -197,15 +197,15 @@ export class UsersController {
 
       // Update user to mark onboarding as completed
       const updatedUser = await this.usersService.update(user.id, {
-        requiresOnboarding: false,
-        onboardingCompletedAt: new Date()
+        requires_onboarding: false,
+        onboarding_completed_at: new Date()
       });
 
       return {
         success: true,
         message: 'Onboarding completed successfully',
-        requiresOnboarding: updatedUser.requiresOnboarding,
-        onboardingCompletedAt: updatedUser.onboardingCompletedAt
+        requires_onboarding: updatedUser.requires_onboarding,
+        onboarding_completed_at: updatedUser.onboarding_completed_at
       };
     } catch (error) {
       // Re-throw HTTP exceptions as they are already properly formatted

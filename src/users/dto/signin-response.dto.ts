@@ -183,6 +183,14 @@ export class SigninDataDto {
   })
   refreshToken: string;
 
+  @Expose({ name: 'requiresOnboarding' })
+  @ApiProperty({
+    description: 'Whether the user needs to complete onboarding',
+    example: true,
+    name: 'requiresOnboarding'
+  })
+  requires_onboarding: boolean;
+
   // Note: password_hash and password fields are intentionally excluded for security
 }
 
