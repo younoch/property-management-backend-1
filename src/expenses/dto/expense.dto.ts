@@ -1,6 +1,7 @@
 import { ApiProperty, OmitType, PickType, PartialType } from '@nestjs/swagger';
 import { Expense, ExpenseStatus } from '../expense.entity';
 import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
+import { PaymentMethod } from '../../common/enums/payment-method.enum';
 
 // Base DTO that includes all fields from Expense entity except relations
 export class ExpenseBaseDto {
@@ -236,13 +237,14 @@ export class CreateExpenseDto {
    */
   @ApiProperty({
     description: 'Payment method used',
-    example: 'Credit Card',
-    enum: ['Credit Card', 'Bank Transfer', 'Check', 'Cash', 'Other'],
-    required: false
+    example: PaymentMethod.CREDIT_CARD,
+    required: false,
+    enum: PaymentMethod,
+    enumName: 'PaymentMethod'
   })
   @IsOptional()
-  @IsEnum(['Credit Card', 'Bank Transfer', 'Check', 'Cash', 'Other'])
-  payment_method?: string;
+  @IsEnum(PaymentMethod)
+  payment_method?: PaymentMethod;
 
   /**
    * URL to the receipt or invoice document

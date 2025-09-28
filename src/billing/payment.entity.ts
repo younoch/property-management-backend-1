@@ -2,8 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Up
 import { ApiProperty } from '@nestjs/swagger';
 import { Lease } from '../tenancy/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
-
-export type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'ach' | 'mobile';
+import { PaymentMethod } from '../common/enums/payment-method.enum';
 
 @Entity()
 @Index(['lease_id'])
@@ -42,12 +41,17 @@ export class Payment {
   })
   unapplied_amount: number;
 
-  @Column({ 
+  @Column({
     type: 'enum',
-    enum: ['cash', 'bank_transfer', 'card', 'ach', 'mobile'],
-    default: 'cash' 
+    enum: PaymentMethod,
+    default: PaymentMethod.BANK_TRANSFER
   })
-  method: PaymentMethod;
+  @ApiProperty({ 
+    enum: PaymentMethod,
+    default: PaymentMethod.BANK_TRANSFER,
+    description: 'Payment method used for this transaction'
+  })
+  payment_method: PaymentMethod | null;
 
   @Column({ type: 'date' })
   at: string;

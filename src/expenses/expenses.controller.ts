@@ -82,12 +82,25 @@ export class ExpensesController {
     @Param('propertyId', ParseIntPipe) propertyId: number,
     @Body() createExpenseDto: CreateExpenseDto
   ): Promise<ExpenseDto> {
-    // Ensure the expense is created for the specified property
-    const expense = await this.expensesService.create({
+    // Log the incoming data for debugging
+    console.log('Creating expense with data:', {
       ...createExpenseDto,
-      property_id: propertyId // Override property_id from DTO with the one from URL
+      property_id: propertyId
     });
-    return await this.mapToDto(expense);
+    
+    try {
+      // Ensure the expense is created for the specified property
+      const expense = await this.expensesService.create({
+        ...createExpenseDto,
+        property_id: propertyId // This will be used to set up the relation
+      });
+      
+      console.log('Expense created successfully, ID:', expense.id);
+      return await this.mapToDto(expense);
+    } catch (error) {
+      console.error('Error in controller when creating expense:', error);
+      throw error;
+    }
   }
 
   @Get()
