@@ -86,12 +86,13 @@ async function bootstrap() {
       .setDescription('Comprehensive property management system for small landlords with user authentication, property management, and rental operations')
       .setVersion('1.0')
       .addTag('auth', 'Authentication endpoints')
-      .addTag('users', 'User management endpoints')
       .addTag('portfolios', 'Portfolio management endpoints')
       .addTag('properties', 'Property management endpoints')
       .addTag('units', 'Unit management endpoints')
       .addTag('tenants', 'Tenant management endpoints')
       .addTag('leases', 'Lease management endpoints')
+      .addTag('users', 'User management endpoints')
+      .addTag('expenses', 'Expense management endpoints')
       .addTag('billing-invoices', 'Invoice management endpoints')
       .addTag('billing-payments', 'Payment management endpoints')
       .addTag('maintenance', 'Maintenance requests and work orders endpoints')
@@ -103,8 +104,87 @@ async function bootstrap() {
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
-    // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document);
-    SwaggerModule.setup('api', app, document);
+    // Custom Swagger UI configuration to collapse models by default
+    const customCss = `
+      .opblock-tag {
+        margin: 10px 0 !important;
+      }
+      .opblock-tag, .opblock {
+        margin-bottom: 10px !important;
+      }
+      .model-box {
+        margin: 5px 0 !important;
+      }
+      .model-container {
+        margin: 0 0 10px 0 !important;
+        padding: 10px;
+        border-radius: 4px;
+        background: rgba(0,0,0,.05);
+      }
+      .models {
+        margin: 0 !important;
+      }
+      .model-box {
+        background: none !important;
+      }
+      .model-container .model-box {
+        display: none !important;
+      }
+      .model-container h4 {
+        cursor: pointer;
+        margin: 0 0 5px 0 !important;
+        padding: 5px 0;
+        font-size: 16px !important;
+      }
+      .model-container h4:after {
+        content: '▶';
+        display: inline-block;
+        margin-left: 5px;
+        transition: transform 0.3s;
+      }
+      .model-container h4.model-box-open:after {
+        transform: rotate(90deg);
+      }
+      .model-container .model-box {
+        padding-left: 15px !important;
+      }
+    `;
+    
+    const customJs = `
+      document.addEventListener('DOMContentLoaded', function() {
+        // Collapse all models by default
+        const models = document.querySelectorAll('.model-container');
+        models.forEach(model => {
+          const title = model.querySelector('h4');
+          const content = model.querySelector('.model-box');
+          if (title && content) {
+            // Add click handler to toggle models
+            title.addEventListener('click', function() {
+              this.classList.toggle('model-box-open');
+              content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            });
+            // Initially hide the content
+            content.style.display = 'none';
+          }
+        });
+      });
+    `;
+    
+    // If using global prefix, change to: SwaggerModule.setup('api/docs', app, document, options);
+    SwaggerModule.setup('api', app, document, {
+      customCss,
+      customJs,
+      customSiteTitle: 'Property Management API',
+      swaggerOptions: {
+        docExpansion: 'none', // Collapse all operations by default
+        filter: true, // Enable filtering
+        showRequestDuration: true,
+        defaultModelsExpandDepth: -1, // Hide models by default
+        defaultModelExpandDepth: 1,   // Show only top level of models
+        defaultModelRendering: 'model', // Show models as models, not examples
+        displayRequestDuration: true,
+      }
+    });
   }
 
   const port = process.env.PORT || 8000;
