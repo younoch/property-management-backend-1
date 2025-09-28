@@ -4,12 +4,7 @@ export class InitialSchema1759001247003 implements MigrationInterface {
     name = 'InitialSchema1759001247003'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "property" DROP CONSTRAINT "FK_property_portfolio"`);
-        await queryRunner.query(`ALTER TABLE "portfolio" DROP CONSTRAINT "FK_portfolio_user"`);
-        await queryRunner.query(`ALTER TABLE "tenant" DROP CONSTRAINT "FK_tenant_portfolio"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_PROPERTY_PORTFOLIO_ID"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_PORTFOLIO_USER_ID"`);
-        await queryRunner.query(`DROP INDEX "public"."IDX_TENANT_PORTFOLIO_ID"`);
+        // Removed DROP CONSTRAINT statements as they are handled in the InitialSchemaFix migration
         await queryRunner.query(`CREATE TABLE "unit" ("id" SERIAL NOT NULL, "property_id" integer NOT NULL, "label" character varying NOT NULL, "bedrooms" integer, "bathrooms" integer, "sqft" integer, "market_rent" numeric(12,2), "status" character varying NOT NULL DEFAULT 'vacant', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "UQ_d16001384f6d95251d979076a57" UNIQUE ("property_id", "label"), CONSTRAINT "PK_4252c4be609041e559f0c80f58a" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE INDEX "IDX_ffd1df4d8c19a8bd49fcd8af71" ON "unit" ("property_id") `);
         await queryRunner.query(`CREATE TABLE "lease_tenant" ("lease_id" integer NOT NULL, "tenant_id" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "is_primary" boolean NOT NULL DEFAULT false, "moved_in_date" date, "moved_out_date" date, "relationship" character varying(255), CONSTRAINT "PK_b5f56ce129b079a8b45f3250081" PRIMARY KEY ("lease_id", "tenant_id"))`);
@@ -51,21 +46,7 @@ export class InitialSchema1759001247003 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "maintenance_request" DROP CONSTRAINT "FK_7990604abb047d1e163e437fc6a"`);
-        await queryRunner.query(`ALTER TABLE "invoices" DROP CONSTRAINT "FK_da309569f957adb1f09c8bb1095"`);
-        await queryRunner.query(`ALTER TABLE "payment_application" DROP CONSTRAINT "FK_9c8c30c178ebe905e59077f84ab"`);
-        await queryRunner.query(`ALTER TABLE "payment_application" DROP CONSTRAINT "FK_2b4fa2d71c82de59053aa0aca72"`);
-        await queryRunner.query(`ALTER TABLE "payment" DROP CONSTRAINT "FK_2d5167c4ef1c8ab3342ac3d05e6"`);
-        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_05ec29a7dc2334ac370eb8719c0"`);
-        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_cb383f9d3e410323aa5c7232cc7"`);
-        await queryRunner.query(`ALTER TABLE "lease_charge" DROP CONSTRAINT "FK_4ecd198da30e9be7ae2c8ffe9db"`);
-        await queryRunner.query(`ALTER TABLE "lease" DROP CONSTRAINT "FK_ca091675febe801029d4db0f642"`);
-        await queryRunner.query(`ALTER TABLE "lease_tenant" DROP CONSTRAINT "FK_64b69371ab43b1453ba3e1229de"`);
-        await queryRunner.query(`ALTER TABLE "lease_tenant" DROP CONSTRAINT "FK_1002d49fc6e6a01abf5308403c8"`);
-        await queryRunner.query(`ALTER TABLE "portfolio_member" DROP CONSTRAINT "FK_c02eecc90e0de3c1742116fefa7"`);
-        await queryRunner.query(`ALTER TABLE "notification" DROP CONSTRAINT "FK_5ec9aa64430984435e8a0262669"`);
-        await queryRunner.query(`ALTER TABLE "unit" DROP CONSTRAINT "FK_ffd1df4d8c19a8bd49fcd8af71b"`);
-        await queryRunner.query(`ALTER TABLE "portfolio_member" DROP CONSTRAINT "UQ_c3f978c50b74de4cd6587b36084"`);
+        // Removed DROP CONSTRAINT statements as they are handled in the InitialSchemaFix migration
         await queryRunner.query(`DROP INDEX "public"."IDX_c02eecc90e0de3c1742116fefa"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_5ec9aa64430984435e8a026266"`);
         await queryRunner.query(`ALTER TABLE "portfolio_member" DROP COLUMN "portfolio_id"`);
@@ -89,12 +70,6 @@ export class InitialSchema1759001247003 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "lease_tenant"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_ffd1df4d8c19a8bd49fcd8af71"`);
         await queryRunner.query(`DROP TABLE "unit"`);
-        await queryRunner.query(`CREATE INDEX "IDX_TENANT_PORTFOLIO_ID" ON "tenant" ("portfolio_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_PORTFOLIO_USER_ID" ON "portfolio" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "IDX_PROPERTY_PORTFOLIO_ID" ON "property" ("portfolio_id") `);
-        await queryRunner.query(`ALTER TABLE "tenant" ADD CONSTRAINT "FK_tenant_portfolio" FOREIGN KEY ("portfolio_id") REFERENCES "portfolio"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "portfolio" ADD CONSTRAINT "FK_portfolio_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "property" ADD CONSTRAINT "FK_property_portfolio" FOREIGN KEY ("portfolio_id") REFERENCES "portfolio"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
     }
 
 }
