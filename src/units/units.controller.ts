@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { UnitsService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { AuthGuard } from '../guards/auth.guard';
 
 @ApiTags('units')

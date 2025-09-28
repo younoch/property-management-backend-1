@@ -10,7 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Lease } from '../tenancy/lease.entity';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
 
 @Entity()

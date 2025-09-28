@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { LeaseCharge } from './lease-charge.entity';
 import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
 import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
 import { Lease } from '../tenancy/lease.entity';
 

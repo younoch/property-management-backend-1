@@ -7,7 +7,7 @@ import { Portfolio } from '../portfolios/portfolio.entity';
 import { Property } from '../properties/property.entity';
 import { Notification } from '../notifications/notification.entity';
 import { PortfolioMember } from '../portfolios/portfolio-member.entity';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { Tenant } from '../tenancy/tenant.entity';
 import { Lease } from '../tenancy/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
