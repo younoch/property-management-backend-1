@@ -11,7 +11,7 @@ import {
   Index,
   JoinColumn,
 } from 'typeorm';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { Tenant } from './tenant.entity';
 import { LeaseTenant } from './lease-tenant.entity';
 import { BadRequestException } from '@nestjs/common';

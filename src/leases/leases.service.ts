@@ -12,7 +12,7 @@ import { DataSource, Repository, In, Not } from 'typeorm';
 import { Lease } from '../tenancy/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { Tenant } from '../tenancy/tenant.entity';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 type UnitStatus = 'vacant' | 'occupied' | 'maintenance';
 import { Portfolio } from '../portfolios/portfolio.entity';
 

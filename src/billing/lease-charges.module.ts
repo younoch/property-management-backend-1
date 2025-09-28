@@ -6,7 +6,7 @@ import { LeaseChargesController, LeaseChargesGlobalController } from './lease-ch
 import { PropertiesModule } from '../properties/properties.module';
 import { Lease } from '../tenancy/lease.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
-import { Unit } from '../properties/unit.entity';
+import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
 import { Tenant } from '../tenancy/tenant.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';

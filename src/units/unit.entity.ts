@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, Unique, JoinColumn, DeleteDateColumn } from 'typeorm';
-import { Property } from './property.entity';
+import { Property } from '../properties/property.entity';
 
 @Entity()
 @Index(['property_id'])

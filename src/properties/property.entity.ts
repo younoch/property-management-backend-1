@@ -11,7 +11,7 @@ import {
   DeleteDateColumn
 } from "typeorm";
 import { Portfolio } from "../portfolios/portfolio.entity";
-import { Unit } from "./unit.entity";
+import { Unit } from "../units/unit.entity";
 import { IsNotEmpty } from 'class-validator';
 
 @Entity()

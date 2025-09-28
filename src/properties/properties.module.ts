@@ -5,7 +5,7 @@ import { User } from '../users/user.entity';
 import { Property } from './property.entity';
 import { PropertiesController, PropertiesGlobalController } from './properties.controller';
 import { PropertiesService } from './properties.service';
-import { Unit } from './unit.entity';
+import { Unit } from '../units/unit.entity';
 
 @Module({
   imports: [
