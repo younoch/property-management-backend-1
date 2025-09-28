@@ -13,6 +13,9 @@ import {
 import { Portfolio } from "../portfolios/portfolio.entity";
 import { Unit } from "../units/unit.entity";
 import { IsNotEmpty } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
+
+import type { Expense } from '../expenses/expense.entity';
 
 @Entity()
 @Index(['city', 'state'])
@@ -65,6 +68,10 @@ export class Property {
 
     @OneToMany(() => Unit, (unit) => unit.property)
     units: Unit[];
+
+    @OneToMany('Expense', 'property', { cascade: true })
+    @ApiHideProperty() // keep to prevent Swagger circular dependency
+    expenses: Promise<Expense[]>;
 
     @Column({ nullable: true, type: "text" })
     description: string;
