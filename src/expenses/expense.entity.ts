@@ -3,6 +3,7 @@ import type { Relation } from 'typeorm';
 // Import Property using type-only import to avoid circular dependency
 import { Property } from '../properties/property.entity';
 import { ApiHideProperty } from '@nestjs/swagger';
+import { PaymentMethod } from '../common/enums/payment-method.enum';
 
 export type ExpenseStatus = 'paid' | 'pending' | 'overdue';
 
@@ -49,8 +50,12 @@ export class Expense {
   @Column({ nullable: true })
   vendor?: string;
 
-  @Column({ nullable: true })
-  payment_method?: string;
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    nullable: true
+  })
+  payment_method?: PaymentMethod;
 
   @Column({ nullable: true })
   receipt_url?: string;

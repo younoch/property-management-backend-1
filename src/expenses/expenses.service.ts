@@ -26,15 +26,27 @@ export class ExpensesService {
       );
     }
 
-    // Create the expense with just the property_id to avoid circular references
+    // Create the expense with the provided data
     const expense = this.expenseRepository.create({
       ...createExpenseDto,
-      property_id: createExpenseDto.property_id,
-      // Initialize the property as a resolved promise
+      // Set the property relation using the property object
       property: Promise.resolve(property)
     });
 
-    return this.expenseRepository.save(expense);
+    // Log the expense being created for debugging
+    console.log('Creating expense with data:', {
+      ...expense,
+      property: '[Property]' // Avoid circular reference in log
+    });
+    
+    try {
+      const savedExpense = await this.expenseRepository.save(expense);
+      console.log('Expense created successfully:', savedExpense.id);
+      return savedExpense;
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      throw error;
+    }
   }
 
   async findAll(
