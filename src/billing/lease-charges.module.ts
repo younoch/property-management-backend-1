@@ -4,11 +4,11 @@ import { LeaseCharge } from './lease-charge.entity';
 import { LeaseChargesService } from './lease-charges.service';
 import { LeaseChargesController, LeaseChargesGlobalController } from './lease-charges.controller';
 import { PropertiesModule } from '../properties/properties.module';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
-import { Tenant } from '../tenancy/tenant.entity';
+import { Tenant } from '../tenants/tenant.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 
 @Module({

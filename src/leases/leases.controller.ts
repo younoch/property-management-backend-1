@@ -4,7 +4,7 @@ import { LeasesService } from './leases.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { UpdateLeaseDto } from './dto/update-lease.dto';
 import { AttachTenantsDto } from './dto/attach-tenants.dto';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from './lease.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { EndLeaseDto } from './dto/end-lease.dto';
 import { LeaseResponseDto } from '../tenancy/dto/lease-response.dto';

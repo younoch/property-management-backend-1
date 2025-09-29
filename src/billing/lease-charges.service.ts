@@ -6,7 +6,7 @@ import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
 import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
 import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 
 @Injectable()
 export class LeaseChargesService {

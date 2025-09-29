@@ -7,7 +7,7 @@ import { Invoice } from '../entities/invoice.entity';
 import { format } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
-import { Lease } from '../../tenancy/lease.entity';
+import { Lease } from '../../leases/lease.entity';
 @Injectable()
 export class InvoiceEmailService {
   private readonly logger = new Logger(InvoiceEmailService.name);

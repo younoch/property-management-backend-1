@@ -7,7 +7,7 @@ import { Invoice } from './entities/invoice.entity';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { AuditLogModule } from '../common/audit-log.module';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { BillingModule } from './billing.module';
 

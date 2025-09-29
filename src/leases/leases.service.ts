@@ -9,9 +9,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, In, Not } from 'typeorm';
 
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from './lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
-import { Tenant } from '../tenancy/tenant.entity';
+import { Tenant } from '../tenants/tenant.entity';
 import { Unit } from '../units/unit.entity';
 type UnitStatus = 'vacant' | 'occupied' | 'maintenance';
 import { Portfolio } from '../portfolios/portfolio.entity';

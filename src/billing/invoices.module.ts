@@ -5,7 +5,7 @@ import { Invoice } from './entities/invoice.entity';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
 import { LeaseCharge } from './lease-charge.entity';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { PaymentsModule } from './payments.module';
 import { EmailModule } from '../email/email.module';
 import { PdfModule } from '../pdf/pdf.module';

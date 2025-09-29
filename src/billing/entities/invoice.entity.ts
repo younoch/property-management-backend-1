@@ -23,7 +23,7 @@ import {
   format,
   differenceInDays
 } from 'date-fns';
-import { Lease } from '../../tenancy/lease.entity';
+import { Lease } from '../../leases/lease.entity';
 import { PaymentApplication } from '../../billing/payment-application.entity';
 
 // Types for invoice statuses

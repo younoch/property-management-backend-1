@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Lease } from '../lease.entity';
+import { Lease } from '../../leases/lease.entity';
 import { LeaseResponseDto } from '../dto/lease-response.dto';
 import { LeaseTenantResponseDto } from '../dto/lease-tenant-response.dto';
 import { LeaseTenant } from '../lease-tenant.entity';

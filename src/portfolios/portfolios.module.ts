@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PortfoliosController } from './portfolios.controller';
 import { PortfoliosService } from './portfolios.service';
 import { Portfolio } from './portfolio.entity';
-import { Tenant } from '../tenancy/tenant.entity';
-import { Lease } from '../tenancy/lease.entity';
+import { Tenant } from '../tenants/tenant.entity';
+import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { CommonModule } from '../common/common.module';
 
