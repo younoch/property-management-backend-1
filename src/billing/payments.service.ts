@@ -7,7 +7,7 @@ import { Invoice } from './entities/invoice.entity';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentApplication } from './payment-application.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { AuditLogService, AuditAction } from '../common/audit-log.service';
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { LeaseStatus } from '../lease.entity';
+import { LeaseStatus } from '../../leases/lease.entity';
 import { LeaseTenantResponseDto } from './lease-tenant-response.dto';
 import { PropertyShortDto } from '../../properties/dto/property-short.dto';
 import { UnitShortDto } from '../../properties/dto/unit-short.dto';

@@ -1,7 +1,7 @@
 // src/tenancy/lease-tenant.entity.ts
 import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column, Index } from 'typeorm';
-import { Lease } from './lease.entity';
-import { Tenant } from './tenant.entity';
+import { Lease } from '../leases/lease.entity';
+import { Tenant } from '../tenants/tenant.entity';
 
 @Entity()
 @Index(['lease_id', 'is_primary'], { unique: true, where: 'is_primary = true' })

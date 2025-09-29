@@ -22,7 +22,7 @@ import { PortfoliosModule } from '../portfolios/portfolios.module';
 import { Invoice } from './entities/invoice.entity';
 import { Payment } from './payment.entity';
 import { PaymentApplication } from './payment-application.entity';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
 
 @Module({

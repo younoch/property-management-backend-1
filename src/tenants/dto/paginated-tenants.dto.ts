@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { Tenant } from '../../tenancy/tenant.entity';
+import { Tenant } from '../tenant.entity';
 
 export class PaginatedTenantsResponseDto {
   @ApiProperty({ type: () => [Tenant] })

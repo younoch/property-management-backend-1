@@ -6,8 +6,8 @@ import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
 import { FindPortfoliosDto } from './dto/find-portfolios.dto';
 import { TimezoneService } from '../common/services/timezone.service';
-import { Tenant } from '../tenancy/tenant.entity';
-import { Lease } from '../tenancy/lease.entity';
+import { Tenant } from '../tenants/tenant.entity';
+import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 
 @Injectable()

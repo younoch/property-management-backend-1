@@ -9,7 +9,7 @@ import {
   Index,
   JoinColumn,
 } from 'typeorm';
-import { Lease } from '../tenancy/lease.entity';
+import { Lease } from '../leases/lease.entity';
 import { Unit } from '../units/unit.entity';
 import { Property } from '../properties/property.entity';
 

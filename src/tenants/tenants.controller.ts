@@ -4,7 +4,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { Tenant } from '../tenancy/tenant.entity';
+import { Tenant } from './tenant.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 import { FindTenantsDto } from './dto/find-tenants.dto';

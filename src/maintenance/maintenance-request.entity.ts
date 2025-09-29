@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
 import { Property } from '../properties/property.entity';
 import { Unit } from '../units/unit.entity';
-import { Tenant } from '../tenancy/tenant.entity';
+import { Tenant } from '../tenants/tenant.entity';
 
 @Entity()
 @Index(['status'])

@@ -12,8 +12,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Unit } from '../units/unit.entity';
-import { Tenant } from './tenant.entity';
-import { LeaseTenant } from './lease-tenant.entity';
+import { Tenant } from '../tenants/tenant.entity';
+import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { BadRequestException } from '@nestjs/common';
 
 // Keep string union or switch to a TS enum shared with DTO
