@@ -22,7 +22,7 @@ export class Expense {
   @ManyToOne('Property', 'expenses', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })
   @ApiHideProperty()
-  property: Promise<Property>;
+  property: Property;   
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;

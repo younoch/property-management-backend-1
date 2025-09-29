@@ -27,10 +27,11 @@ export class ExpensesService {
     }
 
     // Create the expense with the provided data
+    // Create the expense with both property_id and property relation
+    const { property_id, ...expenseData } = createExpenseDto;
     const expense = this.expenseRepository.create({
-      ...createExpenseDto,
-      // Set the property relation using the property object
-      property: Promise.resolve(property)
+      ...expenseData,
+      property: property  // And also set the relation
     });
 
     // Log the expense being created for debugging
@@ -127,7 +128,7 @@ export class ExpensesService {
       }
       
       // Update the property relation
-      expense.property = Promise.resolve(property);
+      expense.property = property;
       expense.property_id = updateExpenseDto.property_id;
     }
 

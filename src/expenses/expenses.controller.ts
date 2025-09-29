@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto, ExpenseDto } from './dto/expense.dto';
+import { ExpenseCategory } from '../common/enums/expense-category.enum';
 import { AuthGuard } from '../guards/auth.guard';
 import { Expense, ExpenseStatus } from './expense.entity';
 
@@ -104,31 +105,39 @@ export class ExpensesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all expenses with optional filters' })
-  @ApiQuery({ name: 'propertyId', required: false, type: Number })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiQuery({ name: 'category', required: false, type: String })
-  @ApiQuery({ 
-    name: 'status', 
-    required: false, 
-    enum: ['paid', 'pending', 'overdue'],
-    description: 'Filter by status'
-  })
-  @ApiResponse({ status: 200, description: 'Returns the list of expenses', type: [ExpenseDto] })
-  @Get()
   @ApiOperation({ summary: 'Get all expenses for a property with optional filters' })
-  @ApiParam({ name: 'propertyId', description: 'ID of the property' })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiParam({ name: 'propertyId', description: 'ID of the property', type: Number })
+  @ApiQuery({ 
+    name: 'startDate', 
+    required: false, 
+    type: String,
+    description: 'Start date for filtering expenses (YYYY-MM-DD)'
+  })
+  @ApiQuery({ 
+    name: 'endDate', 
+    required: false, 
+    type: String,
+    description: 'End date for filtering expenses (YYYY-MM-DD)'
+  })
+  @ApiQuery({ 
+    name: 'category', 
+    required: false, 
+    enum: ExpenseCategory,
+    enumName: 'ExpenseCategory',
+    description: 'Filter by expense category',
+    example: ExpenseCategory.MAINTENANCE
+  })
   @ApiQuery({ 
     name: 'status', 
     required: false, 
     enum: ['paid', 'pending', 'overdue'],
-    description: 'Filter by status'
+    description: 'Filter by payment status'
   })
-  @ApiResponse({ status: 200, description: 'Returns the list of expenses', type: [ExpenseDto] })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Returns the list of expenses filtered by the provided criteria', 
+    type: [ExpenseDto] 
+  })
   async findAll(
     @Param('propertyId', ParseIntPipe) propertyId: number,
     @Query('startDate') startDate?: string,
