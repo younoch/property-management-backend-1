@@ -1,8 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
-import type { Relation } from 'typeorm';
-// Import Property using type-only import to avoid circular dependency
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Property } from '../properties/property.entity';
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ExpenseCategory, EXPENSE_CATEGORIES, getExpenseCategoryLabel } from '../common/enums/expense-category.enum';
 import { PaymentMethod } from '../common/enums/payment-method.enum';
 
 export type ExpenseStatus = 'paid' | 'pending' | 'overdue';
@@ -28,8 +27,18 @@ export class Expense {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;
 
-  @Column()
-  category: string;
+  @Column({
+    type: 'enum',
+    enum: ExpenseCategory,
+    default: ExpenseCategory.OTHER
+  })
+  @ApiProperty({
+    enum: ExpenseCategory,
+    enumName: 'ExpenseCategory',
+    example: ExpenseCategory.MAINTENANCE,
+    description: 'Category of the expense'
+  })
+  category: ExpenseCategory;
 
   @Column({ type: 'date' })
   date_incurred: Date;
