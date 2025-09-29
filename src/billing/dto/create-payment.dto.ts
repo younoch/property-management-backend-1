@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { PaymentMethod } from '../payment.entity';
+import { PaymentMethod } from '../../common/enums/payment-method.enum';
 
 export class CreatePaymentDto {
 
@@ -23,10 +23,16 @@ export class CreatePaymentDto {
   @IsDateString()
   received_at?: string;
 
-  @ApiProperty({ enum: ['cash','bank_transfer','card','ach','mobile'], required: false })
+  @ApiProperty({ 
+    enum: PaymentMethod, 
+    enumName: 'PaymentMethod',
+    example: 'credit_card',
+    description: 'Payment method',
+    required: false 
+  })
   @IsOptional()
-  @IsEnum(['cash','bank_transfer','card','ach','mobile'])
-  method?: PaymentMethod;
+  @IsEnum(PaymentMethod)
+  payment_method?: PaymentMethod;
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { Payment } from './payment.entity';
+import { PaymentMethod } from '../common/enums/payment-method.enum';
 import { Invoice } from './entities/invoice.entity';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentApplication } from './payment-application.entity';
@@ -31,7 +32,7 @@ export class PaymentsService {
         lease: { id: Number(dto.lease_id) } as any,
         lease_id: Number(dto.lease_id),
         amount: parseFloat(dto.amount.toString()),
-        method: dto.method || 'cash',
+        payment_method: dto.payment_method || PaymentMethod.CASH,
         reference: dto.reference || null,
         at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
         notes: dto.notes || null
@@ -43,7 +44,7 @@ export class PaymentsService {
       // Initialize metadata for audit log
       const metadata: Record<string, any> = {
         amount: savedPayment.amount,
-        method: savedPayment.method,
+        payment_method: savedPayment.payment_method,
         reference: savedPayment.reference,
         leaseId: dto.lease_id
       };
@@ -164,7 +165,7 @@ export class PaymentsService {
       const paymentData: Partial<Payment> = {
         lease: { id: leaseId } as any,
         amount: parseFloat(dto.amount.toString()),
-        method: dto.method || 'cash',
+        payment_method: dto.payment_method || PaymentMethod.CASH,
         reference: dto.reference || null,
         at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
         notes: dto.notes || null
@@ -182,7 +183,7 @@ export class PaymentsService {
           userId: dto.user_id,
           metadata: {
             amount: savedPayment.amount,
-            method: savedPayment.method,
+            payment_method: savedPayment.payment_method,
             leaseId: leaseId,
             reference: savedPayment.reference
           },
@@ -274,7 +275,7 @@ export class PaymentsService {
     }
     
     // Only allow updating specific fields
-    const updatableFields: (keyof CreatePaymentDto)[] = ['method', 'reference', 'notes'];
+    const updatableFields: (keyof CreatePaymentDto)[] = ['payment_method', 'reference', 'notes'];
     updatableFields.forEach(field => {
       if (dto[field] !== undefined) {
         payment[field] = dto[field];
@@ -318,7 +319,7 @@ export class PaymentsService {
         // Removed portfolio_id reference as it's no longer part of the Payment entity
         metadata: {
           amount: payment.amount,
-          method: payment.method,
+          payment_method: payment.payment_method,
           leaseId: payment.lease_id,
           reference: payment.reference
         },

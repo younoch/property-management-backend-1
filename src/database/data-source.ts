@@ -44,7 +44,7 @@ export const AppDataSource = new DataSource({
   // Ensure migrations auto-run in production boot flow
   migrationsRun: process.env.NODE_ENV === 'production',
   migrationsTableName: 'migrations',
-  migrations: [__dirname + '/migrations/*{.ts,.js}'],
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   logging: true,
   entities: [
     User,

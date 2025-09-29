@@ -2,6 +2,7 @@ import { ApiProperty, OmitType, PickType, PartialType } from '@nestjs/swagger';
 import { Expense, ExpenseStatus } from '../expense.entity';
 import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
 import { PaymentMethod } from '../../common/enums/payment-method.enum';
+import { ExpenseCategory, EXPENSE_CATEGORIES, getExpenseCategoryLabel } from '../../common/enums/expense-category.enum';
 
 // Base DTO that includes all fields from Expense entity except relations
 export class ExpenseBaseDto {
@@ -26,8 +27,9 @@ export class ExpenseBaseDto {
 
   @ApiProperty({
     description: 'The category of the expense',
-    example: 'Maintenance',
-    enum: ['Maintenance', 'Utilities', 'Insurance', 'Tax', 'Mortgage', 'Repairs', 'Supplies', 'Other']
+    enum: ExpenseCategory,
+    enumName: 'ExpenseCategory',
+    example: ExpenseCategory.MAINTENANCE
   })
   category: string;
 
@@ -164,13 +166,13 @@ export class CreateExpenseDto {
    */
   @ApiProperty({
     description: 'The category of the expense',
-    example: 'Maintenance',
-    enum: ['Maintenance', 'Utilities', 'Insurance', 'Tax', 'Mortgage', 'Repairs', 'Supplies', 'Other'],
+    enum: ExpenseCategory,
+    enumName: 'ExpenseCategory',
+    example: ExpenseCategory.MAINTENANCE,
     required: true
   })
-  @IsString()
-  @IsEnum(['Maintenance', 'Utilities', 'Insurance', 'Tax', 'Mortgage', 'Repairs', 'Supplies', 'Other'])
-  category: string;
+  @IsEnum(ExpenseCategory)
+  category: ExpenseCategory;
 
   /**
    * The date when the expense was incurred (YYYY-MM-DD)
@@ -337,11 +339,14 @@ export class UpdateExpenseDto extends PartialType(PickType(ExpenseBaseDto, [
 
   @ApiProperty({
     description: 'The category of the expense',
-    example: 'Repairs',
-    enum: ['Maintenance', 'Utilities', 'Insurance', 'Tax', 'Mortgage', 'Repairs', 'Supplies', 'Other'],
+    enum: ExpenseCategory,
+    enumName: 'ExpenseCategory',
+    example: ExpenseCategory.MAINTENANCE,
     required: false
   })
-  category?: string;
+  @IsOptional()
+  @IsEnum(ExpenseCategory)
+  category?: ExpenseCategory;
 
   @ApiProperty({
     description: 'The status of the expense payment',
