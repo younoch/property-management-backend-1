@@ -31,6 +31,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
 import { CsrfModule } from './modules/csrf.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 // Interceptors, Filters & Logger
 import { HttpExceptionFilter } from './filters/http-exception.filter';
@@ -88,6 +89,7 @@ import databaseConfig from './config/database';
     CsrfModule,
     FeedbackModule,
     ExpensesModule,
+    DashboardModule,
   ],
 
   controllers: [AppController],

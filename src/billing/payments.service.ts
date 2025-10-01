@@ -27,6 +27,11 @@ export class PaymentsService {
       const leaseRepo = transactionalEntityManager.getRepository(Lease);
       const paymentRepo = transactionalEntityManager.getRepository(Payment);
 
+      // Format the received_at date or use current date
+      const paymentDate = dto.received_at 
+        ? new Date(dto.received_at).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+
       // Create payment with proper type casting
       const paymentData: Partial<Payment> = {
         lease: { id: Number(dto.lease_id) } as any,
@@ -34,7 +39,7 @@ export class PaymentsService {
         amount: parseFloat(dto.amount.toString()),
         payment_method: dto.payment_method || PaymentMethod.CASH,
         reference: dto.reference || null,
-        at: (dto.received_at || new Date().toISOString().slice(0, 10)) as any,
+        at: paymentDate,
         notes: dto.notes || null
       };
       
@@ -116,7 +121,7 @@ export class PaymentsService {
       // Reload the payment with all relations before returning
       const finalPayment = await transactionalEntityManager.findOne(Payment, {
         where: { id: savedPayment.id },
-        relations: ['portfolio', 'lease', 'applications', 'applications.invoice']
+        relations: ['lease', 'applications', 'applications.invoice']
       });
       
       return finalPayment || savedPayment;
