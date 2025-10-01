@@ -18,6 +18,10 @@ export class CsrfModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(CsrfMiddleware)
+      .exclude(
+        { path: 'health', method: RequestMethod.GET },
+        { path: 'health/(.*)', method: RequestMethod.GET }
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

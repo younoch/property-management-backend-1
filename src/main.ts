@@ -99,6 +99,7 @@ async function bootstrap() {
       .addTag('documents', 'Document management endpoints')
       .addTag('notifications', 'Notification management endpoints')
       .addTag('feedback', 'User feedback endpoints')
+      .addTag('dashboard', 'Dashboard statistics and analytics endpoints')
       .addCookieAuth('access_token')
       .addApiKey({ type: 'apiKey', name: 'X-CSRF-Token', in: 'header' }, 'X-CSRF-Token')
       .build();

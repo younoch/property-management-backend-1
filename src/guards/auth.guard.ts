@@ -37,7 +37,8 @@ export class AuthGuard implements CanActivate {
       '/auth/forgot-password',
       '/auth/reset-password',
       '/csrf/refresh',
-      '/csrf/token'  // Only the token endpoint is public
+      '/csrf/token',  // Only the token endpoint is public
+      '/health'       // Health check endpoint
     ].some(route => url.startsWith(route));
     
     if (isPublicRoute) {
