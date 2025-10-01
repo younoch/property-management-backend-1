@@ -1,0 +1,91 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { AuditLog } from '../audit-log.entity';
+
+export class AuditLogResponseDto {
+  @ApiProperty({ description: 'Unique identifier for the audit log entry' })
+  id: number;
+
+  @ApiProperty({ description: 'Type of the entity that was modified', example: 'Payment' })
+  entityType: string;
+
+  @ApiProperty({ description: 'ID of the entity that was modified' })
+  entityId: string;
+
+  @ApiProperty({ 
+    enum: ['CREATE', 'UPDATE', 'DELETE', 'PAYMENT', 'INVOICE_ISSUE', 'INVOICE_VOID'],
+    description: 'Type of action performed'
+  })
+  action: string;
+
+  @ApiProperty({ 
+    description: 'ID of the user who performed the action',
+    required: false 
+  })
+  userId?: number;
+
+  @ApiProperty({ 
+    description: 'ID of the portfolio this action relates to',
+    required: false 
+  })
+  portfolioId?: number;
+
+  @ApiProperty({ 
+    description: 'Additional metadata about the action',
+    type: 'object',
+    additionalProperties: true
+  })
+  metadata?: Record<string, any>;
+
+  @ApiProperty({ 
+    description: 'Human-readable description of the action',
+    required: false 
+  })
+  description?: string;
+
+  @ApiProperty({ 
+    description: 'Timestamp when the action was performed',
+    type: 'string',
+    format: 'date-time' 
+  })
+  timestamp: Date;
+
+  constructor(auditLog: AuditLog) {
+    this.id = auditLog.id;
+    this.entityType = auditLog.entity_type;
+    this.entityId = auditLog.entity_id;
+    this.action = auditLog.action;
+    this.userId = auditLog.user_id;
+    this.portfolioId = auditLog.portfolio_id;
+    this.metadata = auditLog.metadata;
+    this.description = auditLog.description;
+    this.timestamp = auditLog.timestamp;
+  }
+}
+
+export class PaginatedAuditLogsResponseDto {
+  @ApiProperty({ 
+    type: [AuditLogResponseDto],
+    description: 'Array of audit log entries'
+  })
+  data: AuditLogResponseDto[];
+
+  @ApiProperty({ description: 'Total number of items available' })
+  total: number;
+
+  @ApiProperty({ description: 'Current page number' })
+  page: number;
+
+  @ApiProperty({ description: 'Number of items per page' })
+  limit: number;
+
+  @ApiProperty({ description: 'Total number of pages' })
+  totalPages: number;
+
+  constructor(data: AuditLogResponseDto[], total: number, page: number, limit: number) {
+    this.data = data;
+    this.total = total;
+    this.page = page;
+    this.limit = limit;
+    this.totalPages = Math.ceil(total / limit);
+  }
+}

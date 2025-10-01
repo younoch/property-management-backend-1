@@ -32,6 +32,7 @@ import { CsrfModule } from './modules/csrf.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuditModule } from './common/audit.module';
 
 // Interceptors, Filters & Logger
 import { HttpExceptionFilter } from './filters/http-exception.filter';
@@ -90,6 +91,7 @@ import databaseConfig from './config/database';
     FeedbackModule,
     ExpensesModule,
     DashboardModule,
+    AuditModule,
   ],
 
   controllers: [AppController],
