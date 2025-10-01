@@ -27,7 +27,7 @@ import { AuditLogResponseDto, PaginatedAuditLogsResponseDto } from './dto/audit-
 @ApiBearerAuth()
 @Controller('audit-logs')
 @UseGuards(AuthGuard)
-@Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT)
+@Roles(UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT)
 export class AuditLogsController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
@@ -44,12 +44,67 @@ export class AuditLogsController {
   @ApiResponse({ status: 400, description: 'Invalid query parameters' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async findAll(
-    @Query() query: AuditLogQueryDto
+    @Query() query: any // Use 'any' to access raw query parameters
   ): Promise<PaginatedAuditLogsResponseDto> {
     try {
-      return await this.auditLogService.findWithPagination(query);
+      // Log raw query parameters and their types
+      console.log('=== RAW QUERY PARAMETERS ===');
+      Object.entries(query).forEach(([key, value]) => {
+        console.log(`${key}:`, value, `(type: ${typeof value})`);
+      });
+      
+      // Create a new object to avoid mutating the original query
+      const transformedQuery: AuditLogQueryDto = {
+        ...query,
+        // Convert page and limit to numbers with defaults
+        page: query.page ? parseInt(query.page, 10) : 1,
+        limit: query.limit ? parseInt(query.limit, 10) : 10,
+        
+        // Handle portfolioId - keep as string to handle 'null' case
+        portfolioId: query.portfolioId !== undefined ? 
+          (query.portfolioId === 'null' || query.portfolioId === '' ? null : query.portfolioId) : 
+          undefined,
+          
+        // Convert other IDs to numbers if they exist
+        propertyId: query.propertyId ? parseInt(query.propertyId, 10) : undefined,
+        userId: query.userId ? parseInt(query.userId, 10) : undefined,
+        
+        // Preserve other query parameters
+        action: query.action,
+        entityType: query.entityType,
+        entityId: query.entityId,
+        sortBy: query.sortBy || 'timestamp',
+        sortOrder: query.sortOrder || 'DESC',
+        startDate: query.startDate,
+        endDate: query.endDate
+      };
+      
+      console.log('=== TRANSFORMED QUERY ===');
+      console.log(JSON.stringify(transformedQuery, null, 2));
+      
+      const result = await this.auditLogService.findWithPagination(transformedQuery);
+      
+      console.log('=== QUERY RESULT ===');
+      console.log(`Found ${result.total} total records`);
+      if (result.data.length > 0) {
+        console.log('Sample record:', {
+          id: result.data[0].id,
+          entityType: result.data[0].entityType,
+          entityId: result.data[0].entityId,
+          portfolioId: result.data[0].portfolioId,
+          action: result.data[0].action,
+          timestamp: result.data[0].timestamp
+        });
+      }
+      
+      return result;
     } catch (error) {
-      throw new BadRequestException(error.message);
+      console.error('Error in findAll:', error);
+      if (error instanceof Error) {
+        console.error('Error stack:', error.stack);
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('An unknown error occurred');
     }
   }
 

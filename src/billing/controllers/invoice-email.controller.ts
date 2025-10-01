@@ -36,7 +36,7 @@ export class InvoiceEmailController {
   constructor(private readonly invoiceEmailService: InvoiceEmailService) {}
 
   @Post(':id/send')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.LANDLORD)
+  @Roles('super_admin', 'manager', 'landlord')
   @ApiOperation({ 
     summary: 'Send an invoice via email', 
     description: 'Sends the specified invoice as a PDF attachment via email' 

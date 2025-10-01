@@ -49,16 +49,48 @@ export class AuditLogResponseDto {
   })
   timestamp: Date;
 
+  @ApiProperty({ 
+    description: 'IP address of the user who performed the action',
+    required: false
+  })
+  ipAddress?: string;
+
+  @ApiProperty({ 
+    description: 'User agent of the client that performed the action',
+    required: false
+  })
+  userAgent?: string;
+
   constructor(auditLog: AuditLog) {
+    console.log('Mapping audit log to response:', auditLog);
+    
     this.id = auditLog.id;
     this.entityType = auditLog.entity_type;
     this.entityId = auditLog.entity_id;
     this.action = auditLog.action;
     this.userId = auditLog.user_id;
     this.portfolioId = auditLog.portfolio_id;
-    this.metadata = auditLog.metadata;
-    this.description = auditLog.description;
+    
+    // Handle metadata - ensure it's always an object
+    if (typeof auditLog.metadata === 'string') {
+      try {
+        this.metadata = JSON.parse(auditLog.metadata);
+      } catch (e) {
+        console.error('Error parsing metadata:', e);
+        this.metadata = { raw: auditLog.metadata };
+      }
+    } else {
+      this.metadata = auditLog.metadata || {};
+    }
+    
+    this.description = auditLog.description || null;
     this.timestamp = auditLog.timestamp;
+    
+    // Map snake_case to camelCase for response
+    this.ipAddress = auditLog.ip_address || null;
+    this.userAgent = auditLog.user_agent || null;
+    
+    console.log('Mapped audit log:', this);
   }
 }
 

@@ -9,7 +9,8 @@ import { PaymentApplication } from './payment-application.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
-import { AuditLogService, AuditAction } from '../common/audit-log.service';
+import { AuditLogService } from '../common/audit-log.service';
+import { AuditAction } from '../common/enums/audit-action.enum';
 
 @Injectable()
 export class PaymentsService {

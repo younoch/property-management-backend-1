@@ -252,8 +252,48 @@ export class InvoicesService {
     return this.repo.find({ where });
   }
 
-  findByLease(leaseId: number) {
-    return this.repo.find({ where: { lease_id: leaseId } });
+  async findByLease(leaseId: number) {
+    return this.repo.find({ 
+      where: { lease: { id: leaseId } },
+      relations: ['lease', 'items']
+    });
+  }
+
+  /**
+   * Find invoices by portfolio ID with pagination
+   * @param portfolioId - ID of the portfolio
+   * @param page - Page number (1-based)
+   * @param limit - Number of items per page
+   */
+  async findByPortfolio(
+    portfolioId: number,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const [invoices, total] = await this.repo.findAndCount({
+      where: { 
+        lease: {
+          unit: {
+            property: {
+              portfolio: { id: portfolioId }
+            }
+          }
+        } 
+      },
+      relations: ['lease', 'lease.unit', 'lease.unit.property', 'items'],
+      order: { issue_date: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: invoices,
+      meta: {
+        total,
+        page,
+        last_page: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**

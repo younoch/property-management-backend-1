@@ -1,13 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
-
-export enum AuditAction {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  PAYMENT = 'PAYMENT',
-  INVOICE_ISSUE = 'INVOICE_ISSUE',
-  INVOICE_VOID = 'INVOICE_VOID'
-}
+import { AuditAction } from './enums/audit-action.enum';
 
 @Entity('audit_logs')
 export class AuditLog {

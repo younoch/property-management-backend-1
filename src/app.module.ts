@@ -37,6 +37,7 @@ import { AuditModule } from './common/audit.module';
 // Interceptors, Filters & Logger
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
 import databaseConfig from './config/database';
@@ -98,6 +99,10 @@ import databaseConfig from './config/database';
 
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },

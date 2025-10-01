@@ -1,8 +1,11 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { AuditLogService } from './common/audit-log.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -188,12 +191,27 @@ async function bootstrap() {
     });
   }
 
+  // Enable global validation pipe with transform option
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Automatically transform payloads to be objects typed according to their DTO classes
+      whitelist: true, // Strip away any properties that don't have any decorators
+      forbidNonWhitelisted: true, // Throw an error if non-whitelisted values are provided
+      transformOptions: {
+        enableImplicitConversion: true, // Automatically convert primitive types (string -> number, etc.)
+      },
+    })
+  );
+
   const port = process.env.PORT || 8000;
   // Bind to all interfaces for containerized environments
-  app.enableShutdownHooks();
-  await app.listen(port, '0.0.0.0');
-  
-  console.log(`Application is running on port: ${port}`);
+  // Apply global interceptor for audit logging
+  const auditLogService = app.get(AuditLogService);
+  app.useGlobalInterceptors(new AuditInterceptor(auditLogService));
+
+  // Start the application
+  await app.listen(process.env.PORT || 3000);
+  console.log(`🚀 Application is running on: ${await app.getUrl()}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log(`CORS Credentials: enabled`);
