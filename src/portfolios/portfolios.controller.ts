@@ -78,7 +78,7 @@ export class PortfoliosController {
   @ApiResponse({ status: 404, description: 'Portfolio not found' })
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.portfoliosService.findOne(+id);
+    return this.portfoliosService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Get portfolios by landlord ID (paginated + search)' })
@@ -86,7 +86,7 @@ export class PortfoliosController {
   @ApiResponse({ status: 200, description: 'Landlord portfolios retrieved successfully', type: PaginatedPortfoliosResponseDto })
   @Get('landlord/:landlordId')
   findByLandlord(@Param('landlordId') landlordId: string, @Query() query: FindPortfoliosDto) {
-    return this.portfoliosService.findByLandlord(+landlordId, query);
+    return this.portfoliosService.findByLandlord(landlordId, query);
   }
 
   @ApiOperation({ summary: 'Update portfolio by ID' })
@@ -121,7 +121,7 @@ export class PortfoliosController {
   })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDto: UpdatePortfolioDto) {
-    return this.portfoliosService.update(+id, updateDto);
+    return this.portfoliosService.update(id, updateDto);
   }
   
 
