@@ -5,13 +5,13 @@ import { PaymentMethod } from '../../common/enums/payment-method.enum';
 export class CreatePaymentDto {
 
   @ApiProperty({ example: 1, description: 'ID of the lease this payment is for' })
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  lease_id: number;
+  lease_id: string;
 
   @ApiProperty({ example: 1, description: 'ID of the user creating the payment' })
-  @IsInt()
-  user_id: number;
+  @IsString()
+  user_id: string;
 
   @ApiProperty({ example: 1, required: false })
   @IsOptional()

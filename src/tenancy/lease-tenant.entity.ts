@@ -1,36 +1,49 @@
 // src/tenancy/lease-tenant.entity.ts
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Column, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  JoinColumn,
+  Index,
+} from 'typeorm';
 import { Lease } from '../leases/lease.entity';
 import { Tenant } from '../tenants/tenant.entity';
 
 @Entity()
-@Index(['lease_id', 'is_primary'], { unique: true, where: 'is_primary = true' })
+@Index(['lease_id'])
+@Index(['tenant_id'])
 export class LeaseTenant {
-  @PrimaryColumn()
-  lease_id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @PrimaryColumn()
-  tenant_id: number;
-
-  @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
+  /** Lease relation */
+  @ManyToOne(() => Lease, (lease) => lease.lease_tenants, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
   @JoinColumn({ name: 'lease_id' })
   lease: Lease;
 
-  @ManyToOne(() => Tenant, { onDelete: 'RESTRICT' })
+  @Column()
+  lease_id: string;
+
+  /** Tenant relation */
+  @ManyToOne(() => Tenant, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column()
+  tenant_id: string;
 
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @DeleteDateColumn()
-  deleted_at: Date | null;
-
-  @Column({ type: 'boolean', default: false })
+  @Column({ default: false })
   is_primary: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  relationship: string | null;
 
   @Column({ type: 'date', nullable: true })
   moved_in_date: string | null;
@@ -38,8 +51,12 @@ export class LeaseTenant {
   @Column({ type: 'date', nullable: true })
   moved_out_date: string | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  relationship: string | null; // e.g., 'co-tenant', 'guarantor', 'occupant'
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date;
+
+  @DeleteDateColumn({ type: 'timestamptz' })
+  deleted_at: Date | null;
 }
-
-

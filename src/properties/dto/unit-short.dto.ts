@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UnitShortDto {
   @ApiProperty({ description: 'Unit ID' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'Unit label/name (e.g., "Unit 2B")' })
   label: string;

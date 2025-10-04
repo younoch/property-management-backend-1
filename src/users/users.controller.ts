@@ -508,9 +508,12 @@ export class UsersController {
   })
   @ApiParam({ 
     name: 'id', 
-    description: 'Unique identifier of the user',
-    example: 1,
-    type: 'integer'
+    description: 'Unique identifier (UUID) of the user to retrieve',
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000'
+    }
   })
   @ApiResponse({ 
     status: 200, 
@@ -544,7 +547,7 @@ export class UsersController {
   @Get('/:id')
   @Serialize(UserResponseDto)
   async findUser(@Param('id') id: string) {
-    const user = await this.usersService.findOne(parseInt(id));
+    const user = await this.usersService.findOne(id);
     if (!user) {
       throw new NotFoundException('user not found');
     }
@@ -605,9 +608,10 @@ export class UsersController {
   })
   @ApiParam({ 
     name: 'id', 
-    description: 'Unique identifier of the user to update',
-    example: 1,
-    type: 'integer'
+    description: 'Unique identifier (UUID) of the user to update',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid'
   })
   @ApiResponse({ 
     status: 200, 
@@ -674,7 +678,7 @@ export class UsersController {
   @Patch('/:id')
   @UseGuards(AuthGuard, CsrfGuard)
   updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
-    return this.usersService.update(parseInt(id), body);
+    return this.usersService.update(id, body);
   }
 
   @ApiOperation({ 
@@ -683,9 +687,10 @@ export class UsersController {
   })
   @ApiParam({ 
     name: 'id', 
-    description: 'Unique identifier of the user to delete',
-    example: 1,
-    type: 'integer'
+    description: 'Unique identifier (UUID) of the user to delete',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid'
   })
   @ApiResponse({ 
     status: 200, 
@@ -740,6 +745,6 @@ export class UsersController {
   @Delete('/:id')
   @UseGuards(AuthGuard, CsrfGuard)
   removeUser(@Param('id') id: string) {
-    return this.usersService.remove(parseInt(id));
+    return this.usersService.remove(id);
   }
 }

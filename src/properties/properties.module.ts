@@ -6,17 +6,21 @@ import { Property } from './property.entity';
 import { PropertiesController, PropertiesGlobalController } from './properties.controller';
 import { PropertiesService } from './properties.service';
 import { Unit } from '../units/unit.entity';
+import { PortfoliosModule } from '../portfolios/portfolios.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, Unit, User]),
     AuthModule,
+    PortfoliosModule, // Import PortfoliosModule to make PortfolioRepository available
   ],
   controllers: [
     PropertiesController, 
     PropertiesGlobalController
   ],
-  providers: [PropertiesService],
+  providers: [
+    PropertiesService,
+  ],
   exports: [
     PropertiesService,
     TypeOrmModule.forFeature([Property, Unit])

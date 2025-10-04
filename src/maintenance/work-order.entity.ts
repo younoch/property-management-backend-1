@@ -3,18 +3,18 @@ import { MaintenanceRequest } from './maintenance-request.entity';
 
 @Entity()
 export class WorkOrder {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => MaintenanceRequest, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'request_id' })
   request: MaintenanceRequest;
 
   @Column()
-  request_id: number;
+  request_id: string;
 
-  @Column({ type: 'bigint', nullable: true })
-  vendor_id: number | null;
+  @Column({ type: 'varchar', nullable: true })
+  vendor_id: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
   scheduled_for: Date | null;
@@ -28,13 +28,13 @@ export class WorkOrder {
   @Column({ type: 'varchar', default: 'scheduled' })
   status: 'scheduled' | 'assigned' | 'in_progress' | 'done' | 'canceled';
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }
 

@@ -1,21 +1,39 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsDateString, IsString } from 'class-validator';
-import { AuditAction } from '../audit-log.service';
+import { IsEnum, IsNumber, IsOptional, IsDateString, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
+import { AuditAction } from '../enums/audit-action.enum';
 
 export class AuditLogQueryDto {
 
-  @ApiPropertyOptional({ description: 'Filter by portfolio ID' })
-  @IsNumber()
+  @ApiPropertyOptional({ 
+    description: 'Filter by portfolio ID. Use null to filter for logs with no portfolio.',
+    type: Number,
+    nullable: true,
+    example: 1
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   @IsOptional()
-  portfolioId?: number;
+  portfolioId?: number | null;
 
-  @ApiPropertyOptional({ description: 'Filter by property ID' })
-  @IsNumber()
+  @ApiPropertyOptional({ 
+    description: 'Filter by property ID',
+    type: Number
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   @IsOptional()
   propertyId?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by user ID who performed the action' })
-  @IsNumber()
+  @ApiPropertyOptional({ 
+    description: 'Filter by user ID who performed the action',
+    type: Number
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   @IsOptional()
   userId?: number;
 
@@ -49,31 +67,36 @@ export class AuditLogQueryDto {
   endDate?: string;
 
   @ApiPropertyOptional({ 
-    description: 'Page number for pagination',
-    default: 1,
-    minimum: 1
+    description: 'Page number for pagination', 
+    type: Number,
+    default: 1 
   })
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   @IsOptional()
-  page?: number = 1;
+  page: number = 1;
 
   @ApiPropertyOptional({ 
-    description: 'Number of items per page',
-    default: 10,
-    minimum: 1,
-    maximum: 100
+    description: 'Number of items per page', 
+    type: Number,
+    default: 10 
   })
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   @IsOptional()
-  limit?: number = 10;
+  limit: number = 10;
 
   @ApiPropertyOptional({ 
-    description: 'Sort order: field to sort by',
+    description: 'Field to sort by',
+    enum: ['timestamp', 'action', 'entityType', 'entityId'],
     default: 'timestamp'
   })
   @IsString()
   @IsOptional()
-  sortBy?: string = 'timestamp';
+  sortBy?: 'timestamp' | 'action' | 'entityType' | 'entityId' = 'timestamp';
 
   @ApiPropertyOptional({ 
     description: 'Sort direction',
@@ -81,6 +104,7 @@ export class AuditLogQueryDto {
     default: 'DESC'
   })
   @IsString()
+  @IsIn(['ASC', 'DESC'])
   @IsOptional()
   sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }

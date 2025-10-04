@@ -7,6 +7,7 @@ import { Tenant } from '../tenants/tenant.entity';
 import { Lease } from '../leases/lease.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { CommonModule } from '../common/common.module';
+import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 
 @Module({
   imports: [
@@ -21,8 +22,13 @@ import { CommonModule } from '../common/common.module';
   controllers: [PortfoliosController],
   providers: [
     PortfoliosService,
+    PortfolioScopeGuard,
   ],
-  exports: [TypeOrmModule, PortfoliosService],
+  exports: [
+    TypeOrmModule, 
+    PortfoliosService,
+    PortfolioScopeGuard,
+  ],
 })
 export class PortfoliosModule {}
 

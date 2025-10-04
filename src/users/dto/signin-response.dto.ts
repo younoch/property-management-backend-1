@@ -6,9 +6,9 @@ export class PortfolioDto {
   @Expose()
   @ApiProperty({
     description: 'Portfolio ID',
-    example: 1,
+    example: '1',
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -37,9 +37,9 @@ export class NotificationDto {
   @Expose()
   @ApiProperty({
     description: 'Notification ID',
-    example: 1,
+    example: '1',
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -74,9 +74,9 @@ export class SigninDataDto {
   @Expose()
   @ApiProperty({
     description: 'User ID',
-    example: 1,
+    example: '1',
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -142,7 +142,7 @@ export class SigninDataDto {
     type: [PortfolioDto],
     example: [
       {
-        id: 1,
+        id: '1',
         name: 'Rental Portfolio A',
         created_at: '2024-01-01T00:00:00.000Z',
         updated_at: '2024-01-01T00:00:00.000Z'
@@ -158,7 +158,7 @@ export class SigninDataDto {
     type: [NotificationDto],
     example: [
       {
-        id: 1,
+        id: '1',
         title: 'Maintenance Request Update',
         message: 'Your maintenance request has been updated',
         is_read: false,

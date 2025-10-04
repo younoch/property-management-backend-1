@@ -26,39 +26,34 @@ export class NotificationsGlobalController {
 
   @Get()
   @ApiOperation({ summary: 'Get all notifications' })
-  @ApiResponse({ status: 200, description: 'List of all notifications', type: [Notification] })
   async findAll(): Promise<Notification[]> {
     return this.notificationsService.findAll();
   }
 
   @Get('user/:userId')
-  @ApiOperation({ summary: 'Get all notifications for a specific user' })
-  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiOperation({ summary: 'Get all notifications for a user' })
   @ApiResponse({ status: 200, description: 'List of user notifications', type: [Notification] })
-  async findByUser(@Param('userId', ParseIntPipe) userId: number): Promise<Notification[]> {
+  async findByUser(@Param('userId') userId: string): Promise<Notification[]> {
     return this.notificationsService.findByUser(userId);
   }
 
   @Get('user/:userId/unread')
-  @ApiOperation({ summary: 'Get unread notifications for a specific user' })
-  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiOperation({ summary: 'Get unread notifications for a user' })
   @ApiResponse({ status: 200, description: 'List of unread notifications', type: [Notification] })
-  async findUnreadByUser(@Param('userId', ParseIntPipe) userId: number): Promise<Notification[]> {
+  async findUnreadByUser(@Param('userId') userId: string): Promise<Notification[]> {
     return this.notificationsService.findUnreadByUser(userId);
   }
 
   @Get('user/:userId/unread/count')
-  @ApiOperation({ summary: 'Get count of unread notifications for a specific user' })
-  @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'Count of unread notifications' })
-  async getUnreadCount(@Param('userId', ParseIntPipe) userId: number): Promise<{ count: number }> {
+  @ApiOperation({ summary: 'Get count of unread notifications for a user' })
+  @ApiResponse({ status: 200, description: 'Count of unread notifications', type: Object })
+  async getUnreadCount(@Param('userId') userId: string): Promise<{ count: number }> {
     const count = await this.notificationsService.getUnreadCount(userId);
     return { count };
   }
 
   @Get('type/:type')
   @ApiOperation({ summary: 'Get notifications by type' })
-  @ApiParam({ name: 'type', description: 'Notification type' })
   @ApiResponse({ status: 200, description: 'List of notifications by type', type: [Notification] })
   async findByType(@Param('type') type: string): Promise<Notification[]> {
     return this.notificationsService.findByType(type);
@@ -66,7 +61,6 @@ export class NotificationsGlobalController {
 
   @Get('channel/:channel')
   @ApiOperation({ summary: 'Get notifications by channel' })
-  @ApiParam({ name: 'channel', description: 'Notification channel' })
   @ApiResponse({ status: 200, description: 'List of notifications by channel', type: [Notification] })
   async findByChannel(@Param('channel') channel: string): Promise<Notification[]> {
     return this.notificationsService.findByChannel(channel);
@@ -77,38 +71,35 @@ export class NotificationsGlobalController {
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({ status: 200, description: 'Notification found', type: Notification })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Notification> {
+  async findOne(@Param('id') id: string): Promise<Notification> {
     return this.notificationsService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a notification' })
   @ApiParam({ name: 'id', description: 'Notification ID' })
-  @ApiResponse({ status: 200, description: 'Notification updated successfully', type: Notification })
+  @ApiResponse({ status: 200, description: 'Notification updated', type: Notification })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  @UseGuards(AuthGuard)
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateNotificationDto: UpdateNotificationDto,
   ): Promise<Notification> {
     return this.notificationsService.update(id, updateNotificationDto);
   }
 
-  @Patch(':id/read')
+  @Patch(':id/mark-read')
   @ApiOperation({ summary: 'Mark a notification as read' })
-  @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({ status: 200, description: 'Notification marked as read', type: Notification })
   @ApiResponse({ status: 404, description: 'Notification not found' })
-  async markAsRead(@Param('id', ParseIntPipe) id: number): Promise<Notification> {
+  async markAsRead(@Param('id') id: string): Promise<Notification> {
     return this.notificationsService.markAsRead(id);
   }
 
-  @Patch('user/:userId/read-all')
+  @Post('user/:userId/mark-all-read')
   @ApiOperation({ summary: 'Mark all notifications as read for a user' })
-  @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
-  @HttpCode(HttpStatus.OK)
-  async markAllAsRead(@Param('userId', ParseIntPipe) userId: number): Promise<{ message: string }> {
+  @ApiResponse({ status: 200, description: 'All notifications marked as read', type: Object })
+  async markAllAsRead(@Param('userId') userId: string): Promise<{ message: string }> {
     await this.notificationsService.markAllAsRead(userId);
     return { message: 'All notifications marked as read' };
   }
@@ -120,7 +111,7 @@ export class NotificationsGlobalController {
   @ApiResponse({ status: 404, description: 'Notification not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard)
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async remove(@Param('id') id: string): Promise<void> {
     return this.notificationsService.remove(id);
   }
 }
@@ -136,7 +127,7 @@ export class NotificationsController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @UseGuards(AuthGuard, PortfolioScopeGuard)
   async create(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('portfolioId') portfolioId: string,
     @Body() createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
     return this.notificationsService.create({ ...createNotificationDto, portfolio_id: portfolioId });
@@ -145,7 +136,7 @@ export class NotificationsController {
   @Get()
   @ApiOperation({ summary: 'Get all notifications for a portfolio' })
   @ApiResponse({ status: 200, description: 'List of portfolio notifications', type: [Notification] })
-  async findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number): Promise<Notification[]> {
+  async findByPortfolio(@Param('portfolioId') portfolioId: string): Promise<Notification[]> {
     return this.notificationsService.findByPortfolio(portfolioId);
   }
 } 

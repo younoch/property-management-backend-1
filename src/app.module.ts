@@ -1,4 +1,4 @@
-import { Module, ValidationPipe, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, ValidationPipe, MiddlewareConsumer, NestModule, Scope } from '@nestjs/common';
 import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -37,6 +37,8 @@ import { AuditModule } from './common/audit.module';
 // Interceptors, Filters & Logger
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { CurrentUserMiddleware } from './users/middlewares/current-user.middleware';
 import { loggerConfig } from './logger/logger.config';
 import { validate } from './config/env.validation';
 import databaseConfig from './config/database';
@@ -71,8 +73,14 @@ import databaseConfig from './config/database';
     // Feature modules
     PortfoliosModule,
 
-    // Database (combined local + production)
-    TypeOrmModule.forRoot(databaseConfig),
+    // Database configuration with logging disabled
+    TypeOrmModule.forRoot({
+      ...databaseConfig,
+      autoLoadEntities: true,
+      synchronize: false,
+      migrationsRun: process.env.NODE_ENV === 'production',
+      logging: false, // Disable all SQL query logging
+    }),
 
     // Other feature modules
     UsersModule,
@@ -93,11 +101,13 @@ import databaseConfig from './config/database';
     DashboardModule,
     AuditModule,
   ],
-
   controllers: [AppController],
-
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
@@ -112,9 +122,9 @@ import databaseConfig from './config/database';
   ],
 })
 export class AppModule implements NestModule {
-  constructor(private readonly configService: ConfigService) {}
-
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cookieParser()).forRoutes('*');
+    consumer
+      .apply(cookieParser())
+      .forRoutes('*');
   }
 }

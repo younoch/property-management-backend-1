@@ -14,8 +14,8 @@ import { Notification } from '../notifications/notification.entity';
 @Entity({ name: 'users' })
 @Index(['email'])
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -42,21 +42,21 @@ export class User {
   @Column({ name: 'requires_onboarding', default: true })
   requires_onboarding: boolean;
 
-  @Column({ name: 'onboarding_completed_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'onboarding_completed_at', type: 'timestamptz', nullable: true })
   onboarding_completed_at: Date | null;
 
   @Column({ type: 'varchar', length: 10, default: 'en' })
   language: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updated_at: Date;
 
   // Legacy fields removed for production readiness
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 
   @OneToMany(() => Portfolio, (portfolio) => portfolio.landlord)

@@ -7,14 +7,14 @@ import { Invoice } from './entities/invoice.entity';
 @Index(['payment_id'])
 @Index(['id'], { unique: true })
 export class PaymentApplication {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  payment_id: number;
+  payment_id: string;
 
   @Column()
-  invoice_id: number;
+  invoice_id: string;
 
   @ManyToOne(() => Payment, (p) => p.applications, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'payment_id' })
@@ -29,15 +29,15 @@ export class PaymentApplication {
     precision: 12,
     scale: 2,
     transformer: {
-      to: (value: number) => value,
+      to: (value: string) => value,
       from: (value: string) => parseFloat(value || '0')
     }
   })
-  amount: number;
+  amount: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 }

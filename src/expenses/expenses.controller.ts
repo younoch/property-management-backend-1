@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import { 
@@ -17,17 +16,16 @@ import {
   ApiParam, 
   ApiQuery, 
   ApiBearerAuth,
-  ApiBody,
-  getSchemaPath
+  ApiBody
 } from '@nestjs/swagger';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto, ExpenseDto } from './dto/expense.dto';
 import { ExpenseCategory } from '../common/enums/expense-category.enum';
 import { AuthGuard } from '../guards/auth.guard';
-import { Expense, ExpenseStatus } from './expense.entity';
+import { Expense } from './expense.entity';
 
 export type ExpenseQueryParams = {
-  propertyId?: number;
+  propertyId?: string;
   startDate?: string;
   endDate?: string;
   category?: string;
@@ -46,14 +44,15 @@ export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new expense' })
+  @ApiOperation({ summary: 'Create a new expense for a property' })
+  @ApiParam({ name: 'propertyId', description: 'ID of the property' })
   @ApiBody({ 
     type: CreateExpenseDto,
     examples: {
       basic: {
         summary: 'Basic expense',
         value: {
-          property_id: 1,
+          property_id: '1',
           amount: 250.75,
           category: 'Maintenance',
           date_incurred: '2023-10-15',
@@ -76,11 +75,8 @@ export class ExpensesController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @Post()
-  @ApiOperation({ summary: 'Create a new expense for a property' })
-  @ApiParam({ name: 'propertyId', description: 'ID of the property' })
   async create(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Param('propertyId') propertyId: string,
     @Body() createExpenseDto: CreateExpenseDto
   ): Promise<ExpenseDto> {
     // Log the incoming data for debugging
@@ -94,7 +90,7 @@ export class ExpensesController {
       const expense = await this.expensesService.create({
         ...createExpenseDto,
         property_id: propertyId // This will be used to set up the relation
-      });
+      } as any);
       
       console.log('Expense created successfully, ID:', expense.id);
       return await this.mapToDto(expense);
@@ -106,7 +102,7 @@ export class ExpensesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all expenses for a property with optional filters' })
-  @ApiParam({ name: 'propertyId', description: 'ID of the property', type: Number })
+  @ApiParam({ name: 'propertyId', description: 'ID of the property' })
   @ApiQuery({ 
     name: 'startDate', 
     required: false, 
@@ -122,126 +118,82 @@ export class ExpensesController {
   @ApiQuery({ 
     name: 'category', 
     required: false, 
-    enum: ExpenseCategory,
-    enumName: 'ExpenseCategory',
-    description: 'Filter by expense category',
-    example: ExpenseCategory.MAINTENANCE
-  })
-  @ApiQuery({ 
-    name: 'status', 
-    required: false, 
-    enum: ['paid', 'pending', 'overdue'],
-    description: 'Filter by payment status'
+    enum: Object.values(ExpenseCategory),
+    enumName: 'ExpenseCategory'
   })
   @ApiResponse({ 
     status: 200, 
-    description: 'Returns the list of expenses filtered by the provided criteria', 
+    description: 'List of expenses', 
     type: [ExpenseDto] 
   })
   async findAll(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Param('propertyId') propertyId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('category') category?: string,
   ): Promise<ExpenseDto[]> {
-    const expenses = await this.expensesService.findAll(
+    const expenses = await this.expensesService.findAll({
       propertyId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
+      startDate,
+      endDate,
       category,
-    );
+    } as any);
     return Promise.all(expenses.map(expense => this.mapToDto(expense)));
   }
-
   @Get('summary')
-  @ApiOperation({ summary: 'Get expense summary' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Return expense summary',
-    schema: {
-      type: 'object',
-      properties: {
-        total: { type: 'number', example: 1500.75 },
-        count: { type: 'number', example: 10 },
-        byCategory: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              category: { type: 'string', example: 'Maintenance' },
-              total: { type: 'number', example: 750.50 },
-              count: { type: 'number', example: 5 }
-            }
-          }
-        },
-        byStatus: {
-          type: 'object',
-          properties: {
-            paid: { type: 'number', example: 1000.25 },
-            pending: { type: 'number', example: 400.50 },
-            overdue: { type: 'number', example: 100.00 }
-          }
-        }
-      }
-    }
-  })
+  @ApiOperation({ summary: 'Get expense summary for a property' })
+  @ApiParam({ name: 'propertyId', description: 'ID of the property' })
+  @ApiResponse({ status: 200, description: 'Expense summary' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getSummary(@Param('propertyId', ParseIntPipe) propertyId: number) {
-    return this.expensesService.getExpenseSummary(propertyId);
+  async getSummary(@Param('propertyId') propertyId: string) {
+    return this.expensesService.getExpenseSummary(parseInt(propertyId, 10));
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single expense by ID for a property' })
+  @ApiOperation({ summary: 'Get an expense by ID' })
   @ApiParam({ name: 'propertyId', description: 'ID of the property' })
-  @ApiParam({ name: 'id', description: 'Expense ID' })
-  @ApiResponse({ status: 200, description: 'Returns the expense', type: ExpenseDto })
+  @ApiParam({ name: 'id', description: 'ID of the expense' })
+  @ApiResponse({ status: 200, description: 'The expense', type: ExpenseDto })
   @ApiResponse({ status: 404, description: 'Expense not found' })
   async findOne(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-    @Param('id', ParseIntPipe) id: number
+    @Param('propertyId') propertyId: string,
+    @Param('id') id: string
   ): Promise<ExpenseDto> {
-    const expense = await this.expensesService.findOneForProperty(id, propertyId);
-    return await this.mapToDto(expense);
+    const expense = await this.expensesService.findOne(parseInt(id, 10));
+    return this.mapToDto(expense);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an expense' })
   @ApiParam({ name: 'propertyId', description: 'ID of the property' })
-  @ApiParam({ 
-    name: 'id', 
-    type: Number,
-    description: 'ID of the expense to update',
-    example: 1
-  })
-  @ApiResponse({ status: 200, description: 'The expense has been successfully updated.', type: ExpenseDto })
+  @ApiParam({ name: 'id', description: 'ID of the expense' })
+  @ApiBody({ type: UpdateExpenseDto })
+  @ApiResponse({ status: 200, description: 'The updated expense', type: ExpenseDto })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Expense not found' })
   async update(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateExpenseDto: UpdateExpenseDto,
+    @Param('propertyId') propertyId: string,
+    @Param('id') id: string,
+    @Body() updateExpenseDto: UpdateExpenseDto
   ): Promise<ExpenseDto> {
-    // Convert the DTO to a partial expense object
-    const updateData = { ...updateExpenseDto } as any;
-    if (updateExpenseDto.property_id) {
-      updateData.property = { id: updateExpenseDto.property_id } as any;
-      delete updateData.property_id;
-    }
-    const expense = await this.expensesService.update(id, updateData);
+    const updateData = {
+      ...updateExpenseDto,
+      property_id: propertyId // The DTO should handle the string to number conversion
+    };
+    const expense = await this.expensesService.update(parseInt(id, 10), updateData as any);
     return this.mapToDto(expense);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete an expense from a property' })
+  @ApiOperation({ summary: 'Delete an expense' })
   @ApiParam({ name: 'propertyId', description: 'ID of the property' })
-  @ApiParam({ name: 'id', description: 'Expense ID' })
-  @ApiResponse({ status: 200, description: 'The expense has been deleted' })
+  @ApiParam({ name: 'id', description: 'ID of the expense' })
+  @ApiResponse({ status: 200, description: 'Expense deleted' })
   @ApiResponse({ status: 404, description: 'Expense not found' })
   async remove(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-    @Param('id', ParseIntPipe) id: number
+    @Param('propertyId') propertyId: string,
+    @Param('id') id: string
   ): Promise<void> {
-    await this.expensesService.removeForProperty(id, propertyId);
+    await this.expensesService.removeForProperty(parseInt(id, 10), parseInt(propertyId, 10));
   }
 }

@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateWorkOrderDto {
-  @ApiProperty({ example: 1 })
-  @IsInt()
-  portfolio_id: number;
+  @ApiProperty({ example: '1' })
+  @IsString()
+  portfolio_id: string;
 
-  @ApiProperty({ example: 1 })
-  @IsInt()
-  request_id: number;
+  @ApiProperty({ example: '1' })
+  @IsString()
+  request_id: string;
 
   @ApiProperty({ example: 123, required: false })
   @IsOptional()

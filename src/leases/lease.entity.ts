@@ -29,15 +29,15 @@ export type LeaseStatus = 'draft' | 'active' | 'ended' | 'evicted' | 'broken';
 @Index(['unit_id'])
 @Index(['status'])
 export class Lease {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Unit, { onDelete: 'RESTRICT', eager: true })
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
 
   @Column()
-  unit_id: number;
+  unit_id: string;
 
   @Column({ type: 'date' })
   start_date: string;
@@ -118,12 +118,12 @@ export class Lease {
     this.lease_tenants.push(leaseTenant);
   }
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }

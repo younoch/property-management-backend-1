@@ -164,7 +164,7 @@ export class UsersManagementController {
   @UseGuards(AuthGuard)
   @Get(':id')
   @Serialize(UserResponseDto)
-  async findUser(@Param('id', ParseIntPipe) id: number) {
+  async findUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new NotFoundException('user not found');
@@ -239,7 +239,7 @@ export class UsersManagementController {
   @UseGuards(AuthGuard)
   @Get('portfolio/:portfolioId')
   @Serialize(UserResponseDto)
-  async findUsersByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number) {
+  async findUsersByPortfolio(@Param('portfolioId') portfolioId: string) {
     return this.usersService.findByPortfolio(portfolioId);
   }
 
@@ -249,9 +249,12 @@ export class UsersManagementController {
   })
   @ApiParam({ 
     name: 'id', 
-    description: 'Unique identifier of the user to update',
-    example: 1,
-    type: 'integer'
+    description: 'Unique identifier (UUID) of the user to update',
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000'
+    }
   })
   @ApiResponse({ 
     status: 200, 
@@ -329,7 +332,7 @@ export class UsersManagementController {
   @ApiCookieAuth('access_token')
   @Patch(':id')
   @UseGuards(AuthGuard, CsrfGuard)
-  updateUser(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateUserDto) {
+  updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
     return this.usersService.update(id, body);
   }
 
@@ -339,9 +342,12 @@ export class UsersManagementController {
   })
   @ApiParam({ 
     name: 'id', 
-    description: 'Unique identifier of the user to delete',
-    example: 1,
-    type: 'integer'
+    description: 'Unique identifier (UUID) of the user to delete',
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000'
+    }
   })
   @ApiResponse({ 
     status: 200, 
@@ -407,7 +413,7 @@ export class UsersManagementController {
   @ApiCookieAuth('access_token')
   @Delete(':id')
   @UseGuards(AuthGuard, CsrfGuard)
-  removeUser(@Param('id', ParseIntPipe) id: number) {
+  removeUser(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }

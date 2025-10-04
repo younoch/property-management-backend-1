@@ -2,9 +2,9 @@ import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEmail } from 'class-valid
 import { IsUrlOrPath } from '../../common/decorators/is-url-or-path.decorator';
 
 export class CreateFeedbackDto {
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  user_id?: number;
+  user_id?: string;
 
   @IsString()
   @IsEmail()

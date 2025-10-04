@@ -77,12 +77,18 @@ export class PortfoliosService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number): Promise<Portfolio> {
+  async findOne(id: string): Promise<Portfolio> {
+    if (!id) {
+      throw new NotFoundException('Portfolio ID is required');
+    }
+
     const portfolio = await this.portfoliosRepository
       .createQueryBuilder('portfolio')
       .leftJoinAndSelect('portfolio.landlord', 'landlord')
       .leftJoinAndSelect('portfolio.properties', 'properties')
       .leftJoinAndSelect('properties.units', 'units')
+      .where('portfolio.id = :id', { id })
+      .andWhere('portfolio.deleted_at IS NULL')
       .select([
         'portfolio',
         'landlord.id',
@@ -95,6 +101,7 @@ export class PortfoliosService {
         'units'
       ])
       .where('portfolio.id = :id', { id })
+      .andWhere('portfolio.deleted_at IS NULL')
       .getOne();
 
     if (!portfolio) {
@@ -103,7 +110,7 @@ export class PortfoliosService {
     return portfolio;
   }
 
-  async findByLandlord(landlordId: number, query: FindPortfoliosDto): Promise<{ data: Portfolio[]; total: number; page: number; limit: number }> {
+  async findByLandlord(landlordId: string, query: FindPortfoliosDto): Promise<{ data: Portfolio[]; total: number; page: number; limit: number }> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const search = (query.search ?? '').trim();
@@ -141,13 +148,19 @@ export class PortfoliosService {
     return { data, total, page, limit };
   }
 
-  async update(id: number, updateDto: UpdatePortfolioDto): Promise<Portfolio> {
+  async update(id: string, updateDto: UpdatePortfolioDto): Promise<Portfolio> {
     const portfolio = await this.findOne(id);
+    
+    // If timezone is not provided in the update, keep the existing one
+    if (updateDto.timezone === undefined && portfolio.timezone) {
+      updateDto.timezone = portfolio.timezone;
+    }
+    
     Object.assign(portfolio, updateDto);
     return await this.portfoliosRepository.save(portfolio);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

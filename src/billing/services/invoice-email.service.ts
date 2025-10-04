@@ -8,6 +8,37 @@ import { format } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
 import { Lease } from '../../leases/lease.entity';
+
+interface EmailResult {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+interface InvoiceItem {
+  id: string;
+  type: string;
+  name: string;
+  description?: string;
+  qty: number;
+  unit_price: number;
+  amount: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  period_start?: string;
+  period_end?: string;
+}
+
+interface InvoiceData extends Omit<InvoicePdfData, 'items'> {
+  items: InvoiceItem[];
+  custom_fields: {
+    notes: string;
+    include_watermark: boolean;
+  };
+  subtotal: number;
+  discount_amount: number;
+  currency?: string;
+}
 @Injectable()
 export class InvoiceEmailService {
   private readonly logger = new Logger(InvoiceEmailService.name);
@@ -26,19 +57,20 @@ export class InvoiceEmailService {
 
   /**
    * Send an invoice via email with PDF attachment
-   * @param invoiceId ID of the invoice to send
-   * @param sendInvoiceEmailDto DTO containing email options
+   * @param invoiceId - ID of the invoice to send
+   * @param email - Email address to send the invoice to
    * @returns Promise with the result of the email sending operation
    */
-  async sendInvoiceEmail(
-    invoiceId: number,
-    sendInvoiceEmailDto: SendInvoiceEmailDto,
-  ): Promise<{ success: boolean; message: string; error?: string }> {
+  async sendTestInvoiceEmail(
+    invoiceId: string,
+    email: string,
+    sendInvoiceEmailDto?: Partial<SendInvoiceEmailDto>,
+  ): Promise<EmailResult> {
     try {
       // Fetch the invoice with relations
       const invoice = await this.invoiceRepository.findOne({
         where: { id: invoiceId },
-        relations: ['lease'],
+        relations: ['lease', 'items'],
       });
 
       if (!invoice) {
@@ -87,8 +119,8 @@ export class InvoiceEmailService {
         sent_at: new Date(),
         // Store custom fields including notes and watermark preference
         custom_fields: {
-          notes: invoice.notes || sendInvoiceEmailDto.notes || sendInvoiceEmailDto.message || '',
-          include_watermark: sendInvoiceEmailDto.include_watermark || false,
+          notes: invoice.notes || sendInvoiceEmailDto?.notes || sendInvoiceEmailDto?.message || '',
+          include_watermark: sendInvoiceEmailDto?.include_watermark || false,
         },
         // Calculate financial fields
         subtotal: invoice.subtotal || (invoice.items || []).reduce((sum, item) => sum + (item.amount || 0), 0),
@@ -179,25 +211,26 @@ export class InvoiceEmailService {
 
   /**
    * Mark an invoice as sent in the database
-   * @param invoiceId ID of the invoice to update
+   * @param invoiceId ID of the invoice to update (string)
    * @private
    */
-  private async markInvoiceAsSent(invoiceId: number): Promise<void> {
+  private async markInvoiceAsSent(invoiceId: string): Promise<void> {
     try {
       await this.invoiceRepository.update(
         { id: invoiceId },
         {
-          // Align with Invoice entity column names
           is_issued: true,
           sent_at: () => 'CURRENT_TIMESTAMP',
-          // Do not set status here: valid statuses are
-          // 'draft' | 'open' | 'partially_paid' | 'paid' | 'void' | 'overdue'
-          // Let business logic determine status separately.
-        } as any,
+          // Status should be managed by business logic
+          // Valid statuses: 'draft' | 'open' | 'partially_paid' | 'paid' | 'void' | 'overdue'
+        },
       );
       this.logger.log(`Invoice ${invoiceId} marked as sent`);
     } catch (error) {
-      this.logger.error(`Failed to mark invoice ${invoiceId} as sent: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to mark invoice ${invoiceId} as sent: ${error.message}`,
+        error.stack,
+      );
       // Don't fail the whole operation if we can't update the status
     }
   }

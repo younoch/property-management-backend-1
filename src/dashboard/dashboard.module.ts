@@ -7,6 +7,7 @@ import { Tenant } from '../tenants/tenant.entity';
 import { Invoice } from '../billing/entities/invoice.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Lease } from '../leases/lease.entity';
+import { Payment } from '../billing/payment.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Lease } from '../leases/lease.entity';
       Invoice,
       Expense,
       Lease,
+      Payment,
     ]),
   ],
   controllers: [DashboardController],

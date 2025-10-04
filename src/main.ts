@@ -1,8 +1,11 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { AuditLogService } from './common/audit-log.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -85,16 +88,18 @@ async function bootstrap() {
       .setTitle('Property & Rental Management for Small Landlords API')
       .setDescription('Comprehensive property management system for small landlords with user authentication, property management, and rental operations')
       .setVersion('1.0')
+      .addBearerAuth()
+      .addCookieAuth('access_token')
       .addTag('auth', 'Authentication endpoints')
       .addTag('portfolios', 'Portfolio management endpoints')
-      .addTag('properties', 'Property management endpoints')
+      .addTag('properties', 'Property management endpoints (global)')
+      .addTag('portfolio-properties', 'Portfolio-specific property management')
       .addTag('units', 'Unit management endpoints')
       .addTag('tenants', 'Tenant management endpoints')
       .addTag('leases', 'Lease management endpoints')
       .addTag('users', 'User management endpoints')
       .addTag('expenses', 'Expense management endpoints')
-      .addTag('billing-invoices', 'Invoice management endpoints')
-      .addTag('billing-payments', 'Payment management endpoints')
+      .addTag('billing', 'Billing and invoicing endpoints')
       .addTag('maintenance', 'Maintenance requests and work orders endpoints')
       .addTag('documents', 'Document management endpoints')
       .addTag('notifications', 'Notification management endpoints')
@@ -188,12 +193,27 @@ async function bootstrap() {
     });
   }
 
+  // Enable global validation pipe with transform option
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Automatically transform payloads to be objects typed according to their DTO classes
+      whitelist: true, // Strip away any properties that don't have any decorators
+      forbidNonWhitelisted: true, // Throw an error if non-whitelisted values are provided
+      transformOptions: {
+        enableImplicitConversion: true, // Automatically convert primitive types (string -> number, etc.)
+      },
+    })
+  );
+
   const port = process.env.PORT || 8000;
   // Bind to all interfaces for containerized environments
-  app.enableShutdownHooks();
-  await app.listen(port, '0.0.0.0');
-  
-  console.log(`Application is running on port: ${port}`);
+  // Apply global interceptor for audit logging
+  const auditLogService = app.get(AuditLogService);
+  app.useGlobalInterceptors(new AuditInterceptor(auditLogService));
+
+  // Start the application
+  await app.listen(process.env.PORT || 3000);
+  console.log(`🚀 Application is running on: ${await app.getUrl()}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log(`CORS Credentials: enabled`);

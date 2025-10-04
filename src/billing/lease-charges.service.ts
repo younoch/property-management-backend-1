@@ -52,14 +52,14 @@ export class LeaseChargesService {
     });
   }
 
-  findByLease(leaseId: number) {
+  findByLease(leaseId: string) {
     return this.repo.find({ 
       where: { lease_id: leaseId },
       relations: ['unit', 'property']
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const charge = await this.repo.findOne({ 
       where: { id },
       relations: ['unit', 'property', 'lease']
@@ -68,7 +68,7 @@ export class LeaseChargesService {
     return charge;
   }
 
-  async update(id: number, dto: UpdateLeaseChargeDto) {
+  async update(id: string, dto: UpdateLeaseChargeDto) {
     const charge = await this.findOne(id);
     
     // If name is being updated, use the provided name
@@ -81,7 +81,7 @@ export class LeaseChargesService {
     return this.repo.save(charge);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const charge = await this.findOne(id);
     await this.repo.remove(charge);
     return { success: true };

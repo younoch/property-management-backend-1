@@ -34,7 +34,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Get maintenance request by ID' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request found', type: MaintenanceRequest })
-  getRequest(@Param('id', ParseIntPipe) id: number) {
+  getRequest(@Param('id') id: string) {
     return this.svc.findRequest(id);
   }
 
@@ -42,7 +42,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Update maintenance request' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request updated', type: MaintenanceRequest })
-  updateRequest(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMaintenanceRequestDto) {
+  updateRequest(@Param('id') id: string, @Body() dto: UpdateMaintenanceRequestDto) {
     return this.svc.updateRequest(id, dto);
   }
 
@@ -50,7 +50,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Delete maintenance request' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request deleted' })
-  removeRequest(@Param('id', ParseIntPipe) id: number) {
+  removeRequest(@Param('id') id: string) {
     return this.svc.removeRequest(id);
   }
 
@@ -73,7 +73,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Get work order by ID' })
   @ApiParam({ name: 'id', description: 'Work order ID' })
   @ApiResponse({ status: 200, description: 'Work order found', type: WorkOrder })
-  getWorkOrder(@Param('id', ParseIntPipe) id: number) {
+  getWorkOrder(@Param('id') id: string) {
     return this.svc.findWorkOrder(id);
   }
 
@@ -81,7 +81,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Update work order' })
   @ApiParam({ name: 'id', description: 'Work order ID' })
   @ApiResponse({ status: 200, description: 'Work order updated', type: WorkOrder })
-  updateWorkOrder(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateWorkOrderDto) {
+  updateWorkOrder(@Param('id') id: string, @Body() dto: UpdateWorkOrderDto) {
     return this.svc.updateWorkOrder(id, dto);
   }
 
@@ -89,7 +89,7 @@ export class MaintenanceController {
   @ApiOperation({ summary: 'Delete work order' })
   @ApiParam({ name: 'id', description: 'Work order ID' })
   @ApiResponse({ status: 200, description: 'Work order deleted' })
-  removeWorkOrder(@Param('id', ParseIntPipe) id: number) {
+  removeWorkOrder(@Param('id') id: string) {
     return this.svc.removeWorkOrder(id);
   }
 }

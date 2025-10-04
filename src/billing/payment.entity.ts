@@ -3,12 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Lease } from '../leases/lease.entity';
 import { PaymentApplication } from './payment-application.entity';
 import { PaymentMethod } from '../common/enums/payment-method.enum';
+import { PaymentStatus } from '../common/enums/payment-status.enum';
 
 @Entity()
 @Index(['lease_id'])
 export class Payment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lease_id' })
@@ -16,18 +17,18 @@ export class Payment {
 
   @Column()
   @ApiProperty({ example: 1, description: 'ID of the associated lease' })
-  lease_id: number;
+  lease_id: string;
 
   @Column({
     type: 'numeric',
     precision: 12,
     scale: 2,
     transformer: {
-      to: (value: number) => value,
+      to: (value: string) => value,
       from: (value: string) => parseFloat(value || '0')
     }
   })
-  amount: number;
+  amount: string;
 
   @Column({
     type: 'numeric',
@@ -35,11 +36,11 @@ export class Payment {
     scale: 2,
     default: 0,
     transformer: {
-      to: (value: number) => value,
+      to: (value: string) => value,
       from: (value: string) => parseFloat(value || '0')
     }
   })
-  unapplied_amount: number;
+  unapplied_amount: string;
 
   @Column({
     type: 'enum',
@@ -53,8 +54,15 @@ export class Payment {
   })
   payment_method: PaymentMethod | null;
 
-  @Column({ type: 'date' })
-  at: string;
+  @Column({ type: 'timestamptz', name: 'payment_date' })
+  payment_date: Date;
+
+  @Column({ 
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING
+  })
+  status: PaymentStatus;
 
   @Column({ type: 'varchar', nullable: true })
   reference?: string | null;
@@ -65,14 +73,12 @@ export class Payment {
   @OneToMany(() => PaymentApplication, (pa) => pa.payment)
   applications: PaymentApplication[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }
-
-

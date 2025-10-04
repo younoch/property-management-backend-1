@@ -22,14 +22,28 @@ export class UsersService {
     return this.repo.save(user);
   }
 
-  findOne(id: number) {
+  async findOne(id: string) {
     if (!id) {
+      console.warn('No ID provided to findOne');
       return null;
     }
-    return this.repo.findOne({ 
-      where: { id },
-      relations: ['owned_portfolios', 'notifications']
-    });
+    
+    try {
+      const user = await this.repo.findOne({ 
+        where: { id },
+        relations: ['owned_portfolios', 'notifications']
+      });
+      
+      if (!user) {
+        console.warn(`User with ID ${id} not found`);
+        return null;
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('Error finding user:', error);
+      return null;
+    }
   }
 
   findAll() {
@@ -50,24 +64,30 @@ export class UsersService {
     return this.findByEmail(email);
   }
 
-  async findByPortfolio(portfolioId: number) {
+  async findByPortfolio(portfolioId: string) {
     // TODO: implement proper join to fetch users associated with a given portfolio
     return this.repo.find();
   }
 
-  async update(id: number, attrs: Partial<User>) {
+  async update(id: string, attrs: Partial<User>) {
+    if (!id) {
+      throw new NotFoundException('User ID is required');
+    }
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException('user not found');
+      throw new NotFoundException('User not found');
     }
     Object.assign(user, attrs);
     return this.repo.save(user);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
+    if (!id) {
+      throw new NotFoundException('User ID is required');
+    }
     const user = await this.findOne(id);
     if (!user) {
-      throw new NotFoundException('user not found');
+      throw new NotFoundException('User not found');
     }
     return this.repo.remove(user);
   }

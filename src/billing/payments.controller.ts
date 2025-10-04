@@ -32,7 +32,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get payment by ID' })
   @ApiParam({ name: 'id', description: 'Payment ID' })
   @ApiResponse({ status: 200, description: 'Payment found successfully', type: Payment })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.paymentsService.findOne(id);
   }
 
@@ -41,7 +41,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Update payment by ID' })
   @ApiParam({ name: 'id', description: 'Payment ID' })
   @ApiResponse({ status: 200, description: 'Payment updated successfully', type: Payment })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
+  update(@Param('id') id: string, @Body() dto: UpdatePaymentDto) {
     return this.paymentsService.update(id, dto);
   }
 
@@ -50,7 +50,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Delete payment by ID' })
   @ApiParam({ name: 'id', description: 'Payment ID' })
   @ApiResponse({ status: 200, description: 'Payment deleted successfully' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.paymentsService.remove(id);
   }
 }

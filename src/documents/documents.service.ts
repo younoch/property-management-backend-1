@@ -21,19 +21,19 @@ export class DocumentsService {
   }
 
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const d = await this.repo.findOne({ where: { id } });
     if (!d) throw new NotFoundException('Document not found');
     return d;
   }
 
-  async update(id: number, dto: UpdateDocumentDto) {
+  async update(id: string, dto: UpdateDocumentDto) {
     const d = await this.findOne(id);
     Object.assign(d, dto);
     return this.repo.save(d);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const d = await this.findOne(id);
     await this.repo.remove(d);
     return { success: true };

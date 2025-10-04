@@ -15,13 +15,11 @@ export class DashboardFilterDto {
   
   @ApiProperty({ 
     required: false, 
-    description: 'Filter by property ID',
-    example: 1
+    description: 'Filter by property ID (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @IsNumber()
   @IsOptional()
-  @Type(() => Number)
-  propertyId?: number;
+  propertyId?: string;
 }
 
 export class MonthlyDataDto {

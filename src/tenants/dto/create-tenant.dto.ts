@@ -3,8 +3,8 @@ import { IsBoolean, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength 
 
 export class CreateTenantDto {
   @ApiProperty({ example: 1 })
-  @IsInt()
-  portfolio_id: number;
+  @IsString()
+  portfolio_id: string;
 
   @ApiProperty({ example: 'Jane' })
   @IsString()

@@ -28,10 +28,15 @@ export class CurrentUserInterceptor implements NestInterceptor {
         );
         
         if (payload?.sub) {
-          const userId = parseInt(payload.sub, 10);
-          const user = await this.usersService.findOne(userId);
-          if (user) {
-            request.currentUser = user;
+          try {
+            const user = await this.usersService.findOne(payload.sub);
+            if (user) {
+              request.currentUser = user;
+            } else {
+              console.warn(`User with ID ${payload.sub} not found`);
+            }
+          } catch (error) {
+            console.error('Error fetching user in CurrentUserInterceptor:', error);
           }
         }
       }

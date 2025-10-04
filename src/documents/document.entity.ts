@@ -3,14 +3,14 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Up
 @Entity()
 @Index(['subject_type', 'subject_id'])
 export class Document {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   subject_type: string;
 
   @Column('bigint')
-  subject_id: number;
+  subject_id: string;
 
   @Column()
   filename: string;
@@ -24,14 +24,14 @@ export class Document {
   @Column({ type: 'bigint', nullable: true })
   size_bytes: number | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-   @DeleteDateColumn()
-   deleted_at: Date | null;
+  @DeleteDateColumn({ type: 'timestamptz' })
+  deleted_at: Date | null;
 }
 
 

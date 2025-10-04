@@ -40,7 +40,7 @@ export class LeasesGlobalController {
   @Get(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   async findOne(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.findOne(id);
     return this.leaseMapper.toResponseDto(lease);
@@ -57,7 +57,7 @@ export class LeasesGlobalController {
   @UseGuards(AuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   async update(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id') id: string, 
     @Body() dto: UpdateLeaseDto
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.update(id, dto);
@@ -69,7 +69,7 @@ export class LeasesGlobalController {
   @ApiResponse({ status: 200, description: 'Lease deleted successfully' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.leasesService.remove(id);
   }
 
@@ -84,11 +84,13 @@ export class LeasesGlobalController {
   @UseGuards(AuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   async attachTenants(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id') id: string, 
     @Body() dto: AttachTenantsDto
   ): Promise<LeaseResponseDto> {
+    // Convert tenant_ids to strings if they're numbers
+    const tenantIds = dto.tenant_ids.map(id => String(id));
+    await this.leasesService.attachTenants(id, tenantIds);
     const lease = await this.leasesService.findOne(id);
-    await this.leasesService.attachTenants(id, dto.tenant_ids);
     return this.leaseMapper.toResponseDto(lease);
   }
 
@@ -103,7 +105,7 @@ export class LeasesGlobalController {
   @UseGuards(AuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   async activate(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.activate(id);
     return this.leaseMapper.toResponseDto(lease);
@@ -128,13 +130,13 @@ export class LeasesController {
   })
   @Post()
   async create(
-    @Param('unitId', ParseIntPipe) unitId: number,
+    @Param('unitId') unitId: string,
     @Body() dto: CreateLeaseDto,
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.create({
       ...dto,
       unit_id: unitId,
-    });
+    } as any);
     return this.leaseMapper.toResponseDto(lease);
   }
 
@@ -158,7 +160,7 @@ export class LeasesController {
   })
   @Get()
   async findByUnit(
-    @Param('unitId', ParseIntPipe) unitId: number,
+    @Param('unitId') unitId: string,
   ): Promise<LeaseResponseDto[]> {
     const leases = await this.leasesService.findByUnit(unitId);
     return this.leaseMapper.toResponseDtos(leases);
@@ -173,7 +175,7 @@ export class LeasesController {
   })
   @Get(':id')
   async findOne(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.findOne(id);
     return this.leaseMapper.toResponseDto(lease);
@@ -188,7 +190,7 @@ export class LeasesController {
   })
   @Patch(':id')
   async update(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id') id: string, 
     @Body() dto: UpdateLeaseDto
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.update(id, dto);
@@ -200,7 +202,7 @@ export class LeasesController {
   @ApiResponse({ status: 200, description: 'Lease deleted successfully' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.leasesService.remove(id);
   }
 
@@ -214,10 +216,12 @@ export class LeasesController {
   @Post(':id/tenants')
   @UseGuards(AuthGuard)
   async attachTenants(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id') id: string, 
     @Body() dto: AttachTenantsDto
   ): Promise<LeaseResponseDto> {
-    await this.leasesService.attachTenants(id, dto.tenant_ids);
+    // Convert tenant_ids to strings if they're numbers
+    const tenantIds = dto.tenant_ids.map(id => String(id));
+    await this.leasesService.attachTenants(id, tenantIds);
     const lease = await this.leasesService.findOne(id);
     return this.leaseMapper.toResponseDto(lease);
   }
@@ -232,7 +236,7 @@ export class LeasesController {
   @Post(':id/activate')
   @UseGuards(AuthGuard)
   async activate(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.activate(id);
     return this.leaseMapper.toResponseDto(lease);
@@ -248,7 +252,7 @@ export class LeasesController {
   @Post(':id/end')
   @UseGuards(AuthGuard)
   async endLease(
-    @Param('id', ParseIntPipe) leaseId: number,
+    @Param('id') leaseId: string,
     @Body() dto: EndLeaseDto,
   ): Promise<LeaseResponseDto> {
     const lease = await this.leasesService.endLease(leaseId, dto.end_date);

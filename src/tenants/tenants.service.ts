@@ -46,7 +46,7 @@ export class TenantsService {
     return { data, total, page, limit };
   }
 
-  async findByPortfolio(portfolioId: number, query?: { page?: number; limit?: number; search?: string }) {
+  async findByPortfolio(portfolioId: string, query?: { page?: number; limit?: number; search?: string }) {
     const page = query?.page ?? 1;
     const limit = query?.limit ?? 10;
     const search = (query?.search ?? '').trim();
@@ -71,19 +71,19 @@ export class TenantsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const tenant = await this.repo.findOne({ where: { id } });
     if (!tenant) throw new NotFoundException('Tenant not found');
     return tenant;
   }
 
-  async update(id: number, dto: UpdateTenantDto) {
+  async update(id: string, dto: UpdateTenantDto) {
     const tenant = await this.findOne(id);
     Object.assign(tenant, dto);
     return this.repo.save(tenant);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const tenant = await this.findOne(id);
     
     // First, delete all related lease_tenant records

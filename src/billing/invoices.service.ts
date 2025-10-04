@@ -15,7 +15,7 @@ import { Tenant } from '../tenants/tenant.entity';
 type InvoiceWithRelations = Omit<Invoice, 'lease' | 'items'> & {
   portfolio: Portfolio;
   lease: Lease & {
-    id: number;
+    id: string;
     tenant_name: string;
     tenant_email?: string;
     tenant_phone?: string;
@@ -110,7 +110,7 @@ export class InvoicesService {
     throw new Error('Failed to generate a unique invoice number after multiple attempts');
   }
 
-  async isInvoiceNumberUnique(invoiceNumber: string, excludeId?: number): Promise<boolean> {
+  async isInvoiceNumberUnique(invoiceNumber: string, excludeId?: string): Promise<boolean> {
     const where: any = { 
       invoice_number: invoiceNumber
     };
@@ -252,8 +252,48 @@ export class InvoicesService {
     return this.repo.find({ where });
   }
 
-  findByLease(leaseId: number) {
-    return this.repo.find({ where: { lease_id: leaseId } });
+  async findByLease(leaseId: string) {
+    return this.repo.find({ 
+      where: { lease: { id: leaseId } },
+      relations: ['lease', 'items']
+    });
+  }
+
+  /**
+   * Find invoices by portfolio ID with pagination
+   * @param portfolioId - ID of the portfolio
+   * @param page - Page number (1-based)
+   * @param limit - Number of items per page
+   */
+  async findByPortfolio(
+    portfolioId: string,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const [invoices, total] = await this.repo.findAndCount({
+      where: { 
+        lease: {
+          unit: {
+            property: {
+              portfolio: { id: portfolioId }
+            }
+          }
+        } 
+      },
+      relations: ['lease', 'lease.unit', 'lease.unit.property', 'items'],
+      order: { issue_date: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: invoices,
+      meta: {
+        total,
+        page,
+        last_page: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**
@@ -262,7 +302,7 @@ export class InvoicesService {
    * @param billingMonth - Billing month in YYYY-MM format
    * @returns Array of invoices matching the criteria
    */
-  async findByLeaseAndMonth(leaseId: number, billingMonth: string) {
+  async findByLeaseAndMonth(leaseId: string, billingMonth: string) {
     // Validate billing month format (YYYY-MM)
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {
       throw new BadRequestException('Invalid billing month format. Use YYYY-MM');
@@ -299,7 +339,7 @@ export class InvoicesService {
    * @returns Created or updated invoice
    */
   async generateNextForLease(
-    leaseId: number, 
+    leaseId: string, 
     options: { 
       force?: boolean; 
       additionalCharges?: Array<{
@@ -509,13 +549,13 @@ export class InvoicesService {
     return this.repo.save(invoice);
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const invoice = await this.repo.findOne({ where: { id } });
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;
   }
 
-  async update(id: number, dto: UpdateInvoiceDto) {
+  async update(id: string, dto: UpdateInvoiceDto) {
     const invoice = await this.findOne(id);
     
     // If items are being updated, process them and recalculate totals
@@ -593,7 +633,7 @@ export class InvoicesService {
     return this.repo.save(invoice);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.repo.delete(id);
   }
 
@@ -602,7 +642,7 @@ export class InvoicesService {
    * @param invoiceId - ID of the invoice to send
    * @param recipientEmail - Optional email address to send to (defaults to tenant's email)
    */
-  async sendInvoiceEmail(invoiceId: number): Promise<{ success: boolean; message: string }> {
+  async sendInvoiceEmail(invoiceId: string): Promise<{ success: boolean; message: string }> {
     const invoice = await this.repo.findOne({
       where: { id: invoiceId },
       relations: ['portfolio', 'lease', 'lease.tenant']

@@ -4,7 +4,6 @@ import {
   Post, 
   Body, 
   Param, 
-  ParseIntPipe, 
   UseGuards, 
   Logger, 
   HttpStatus, 
@@ -22,7 +21,6 @@ import {
 import { AuthGuard } from '../../guards/auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from '../../users/enums/user-role.enum';
 import { InvoiceEmailService } from '../services/invoice-email.service';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
 
@@ -36,7 +34,7 @@ export class InvoiceEmailController {
   constructor(private readonly invoiceEmailService: InvoiceEmailService) {}
 
   @Post(':id/send')
-  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.LANDLORD)
+  @Roles('super_admin', 'manager', 'landlord')
   @ApiOperation({ 
     summary: 'Send an invoice via email', 
     description: 'Sends the specified invoice as a PDF attachment via email' 
@@ -47,20 +45,24 @@ export class InvoiceEmailController {
   @ApiResponse({ status: 403, description: 'Forbidden - CSRF token missing or invalid' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   @ApiResponse({ status: 500, description: 'Failed to send email' })
-  @ApiParam({ name: 'id', type: 'number', description: 'Invoice ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Invoice ID' })
   @ApiBody({ type: SendInvoiceEmailDto })
   async sendInvoiceEmail(
-    @Param('id', ParseIntPipe) invoiceId: number,
+    @Param('id') invoiceId: string,
     @Body() sendInvoiceEmailDto: SendInvoiceEmailDto,
   ) {
     try {
-      const result = await this.invoiceEmailService.sendInvoiceEmail(
+      const result = await this.invoiceEmailService.sendTestInvoiceEmail(
         invoiceId,
+        sendInvoiceEmailDto.recipient_email,
         sendInvoiceEmailDto,
       );
 
       if (!result.success) {
-        throw new HttpException(result.error || 'Failed to send invoice email', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          result.error || 'Failed to send invoice email',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       return {
@@ -72,5 +74,4 @@ export class InvoiceEmailController {
       throw new BadRequestException(error.message || 'Failed to send invoice email');
     }
   }
-
 }

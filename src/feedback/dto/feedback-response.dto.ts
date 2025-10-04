@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class FeedbackDataDto {
   @ApiProperty({ description: 'The unique identifier of the feedback' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'The feedback message' })
   message: string;

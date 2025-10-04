@@ -21,8 +21,8 @@ type LeaseChargeType = import('../billing/lease-charge.entity').LeaseCharge;
 @Index(['landlord'])
 @Index(['status'])
 export class Portfolio {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   @IsNotEmpty()
@@ -64,13 +64,12 @@ export class Portfolio {
   @Column({ default: 'USD' })
   currency: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'landlord_id' })
   landlord: User;
 
-  @Column()
-  @IsNotEmpty()
-  landlord_id: number;
+  @Column({ nullable: true })
+  landlord_id: string | null;
 
   @Column()
   subscription_plan: string;
@@ -109,12 +108,12 @@ export class Portfolio {
   leaseCharges: LeaseChargeType[];
 
   /** Timestamps */
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }

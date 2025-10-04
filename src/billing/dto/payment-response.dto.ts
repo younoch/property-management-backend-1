@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PaymentResponseDto {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: '1' })
+  id: string;
 
-  @ApiProperty({ example: 2 })
-  portfolio_id: number;
+  @ApiProperty({ example: '2' })
+  portfolio_id: string;
 
   @ApiProperty({ example: 1, nullable: true })
-  lease_id: number | null;
+  lease_id: string | null;
 
   @ApiProperty({ example: 1000.00 })
   amount: number;

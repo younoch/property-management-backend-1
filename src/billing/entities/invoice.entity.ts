@@ -65,9 +65,9 @@ const decimal = (value: number | string, decimals: number = 2): number => {
   where: "status != 'void'" 
 })
 export class Invoice {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   @ApiProperty({ description: 'Unique identifier for the invoice' })
-  id: number;
+  id: string;
 
   @ManyToOne(() => Lease, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'lease_id' })
@@ -82,9 +82,9 @@ export class Invoice {
   @ApiProperty({ 
     description: 'ID of the lease this invoice is for', 
     nullable: true,
-    example: 1
+    example: '1'
   })
-  lease_id: number | null;
+  lease_id: string | null;
 
   @Column({ 
     type: 'varchar',

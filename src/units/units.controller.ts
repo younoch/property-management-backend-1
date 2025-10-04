@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { AuthGuard } from '../guards/auth.guard';
 import { UnitsService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
 import { Unit } from '../units/unit.entity';
-import { AuthGuard } from '../guards/auth.guard';
 
 @ApiTags('units')
 @Controller('properties/:propertyId/units')
@@ -16,7 +16,7 @@ export class UnitsController {
   @Post()
   @UseGuards(AuthGuard)
   create(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Param('propertyId') propertyId: string,
     @Body() createUnitDto: CreateUnitDto,
   ) {
     return this.unitsService.create({ ...createUnitDto, property_id: propertyId });
@@ -31,10 +31,8 @@ export class UnitsController {
 
   @ApiOperation({ summary: 'Get all units for a property' })
   @ApiResponse({ status: 200, description: 'Units retrieved successfully', type: [Unit] })
-  @Get()
-  findByProperty(
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-  ) {
+  @Get('property/:propertyId')
+  findByProperty(@Param('propertyId') propertyId: string) {
     return this.unitsService.findByProperty(propertyId);
   }
 
@@ -42,7 +40,7 @@ export class UnitsController {
   @ApiParam({ name: 'id', description: 'Unit ID' })
   @ApiResponse({ status: 200, description: 'Unit found successfully', type: Unit })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.unitsService.findOne(id);
   }
 
@@ -51,7 +49,7 @@ export class UnitsController {
   @ApiResponse({ status: 200, description: 'Unit updated successfully', type: Unit })
   @Patch(':id')
   @UseGuards(AuthGuard)
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUnitDto: UpdateUnitDto) {
+  update(@Param('id') id: string, @Body() updateUnitDto: UpdateUnitDto) {
     return this.unitsService.update(id, updateUnitDto);
   }
 
@@ -60,7 +58,7 @@ export class UnitsController {
   @ApiResponse({ status: 200, description: 'Unit deleted successfully' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.unitsService.remove(id);
   }
 }
