@@ -26,10 +26,10 @@ export class AuditLogService {
     description,
   }: {
     entityType: string;
-    entityId: number | string;
+    entityId: string | number;
     action: AuditAction;
-    userId?: number;
-    portfolioId?: number;
+    userId?: string | number;
+    portfolioId?: string | number;
     metadata?: Record<string, any>;
     oldValue?: any;
     newValue?: any;
@@ -37,10 +37,10 @@ export class AuditLogService {
   }): Promise<void> {
     const log = this.auditLogRepository.create({
       entity_type: entityType,
-      entity_id: entityId.toString(),
+      entity_id: entityId?.toString(),
       action,
-      user_id: userId,
-      portfolio_id: portfolioId,
+      user_id: userId?.toString(),
+      portfolio_id: portfolioId?.toString(),
       metadata: {
         ...(Object.keys(metadata).length > 0 ? metadata : {}),
         ...(oldValue ? { oldValue } : {}),
@@ -138,7 +138,7 @@ export class AuditLogService {
       const where: FindOptionsWhere<AuditLog> = {};
       
       if (filters.userId) {
-        where.user_id = filters.userId;
+        where.user_id = filters.userId.toString();
         console.log('Filtering by userId:', filters.userId);
       }
       
@@ -250,26 +250,28 @@ export class AuditLogService {
 
   /**
    * Find a single audit log by ID
+   * @param id The ID of the audit log to find (string or number)
+   * @returns The found audit log
+   * @throws NotFoundException if audit log is not found
    */
-  async findOne(id: number): Promise<AuditLogResponseDto> {
-    const log = await this.auditLogRepository.findOne({ 
-      where: { id },
-      relations: ['user'] // Assuming there's a relation to User
-    });
-    
+  async findOne(id: string): Promise<AuditLogResponseDto> {
+    const log = await this.auditLogRepository.findOne({ where: { id } });
     if (!log) {
       throw new NotFoundException(`Audit log with ID ${id} not found`);
     }
-    
     return new AuditLogResponseDto(log);
   }
 
   /**
    * Get logs for a specific entity
+   * @param entityType The type of the entity
+   * @param entityId The ID of the entity
+   * @param limit Maximum number of logs to return (default: 50, max: 100)
+   * @returns Array of audit logs for the entity
    */
   async getEntityLogs(
     entityType: string,
-    entityId: number | string,
+    entityId: string,
     limit = 50
   ): Promise<AuditLogResponseDto[]> {
     if (limit > 100) {

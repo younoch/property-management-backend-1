@@ -147,7 +147,7 @@ export class PortfoliosService {
     return await this.portfoliosRepository.save(portfolio);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

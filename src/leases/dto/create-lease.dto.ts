@@ -21,15 +21,15 @@ export enum LeaseStatus {
 }
 
 export class CreateLeaseDto {
-  @ApiProperty({ example: 1, required: false })
+  @ApiProperty({ example: '1', required: false })
   @IsOptional()
-  @IsInt()
-  portfolio_id: number;
+  @IsString()
+  portfolio_id: string;
 
-  @ApiProperty({ example: 1, required: false })
+  @ApiProperty({ example: '1', required: false })
   @IsOptional()
-  @IsInt()
-  unit_id: number;
+  @IsString()
+  unit_id: string;
 
   @ApiProperty({ example: '2025-09-01' })
   @IsDateString()

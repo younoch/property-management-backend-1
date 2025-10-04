@@ -1,6 +1,5 @@
 // src/database/data-source.ts
 import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { User } from '../users/user.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
@@ -23,29 +22,30 @@ import { Expense } from '../expenses/expense.entity';
 // Load environment variables for CLI context
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
-const configService = new ConfigService();
-console.log('🔎 DB_HOST:', configService.get<string>('DB_HOST'));
-console.log('🔎 DB_SSL:', configService.get<string>('DB_SSL'));
+console.log('🔎 DB_HOST:', process.env.DB_HOST);
+console.log('🔎 DB_SSL:', process.env.DB_SSL);
+
 // Helper to determine SSL configuration
-const sslConfig =
-  configService.get<string>('DB_SSL') === 'true'
-    ? { rejectUnauthorized: false }
-    : undefined;
+const sslConfig = process.env.DB_SSL === 'true' 
+  ? { rejectUnauthorized: false } 
+  : undefined;
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: configService.get<string>('DB_HOST'),
-  port: Number(configService.get<string>('DB_PORT')),
-  username: configService.get<string>('DB_USERNAME'),
-  password: configService.get<string>('DB_PASSWORD'),
-  database: configService.get<string>('DB_NAME'),
-  // Use synchronize only in non-production to avoid destructive/implicit schema changes
-  synchronize: process.env.NODE_ENV !== 'production',
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 5432),
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || 'rR%jrYKNqQdnYVQUkzuN',
+  database: process.env.DB_NAME || 'property_management',
+  // Disable synchronize in all environments - use migrations instead
+  synchronize: false, // Always false since we're using migrations
   // Ensure migrations auto-run in production boot flow
   migrationsRun: process.env.NODE_ENV === 'production',
   migrationsTableName: 'migrations',
-  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-  logging: true,
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
+  // Disable all logging
+  logging: [],
+  logger: 'advanced-console',
   entities: [
     User,
     Portfolio,

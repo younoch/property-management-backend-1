@@ -2,18 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDocumentDto {
-  @ApiProperty({ example: 1 })
-  @IsInt()
-  portfolio_id: number;
+  @ApiProperty({ example: '1' })
+  @IsString()
+  portfolio_id: string;
 
   @ApiProperty({ example: 'invoice' })
   @IsString()
   @IsNotEmpty()
   subject_type: string;
 
-  @ApiProperty({ example: 123 })
-  @IsInt()
-  subject_id: number;
+  @ApiProperty({ example: '123' })
+  @IsString()
+  subject_id: string;
 
   @ApiProperty({ example: 'invoice-sept.pdf' })
   @IsString()

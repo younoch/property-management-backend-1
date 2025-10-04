@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class TenantDto {
   @ApiProperty({ description: 'Tenant ID' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'Portfolio ID' })
-  portfolio_id: number;
+  portfolio_id: string;
 
   @ApiProperty({ description: 'First name' })
   first_name: string;
@@ -34,7 +34,7 @@ export class TenantDto {
 
 export class LeaseTenantResponseDto {
   @ApiProperty({ description: 'Lease ID' })
-  lease_id: number;
+  lease_id: string;
 
   @ApiProperty({ description: 'Creation timestamp' })
   created_at: Date;

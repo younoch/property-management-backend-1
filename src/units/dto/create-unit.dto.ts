@@ -3,8 +3,8 @@ import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'cl
 
 export class CreateUnitDto {
   @ApiProperty({ example: 1 })
-  @IsInt()
-  property_id: number;
+  @IsString()
+  property_id: string;
 
   @ApiProperty({ example: 'Unit 2B' })
   @IsString()

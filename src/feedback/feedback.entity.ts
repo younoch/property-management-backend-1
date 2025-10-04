@@ -3,8 +3,8 @@ import { User } from '../users/user.entity';
 
 @Entity('user_feedback')
 export class Feedback {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'text' })
   message: string;
@@ -25,6 +25,6 @@ export class Feedback {
   @JoinColumn({ name: 'userId' })
   user: User | null;
 
-  @Column({ type: 'int', nullable: true })
-  userId: number | null;
+  @Column({ type: 'varchar', nullable: true })
+  userId: string | null;
 }

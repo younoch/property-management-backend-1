@@ -18,22 +18,22 @@ import { Portfolio } from "../portfolios/portfolio.entity";
 @Index(['sent_at'])
 @Index(['portfolio_id'])
 export class Notification {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
   @Column()
-  portfolio_id: number;
+  portfolio_id: string;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ nullable: true })
-  user_id: number;
+  user_id: string;
 
   @Column()
   type: string;
@@ -54,15 +54,15 @@ export class Notification {
   @Column()
   channel: string; // in_app | email | sms | push
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   sent_at: Date | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 } 

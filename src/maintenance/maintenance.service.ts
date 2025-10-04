@@ -26,19 +26,19 @@ export class MaintenanceService {
 
   // Removed findRequestsByPortfolio method as portfolio relation no longer exists
 
-  async findRequest(id: number) {
+  async findRequest(id: string) {
     const r = await this.reqRepo.findOne({ where: { id } });
     if (!r) throw new NotFoundException('Maintenance request not found');
     return r;
   }
 
-  async updateRequest(id: number, dto: UpdateMaintenanceRequestDto) {
+  async updateRequest(id: string, dto: UpdateMaintenanceRequestDto) {
     const r = await this.findRequest(id);
     Object.assign(r, dto);
     return this.reqRepo.save(r);
   }
 
-  async removeRequest(id: number) {
+  async removeRequest(id: string) {
     const r = await this.findRequest(id);
     await this.reqRepo.remove(r);
     return { success: true };
@@ -55,19 +55,19 @@ export class MaintenanceService {
 
   // Removed findWorkOrdersByPortfolio method as portfolio relation no longer exists
 
-  async findWorkOrder(id: number) {
+  async findWorkOrder(id: string) {
     const w = await this.woRepo.findOne({ where: { id } });
     if (!w) throw new NotFoundException('Work order not found');
     return w;
   }
 
-  async updateWorkOrder(id: number, dto: UpdateWorkOrderDto) {
+  async updateWorkOrder(id: string, dto: UpdateWorkOrderDto) {
     const w = await this.findWorkOrder(id);
     Object.assign(w, dto);
     return this.woRepo.save(w);
   }
 
-  async removeWorkOrder(id: number) {
+  async removeWorkOrder(id: string) {
     const w = await this.findWorkOrder(id);
     await this.woRepo.remove(w);
     return { success: true };

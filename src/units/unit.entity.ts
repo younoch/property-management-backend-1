@@ -1,19 +1,30 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, Unique, JoinColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  Unique,
+  JoinColumn,
+  DeleteDateColumn
+} from 'typeorm';
 import { Property } from '../properties/property.entity';
 
 @Entity()
-@Index(['property_id'])
-@Unique(['property_id', 'label'])
+@Index(['property'])
+@Unique(['property', 'label'])
 export class Unit {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @ManyToOne(() => Property, { onDelete: 'CASCADE', eager: true })
+  @ManyToOne(() => Property, property => property.units, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'property_id' })
   property: Property;
 
-  @Column()
-  property_id: number;
+  @Column({ nullable: true })
+  property_id: string | null;
 
   @Column()
   label: string; // e.g., "Unit 2B"
@@ -27,10 +38,10 @@ export class Unit {
   @Column({ type: 'int', nullable: true })
   sqft: number | null;
 
-  @Column({ 
-    type: 'numeric', 
-    precision: 12, 
-    scale: 2, 
+  @Column({
+    type: 'numeric',
+    precision: 12,
+    scale: 2,
     nullable: true,
     transformer: {
       to: (value: number | null) => value,
@@ -42,14 +53,12 @@ export class Unit {
   @Column({ type: 'varchar', default: 'vacant' })
   status: 'vacant' | 'occupied' | 'maintenance';
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }
-
-

@@ -26,15 +26,15 @@ export class NotificationsService {
     });
   }
 
-  async findByPortfolio(portfolioId: number): Promise<Notification[]> {
+  async findByPortfolio(portfolioId: string): Promise<Notification[]> {
     return this.notificationsRepository.find({
-      where: { portfolio_id: portfolioId },
+      where: { portfolio: { id: portfolioId } },
       relations: ['user'],
       order: { sent_at: 'DESC' },
     });
   }
 
-  async findOne(id: number): Promise<Notification> {
+  async findOne(id: string): Promise<Notification> {
     const notification = await this.notificationsRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -45,7 +45,7 @@ export class NotificationsService {
     return notification;
   }
 
-  async findByUser(userId: number): Promise<Notification[]> {
+  async findByUser(userId: string): Promise<Notification[]> {
     return this.notificationsRepository.find({
       where: { user_id: userId },
       relations: ['user'],
@@ -53,7 +53,7 @@ export class NotificationsService {
     });
   }
 
-  async findUnreadByUser(userId: number): Promise<Notification[]> {
+  async findUnreadByUser(userId: string): Promise<Notification[]> {
     return this.notificationsRepository.find({
       where: { user_id: userId, is_read: false },
       relations: ['user'],
@@ -77,7 +77,7 @@ export class NotificationsService {
     });
   }
 
-  async update(id: number, updateNotificationDto: UpdateNotificationDto): Promise<Notification> {
+  async update(id: string, updateNotificationDto: UpdateNotificationDto): Promise<Notification> {
     const notification = await this.findOne(id);
     
     if (updateNotificationDto.sent_at) {
@@ -88,25 +88,25 @@ export class NotificationsService {
     return this.notificationsRepository.save(notification);
   }
 
-  async markAsRead(id: number): Promise<Notification> {
+  async markAsRead(id: string): Promise<Notification> {
     const notification = await this.findOne(id);
     notification.is_read = true;
     return this.notificationsRepository.save(notification);
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
+  async markAllAsRead(userId: string): Promise<void> {
     await this.notificationsRepository.update(
       { user_id: userId, is_read: false },
       { is_read: true }
     );
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const notification = await this.findOne(id);
     await this.notificationsRepository.remove(notification);
   }
 
-  async getUnreadCount(userId: number): Promise<number> {
+  async getUnreadCount(userId: string): Promise<number> {
     return this.notificationsRepository.count({
       where: { user_id: userId, is_read: false },
     });

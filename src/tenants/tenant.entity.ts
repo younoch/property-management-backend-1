@@ -1,20 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 
 @Entity()
 @Index(['portfolio_id'])
 export class Tenant {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
-  @Column()
-  @IsNotEmpty()
-  portfolio_id: number;
+  @Column({ nullable: true })
+  portfolio_id: string | null;
 
   @Column()
   @IsNotEmpty()
@@ -37,14 +37,19 @@ export class Tenant {
   @IsNotEmpty()
   is_active: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
+
+  @OneToMany(() => LeaseTenant, leaseTenant => leaseTenant.tenant, {
+    cascade: true
+  })
+  lease_tenants: LeaseTenant[];
 }
 
 

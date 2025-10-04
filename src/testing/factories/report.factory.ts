@@ -4,7 +4,7 @@ import { User } from '../../users/user.entity';
 export class ReportFactory {
   static create(overrides: Partial<Report> = {}, user?: User): Report {
     return {
-      id: 1,
+      id: '00000000-0000-0000-0000-000000000001',
       approved: false,
       price: 25000,
       make: 'Toyota',
@@ -31,7 +31,7 @@ export class ReportFactory {
   static createMany(count: number, overrides: Partial<Report> = {}, user?: User): Report[] {
     return Array.from({ length: count }, (_, index) =>
       this.create({
-        id: index + 1,
+        id: `00000000-0000-0000-0000-${String(index + 1).padStart(12, '0')}`,
         price: 20000 + (index * 5000),
         year: 2018 + index,
         ...overrides,

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -32,7 +32,7 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Get document by ID' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document found', type: Doc })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.svc.findOne(id);
   }
 
@@ -41,7 +41,10 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Update document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document updated', type: Doc })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDocumentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateDocumentDto,
+  ) {
     return this.svc.update(id, dto);
   }
 
@@ -50,7 +53,7 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Delete document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document deleted' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.svc.remove(id);
   }
 }

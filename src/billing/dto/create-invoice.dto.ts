@@ -6,8 +6,8 @@ export class CreateInvoiceDto {
     example: 1,
     description: 'ID of the portfolio this invoice belongs to'
   })
-  @IsInt()
-  portfolio_id: number;
+  @IsString()
+  portfolio_id: string;
 
   @ApiProperty({
     example: '2025-09',
@@ -25,8 +25,8 @@ export class CreateInvoiceDto {
     description: 'ID of the lease this invoice is associated with (if any)' 
   })
   @IsOptional()
-  @IsInt()
-  lease_id?: number;
+  @IsString()
+  lease_id?: string;
 
   @ApiProperty({ 
     example: '2025-09-01',

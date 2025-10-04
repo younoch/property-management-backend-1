@@ -7,8 +7,8 @@ import { User } from '../users/user.entity';
 @Index(['year'])
 @Index(['approved'])
 export class Report {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ default: false })
   approved: boolean;
@@ -37,12 +37,12 @@ export class Report {
   @ManyToOne(() => User)
   user: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }

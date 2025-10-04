@@ -4,8 +4,8 @@ import { ApiProperty } from '@nestjs/swagger';
 // DTO for Portfolio information
 export class PortfolioDto {
   @Expose()
-  @ApiProperty({ description: 'Portfolio ID', example: 1 })
-  id: number;
+  @ApiProperty({ description: 'Portfolio ID', example: '1' })
+  id: string;
 
   @Expose()
   @ApiProperty({ description: 'Portfolio name', example: 'Rental Portfolio A' })
@@ -25,9 +25,9 @@ export class NotificationDto {
   @Expose()
   @ApiProperty({
     description: 'Notification ID',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -62,9 +62,9 @@ export class UserDataDto {
   @Expose()
   @ApiProperty({
     description: 'User ID',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -145,7 +145,7 @@ export class UserDataDto {
     type: [PortfolioDto],
     example: [
       {
-        id: 1,
+        id: '1',
         name: 'Rental Portfolio A',
         status: 'active',
         created_at: '2024-01-01T00:00:00.000Z'
@@ -161,7 +161,7 @@ export class UserDataDto {
     type: [NotificationDto],
     example: [
       {
-        id: 1,
+        id: '1',
         title: 'Maintenance Request Update',
         message: 'Your maintenance request has been updated',
         is_read: false,
@@ -180,9 +180,9 @@ export class UserResponseDto {
   @Expose()
   @ApiProperty({
     description: 'User ID',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -263,7 +263,7 @@ export class UserResponseDto {
     type: [PortfolioDto],
     example: [
       {
-        id: 1,
+        id: '1',
         name: 'Rental Portfolio A',
         status: 'active',
         created_at: '2024-01-01T00:00:00.000Z'
@@ -279,7 +279,7 @@ export class UserResponseDto {
     type: [NotificationDto],
     example: [
       {
-        id: 1,
+        id: '1',
         title: 'Maintenance Request Update',
         message: 'Your maintenance request has been updated',
         is_read: false,
@@ -298,9 +298,9 @@ export class FullUserResponseDto {
   @Expose()
   @ApiProperty({
     description: 'User ID',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @Expose()
   @ApiProperty({
@@ -381,7 +381,7 @@ export class FullUserResponseDto {
     type: [PortfolioDto],
     example: [
       {
-        id: 1,
+        id: '1',
         name: 'Rental Portfolio A',
         status: 'active',
         created_at: '2024-01-01T00:00:00.000Z'
@@ -397,7 +397,7 @@ export class FullUserResponseDto {
     type: [NotificationDto],
     example: [
       {
-        id: 1,
+        id: '1',
         title: 'Maintenance Request Update',
         message: 'Your maintenance request has been updated',
         is_read: false,

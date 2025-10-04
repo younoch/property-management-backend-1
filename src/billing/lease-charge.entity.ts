@@ -18,8 +18,8 @@ import { Property } from '../properties/property.entity';
 @Index(['unit_id'])
 @Index(['property_id'])
 export class LeaseCharge {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   /** Lease relation */
   @ManyToOne(() => Lease, { onDelete: 'CASCADE' })
@@ -27,7 +27,7 @@ export class LeaseCharge {
   lease: Lease;
 
   @Column()
-  lease_id: number;
+  lease_id: string;
 
   /** Charge name (e.g., Monthly Rent) */
   @Column()
@@ -39,7 +39,7 @@ export class LeaseCharge {
   unit: Unit;
 
   @Column()
-  unit_id: number;
+  unit_id: string;
 
   /** Property relation */
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
@@ -47,7 +47,7 @@ export class LeaseCharge {
   property: Property;
 
   @Column()
-  property_id: number;
+  property_id: string;
 
   /** Amount with numeric transformer */
   @Column({
@@ -73,12 +73,12 @@ export class LeaseCharge {
   end_date: string | null;
 
   /** Timestamps */
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }

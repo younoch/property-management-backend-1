@@ -112,11 +112,15 @@ profile_image_url: user.profile_image_url,
         throw new BadRequestException('The refresh token provided is invalid or has expired. Please sign in again.');
       }
 
-      // Get the user
-      const userId = parseInt(payload.sub, 10);
+      // Get the user using the string ID directly
+      const userId = payload.sub;
+      if (!userId) {
+        throw new BadRequestException('Invalid user ID in token');
+      }
+      
       const user = await this.usersService.findOne(userId);
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('User account not found. Please contact support.');
       }
 
       // Check if user account is active

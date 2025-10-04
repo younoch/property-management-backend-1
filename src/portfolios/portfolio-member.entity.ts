@@ -7,33 +7,33 @@ import { User } from '../users/user.entity';
 @Index(['portfolio_id'])
 @Index(['user_id'])
 export class PortfolioMember {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
   @Column()
-  portfolio_id: number;
+  portfolio_id: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column()
-  user_id: number;
+  user_id: string;
 
   @Column({ type: 'varchar' })
   role: 'landlord' | 'admin' | 'manager' | 'viewer';
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }
 

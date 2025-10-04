@@ -4,7 +4,7 @@ import * as bcrypt from 'bcryptjs';
 export class UserFactory {
   static async create(overrides: Partial<User> = {}): Promise<User> {
     const user = new User();
-    user.id = 1;
+    user.id = '00000000-0000-0000-0000-000000000001';
     user.name = 'Test User';
     user.email = 'test@example.com';
     // Use a test password that gets hashed dynamically
@@ -25,7 +25,7 @@ export class UserFactory {
     const users: User[] = [];
     for (let i = 0; i < count; i++) {
       const user = await this.create(overrides);
-      user.id = i + 1;
+      user.id = `00000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`;
       user.email = `test${i + 1}@example.com`;
       users.push(user);
     }

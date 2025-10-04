@@ -136,6 +136,6 @@ export class PortfoliosController {
   })
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.portfoliosService.remove(+id);
+    return this.portfoliosService.remove(id);
   }
 }

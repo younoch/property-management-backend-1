@@ -104,25 +104,25 @@ export class AuditLogsController {
         console.error('Error stack:', error.stack);
         throw new BadRequestException(error.message);
       }
-      throw new BadRequestException('An unknown error occurred');
-    }
   }
+}
 
   @Get(':id')
   @ApiOperation({ 
-    summary: 'Get a single audit log by ID',
-    description: 'Retrieve detailed information about a specific audit log entry.'
+    summary: 'Get a single audit log entry',
+    description: 'Retrieve a specific audit log entry by its ID.'
   })
-  @ApiParam({ name: 'id', description: 'Audit log ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Audit log ID' })
   @ApiResponse({ 
     status: 200, 
-    description: 'Audit log retrieved successfully', 
+    description: 'Audit log entry',
     type: AuditLogResponseDto 
   })
   @ApiResponse({ status: 404, description: 'Audit log not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async findOne(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<AuditLogResponseDto> {
     try {
       return await this.auditLogService.findOne(id);

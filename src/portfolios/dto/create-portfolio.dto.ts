@@ -62,9 +62,9 @@ export class CreatePortfolioDto {
   name: string;
 
   @ApiProperty({ description: 'Landlord ID', example: 1 })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  landlord_id: number;
+  landlord_id: string;
 
   @ApiPropertyOptional({ description: 'Street address', example: '123 Main St' })
   @IsString()

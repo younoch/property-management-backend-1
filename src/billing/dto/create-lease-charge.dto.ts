@@ -3,20 +3,20 @@ import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString } from 'cla
 
 export class CreateLeaseChargeDto {
   @ApiProperty({ example: 1 })
-  @IsInt()
-  portfolio_id: number;
+  @IsString()
+  portfolio_id: string;
 
   @ApiProperty({ example: 1 })
-  @IsInt()
-  lease_id: number;
+  @IsString()
+  lease_id: string;
 
   @ApiProperty({ example: 1 })
-  @IsInt()
-  unit_id: number;
+  @IsString()
+  unit_id: string;
 
   @ApiProperty({ example: 1 })
-  @IsInt()
-  property_id: number;
+  @IsString()
+  property_id: string;
 
   @ApiProperty({ example: 1500.0 })
   @IsNumber()

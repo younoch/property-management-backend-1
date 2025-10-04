@@ -40,39 +40,39 @@ export class LeasesService {
     return result as unknown as Lease;
   }
 
-  findAll() {
-    return this.repo.find();
+  async findAll(): Promise<Lease[]> {
+    return this.repo.find({
+      relations: ['unit', 'tenants', 'tenants.tenant'],
+    });
   }
 
-  async findByUnit(unitId: number): Promise<Lease[]> {
-    return this.repo.find({ where: { unit_id: unitId } });
+  async findByUnit(unitId: string): Promise<Lease[]> {
+    return this.repo.find({ 
+      where: { unit_id: unitId },
+      relations: ['unit', 'tenants', 'tenants.tenant']
+    });
   }
 
   /**
    * Robust findOne that also fetches attached tenants regardless of entity relations.
    */
-  async findOne(id: number) {
-    const lease = await this.repo.findOne({ where: { id } });
-    if (!lease) throw new NotFoundException('Lease not found');
-
-    // Load attached tenants (works even if Lease doesn't have @OneToMany)
-    const leaseTenants = await this.leaseTenantRepo.find({
-      where: { lease_id: id },
-      relations: ['tenant'],
+  async findOne(id: string): Promise<Lease> {
+    const lease = await this.repo.findOne({
+      where: { id },
+      relations: ['unit', 'tenants', 'tenants.tenant']
     });
-    // Use the same property name that's expected by the mapper (lease_tenants)
-    (lease as any).lease_tenants = leaseTenants;
-
+    
+    if (!lease) throw new NotFoundException('Lease not found');
     return lease;
   }
 
-  async update(id: number, dto: UpdateLeaseDto) {
+  async update(id: string, dto: UpdateLeaseDto): Promise<Lease> {
     const lease = await this.findOne(id);
     Object.assign(lease, dto);
     return this.repo.save(lease);
   }
 
-  async remove(id: number) {
+  async remove(id: string): Promise<{ success: boolean }> {
     const lease = await this.findOne(id);
     await this.repo.remove(lease);
     return { success: true };
@@ -82,7 +82,7 @@ export class LeasesService {
    * Attach multiple tenants to a lease. Creates LeaseTenant rows for each tenant id.
    * Returns the list of attached tenants for the lease.
    */
-  async attachTenants(leaseId: number, tenantIds: number[]) {
+  async attachTenants(leaseId: string, tenantIds: string[]): Promise<LeaseTenant[]> {
     // Ensure lease exists
     await this.findOne(leaseId);
 
@@ -123,9 +123,12 @@ export class LeasesService {
    * - no other active lease for the same unit
    * All changes happen in a single DB transaction.
    */
-  async activate(leaseId: number) {
+  async activate(leaseId: string): Promise<Lease> {
     // Reload with the fields we need
-    const lease = await this.repo.findOne({ where: { id: leaseId } });
+    const lease = await this.repo.findOne({ 
+      where: { id: leaseId },
+      relations: ['unit']
+    });
     if (!lease) throw new NotFoundException('Lease not found');
 
     if (lease.status !== 'draft') {
@@ -139,24 +142,30 @@ export class LeasesService {
     }
 
     // Unit must be vacant at activation time
-    const unit = await this.unitRepo.findOne({ where: { id: lease.unit_id } });
-    if (!unit) throw new NotFoundException('Unit not found for this lease');
-    if (unit.status !== 'vacant') {
+    if (!lease.unit) {
+      throw new NotFoundException('Unit not found for this lease');
+    }
+    if (lease.unit.status !== 'vacant') {
       throw new ConflictException('Unit is not vacant; cannot activate lease');
     }
 
     // Optional: ensure no other ACTIVE lease exists for this unit
     const overlappingActive = await this.repo.count({
-      where: { unit_id: lease.unit_id, status: 'active' as any },
+      where: { 
+        unit_id: lease.unit_id, 
+        status: 'active',
+        id: Not(leaseId) // Exclude current lease from the count
+      },
     });
+    
     if (overlappingActive > 0) {
       throw new ConflictException('Another active lease already exists for this unit');
     }
 
     // Transaction: set lease -> active, unit -> occupied
     await this.dataSource.transaction(async (manager) => {
-      await manager.update(Lease, { id: leaseId }, { status: 'active' as any });
-      await manager.update(Unit, { id: lease.unit_id }, { status: 'occupied' as any });
+      await manager.update(Lease, { id: leaseId }, { status: 'active' });
+      await manager.update(Unit, { id: lease.unit_id }, { status: 'occupied' });
     });
 
     // Return fresh state (with attached tenants)
@@ -167,20 +176,41 @@ export class LeasesService {
    * End a lease on the provided date. If the provided date equals the lease's end_date,
    * mark the unit as 'vacant'. Runs in a transaction.
    */
-  async endLease(leaseId: number, endDate: string) {
-    // load lease
-    const lease = await this.repo.findOne({ where: { id: leaseId } });
+  async endLease(leaseId: string, endDate: string): Promise<Lease> {
+    // load lease with unit relation
+    const lease = await this.repo.findOne({ 
+      where: { id: leaseId },
+      relations: ['unit']
+    });
     if (!lease) throw new NotFoundException('Lease not found');
 
     // perform transaction: update lease end_date and status; if endDate equals lease.end_date (or we set it), update unit.status to 'vacant'
     await this.dataSource.transaction(async (manager) => {
-      await manager.update(Lease, { id: leaseId }, { end_date: endDate, status: 'ended' as any });
+      await manager.update(Lease, 
+        { id: leaseId }, 
+        { 
+          end_date: endDate, 
+          status: 'ended',
+          // Update the updated_at timestamp
+          updated_at: () => 'CURRENT_TIMESTAMP'
+        }
+      );
 
-      // set unit to vacant if end_date equals provided date
-      // (we just set it, so always set unit to vacant)
-      await manager.update(Unit, { id: lease.unit_id }, { status: 'vacant' as any });
+      // set unit to vacant
+      if (lease.unit) {
+        await manager.update(
+          Unit, 
+          { id: lease.unit_id }, 
+          { 
+            status: 'vacant',
+            // Update the updated_at timestamp
+            updated_at: () => 'CURRENT_TIMESTAMP'
+          }
+        );
+      }
     });
 
+    // Return the updated lease with all relations
     return this.findOne(leaseId);
   }
 }

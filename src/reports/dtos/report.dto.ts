@@ -3,7 +3,7 @@ import { User } from '../../users/user.entity';
 
 export class ReportDto {
   @Expose()
-  id: number;
+  id: string;
   @Expose()
   price: number;
   @Expose()
@@ -23,5 +23,5 @@ export class ReportDto {
 
   @Transform(({ obj }) => obj.user.id)
   @Expose()
-  userId: number;
+  userId: string;
 }

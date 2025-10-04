@@ -3,15 +3,22 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   Query,
   UseGuards,
   Request,
-  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiCookieAuth } from '@nestjs/swagger';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiParam, 
+  ApiQuery, 
+  ApiCookieAuth, 
+  ApiBody 
+} from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
@@ -35,56 +42,55 @@ export class PropertiesGlobalController {
 
   @ApiOperation({ summary: 'Get all properties (paginated + search)' })
   @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: PaginatedPropertiesResponseDto })
-  @Get()
   findAll(@Query() query: FindPropertiesDto) {
     return this.propertiesService.findAll(query);
   }
 
-  @ApiOperation({ summary: 'Get property by ID' })
-  @ApiParam({ name: 'id', description: 'Property ID' })
-  @ApiResponse({ status: 200, description: 'Property found successfully', type: Property })
+  @ApiOperation({ summary: 'Get a single property by ID' })
+  @ApiResponse({ status: 200, description: 'Property found', type: Property })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.propertiesService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Search properties by location' })
   @ApiQuery({ name: 'city', description: 'City name', required: false })
-  @ApiQuery({ name: 'state', description: 'State name', required: false })
-  @ApiResponse({ status: 200, description: 'Properties found by location', type: [Property] })
-  @Get('location/search')
-  findByLocation(
-    @Query('city') city: string,
-    @Query('state') state: string,
+  @ApiQuery({ name: 'state', description: 'State code', required: false })
+  @Get('search/location')
+  async findByLocation(
+    @Query('city') city?: string,
+    @Query('state') state?: string
   ) {
     return this.propertiesService.findByLocation(city, state);
   }
 
-  @ApiOperation({ summary: 'Update property by ID' })
+  @ApiOperation({ summary: 'Update a property' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiResponse({ status: 200, description: 'Property updated successfully', type: Property })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
   @ApiResponse({ status: 404, description: 'Property not found' })
-  @Patch(':id')
-  @UseGuards(AuthGuard, PortfolioScopeGuard)
-  update(@Param('id', ParseIntPipe) id: number, @Body() updatePropertyDto: UpdatePropertyDto) {
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updatePropertyDto: UpdatePropertyDto,
+  ) {
     return this.propertiesService.update(id, updatePropertyDto);
   }
 
-  @ApiOperation({ summary: 'Delete property by ID' })
-  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiOperation({ summary: 'Delete a property' })
   @ApiResponse({ status: 200, description: 'Property deleted successfully' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   @Delete(':id')
-  @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.propertiesService.remove(id);
   }
 }
 
-@ApiTags('properties')
+@ApiTags('portfolio-properties')
 @Controller('portfolios/:portfolioId/properties')
+@ApiCookieAuth()
+@UseGuards(AuthGuard, PortfolioScopeGuard)
+@ApiParam({ name: 'portfolioId', description: 'ID of the portfolio', type: String })
 export class PropertiesController {
   constructor(
     private readonly propertiesService: PropertiesService,
@@ -92,15 +98,48 @@ export class PropertiesController {
     private readonly jwtService: JwtService,
   ) {}
 
-  @ApiOperation({ summary: 'Create a new property for a portfolio' })
-  @ApiResponse({ status: 201, description: 'Property created successfully', type: Property })
-  @ApiResponse({ status: 400, description: 'Bad request - invalid data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - authentication required' })
-  @ApiCookieAuth()
-  @UseGuards(AuthGuard)
+  @ApiOperation({ 
+    summary: 'Create a new property for a portfolio',
+    description: 'Creates a new property within the specified portfolio. Requires authentication and portfolio access.'
+  })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Property created successfully', 
+    type: Property 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad request - invalid data' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized - authentication required' 
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - insufficient permissions' 
+  })
+  @ApiBody({ 
+    type: CreatePropertyDto,
+    description: 'Property details',
+    examples: {
+      basic: {
+        summary: 'Basic property creation',
+        value: {
+          name: 'Sunny Apartments',
+          property_type: 'apartment',
+          address: '123 Main St',
+          city: 'New York',
+          state: 'NY',
+          postal_code: '10001',
+          country: 'USA'
+        }
+      }
+    }
+  })
   @Post()
   async create(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('portfolioId') portfolioId: string,
     @Body() createPropertyDto: CreatePropertyDto,
     @Request() req,
   ) {
@@ -112,15 +151,52 @@ export class PropertiesController {
       { secret: this.configService.get<string>('JWT_ACCESS_SECRET') }
     );
     
-    const userId = parseInt(payload.sub, 10);
+    const userId = payload.sub; // Keep as string to match service expectations
     
     return await this.propertiesService.create({ ...createPropertyDto, portfolio_id: portfolioId }, userId);
   }
 
-  @ApiOperation({ summary: 'Get all properties for a portfolio (paginated + search)' })
-  @ApiResponse({ status: 200, description: 'Portfolio properties retrieved successfully', type: PaginatedPropertiesResponseDto })
+  @ApiOperation({ 
+    summary: 'Get all properties for a portfolio', 
+    description: 'Retrieves a paginated list of properties for the specified portfolio with optional search and filtering.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Portfolio properties retrieved successfully', 
+    type: PaginatedPropertiesResponseDto 
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - authentication required'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions'
+  })
+  @ApiParam({
+    name: 'portfolioId',
+    description: 'ID of the portfolio to get properties for',
+    type: String
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number for pagination',
+    example: 1
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+    example: 10
+  })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Query() query: FindPropertiesDto) {
+  findByPortfolio(
+    @Param('portfolioId') portfolioId: string, 
+    @Query() query: FindPropertiesDto
+  ) {
     return this.propertiesService.findByPortfolio(portfolioId, query);
   }
 } 

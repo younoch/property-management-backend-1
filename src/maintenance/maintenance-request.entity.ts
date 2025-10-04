@@ -6,29 +6,29 @@ import { Tenant } from '../tenants/tenant.entity';
 @Entity()
 @Index(['status'])
 export class MaintenanceRequest {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })
   property: Property;
 
   @Column()
-  property_id: number;
+  property_id: string;
 
   @ManyToOne(() => Unit, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'unit_id' })
   unit: Unit | null;
 
   @Column({ nullable: true })
-  unit_id: number | null;
+  unit_id: string | null;
 
   @ManyToOne(() => Tenant, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant | null;
 
   @Column({ nullable: true })
-  tenant_id: number | null;
+  tenant_id: string | null;
 
   @Column()
   title: string;
@@ -48,13 +48,13 @@ export class MaintenanceRequest {
   @Column({ type: 'timestamptz', nullable: true })
   completed_at: Date | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date | null;
 }
 

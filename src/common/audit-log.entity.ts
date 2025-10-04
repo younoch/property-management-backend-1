@@ -3,8 +3,8 @@ import { AuditAction } from './enums/audit-action.enum';
 
 @Entity('audit_logs')
 export class AuditLog {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 50 })
   @Index()
@@ -22,13 +22,13 @@ export class AuditLog {
   @Index()
   action: AuditAction;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   @Index()
-  user_id?: number;
+  user_id?: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   @Index()
-  portfolio_id?: number;
+  portfolio_id?: string;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, any>;

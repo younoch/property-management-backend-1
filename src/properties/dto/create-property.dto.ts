@@ -12,12 +12,12 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreatePropertyDto {
   @ApiProperty({
     description: 'Portfolio ID that owns this property (auto-generated from authenticated user)',
-    example: 1,
-    required: false
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: true
   })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  portfolio_id?: number;
+  portfolio_id: string;
 
   @ApiProperty({
     description: 'Property name',

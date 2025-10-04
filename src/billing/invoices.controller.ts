@@ -42,7 +42,7 @@ export class InvoicesController {
   @ApiNotFoundResponse({ description: 'Invoice not found' })
   @Get(':id')
   @UseGuards(AuthGuard)
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.invoicesService.findOne(id);
   }
 
@@ -68,7 +68,7 @@ export class InvoicesController {
   @Patch(':id')
   @UseGuards(AuthGuard)
   update(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id') id: string, 
     @Body() dto: UpdateInvoiceDto
   ) {
     return this.invoicesService.update(id, dto);
@@ -90,7 +90,7 @@ export class InvoicesController {
   @ApiNotFoundResponse({ description: 'Invoice not found' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.invoicesService.remove(id);
   }
 
@@ -136,7 +136,7 @@ export class InvoicesController {
   })
   @ApiNotFoundResponse({ description: 'Invoice not found' })
   async findByLeaseAndMonth(
-    @Query('leaseId', ParseIntPipe) leaseId: number,
+    @Query('leaseId') leaseId: string,
     @Query('billingMonth') billingMonth: string
   ) {
     if (!billingMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(billingMonth)) {

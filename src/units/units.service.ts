@@ -21,23 +21,27 @@ export class UnitsService {
     return this.unitsRepo.find();
   }
 
-  findByProperty(propertyId: number) {
-    return this.unitsRepo.find({ where: { property_id: propertyId } });
+  findByProperty(propertyId: string) {
+    return this.unitsRepo.find({ 
+      where: { 
+        property: { id: propertyId } 
+      } 
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const unit = await this.unitsRepo.findOne({ where: { id } });
     if (!unit) throw new NotFoundException('Unit not found');
     return unit;
   }
 
-  async update(id: number, dto: UpdateUnitDto) {
+  async update(id: string, dto: UpdateUnitDto) {
     const unit = await this.findOne(id);
     Object.assign(unit, dto);
     return this.unitsRepo.save(unit);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const unit = await this.findOne(id);
     await this.unitsRepo.remove(unit);
     return { success: true };

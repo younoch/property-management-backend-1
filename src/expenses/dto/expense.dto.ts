@@ -8,15 +8,15 @@ import { ExpenseCategory, EXPENSE_CATEGORIES, getExpenseCategoryLabel } from '..
 export class ExpenseBaseDto {
   @ApiProperty({ 
     description: 'The unique identifier of the expense',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @ApiProperty({ 
     description: 'The ID of the property this expense belongs to',
-    example: 1
+    example: '1'
   })
-  property_id: number;
+  property_id: string;
 
   @ApiProperty({ 
     description: 'The amount of the expense',
@@ -140,11 +140,11 @@ export class CreateExpenseDto {
    */
   @ApiProperty({
     description: 'The ID of the property this expense belongs to',
-    example: 1,
+    example: '1',
     required: true
   })
-  @IsInt()
-  property_id: number;
+  @IsString()
+  property_id: string;
 
   /**
    * The amount of the expense
@@ -376,9 +376,9 @@ export class ExpenseListDto extends PickType(ExpenseBaseDto, [
 ] as const) {
   @ApiProperty({
     description: 'The unique identifier of the expense',
-    example: 1
+    example: '1'
   })
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The amount of the expense',

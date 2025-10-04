@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { FeedbackResponseDto } from './dto/feedback-response.dto';
@@ -81,8 +81,9 @@ export class FeedbackController {
     description: 'Feedback marked as reviewed',
     type: FeedbackResponseDto,
   })
+  @ApiParam({ name: 'id', type: String, description: 'Feedback ID (UUID)' })
   async markAsReviewed(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
   ): Promise<FeedbackResponseDto> {
     const feedbackData = await this.feedbackService.markAsReviewed(id);
     const response = new FeedbackResponseDto();

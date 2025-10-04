@@ -10,7 +10,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 
 export interface InvoicePdfData {
-  id: number;
+  id: string;
   invoice_number: string;
   issue_date: string | Date;
   due_date: string | Date;
@@ -30,14 +30,14 @@ export interface InvoicePdfData {
     period_end?: string;
   }>;
   lease: {
-    id: number;
+    id: string;
     tenant_name: string;
     tenant_email?: string;
     tenant_phone?: string;
     property_address?: string;
   };
   portfolio?: {
-    id: number;
+    id: string;
     name: string;
     address?: string;
     phone?: string;

@@ -13,11 +13,11 @@ export const EXPENSE_STATUSES: ExpenseStatus[] = ['paid', 'pending', 'overdue'];
 @Index(['date_incurred'])
 @Index(['category'])
 export class Expense {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  property_id: number;
+  property_id: string;
 
   @ManyToOne('Property', 'expenses', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })
@@ -78,12 +78,12 @@ export class Expense {
   @Column({ type: 'text', nullable: true })
   notes?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @DeleteDateColumn({ nullable: true })
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
 }

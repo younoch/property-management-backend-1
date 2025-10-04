@@ -5,9 +5,13 @@ import { TenantsController, TenantsGlobalController } from './tenants.controller
 import { TenantsService } from './tenants.service';
 import { Tenant } from './tenant.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
+import { PortfoliosModule } from '../portfolios/portfolios.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, LeaseTenant])],
+  imports: [
+    TypeOrmModule.forFeature([Tenant, LeaseTenant]),
+    PortfoliosModule
+  ],
   controllers: [TenantsController, TenantsGlobalController],
   providers: [TenantsService],
 })

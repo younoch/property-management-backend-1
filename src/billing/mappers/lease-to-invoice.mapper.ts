@@ -37,7 +37,7 @@ export class LeaseToInvoiceMapper {
         unit_price: parseFloat(lease.rent.toString()),
         amount: parseFloat(lease.rent.toString()),
         is_recurring: true,
-        lease_term_id: lease.id
+        lease_term_id: typeof lease.id === 'string' ? parseInt(lease.id, 10) : lease.id
       });
     }
 
@@ -53,7 +53,7 @@ export class LeaseToInvoiceMapper {
           unit_price: parseFloat(lease.late_fee_flat.toString()),
           amount: parseFloat(lease.late_fee_flat.toString()),
           is_recurring: true,
-          lease_term_id: lease.id
+          lease_term_id: typeof lease.id === 'string' ? parseInt(lease.id, 10) : lease.id
         });
       }
       // Note: Percentage-based late fees would need the invoice amount to calculate

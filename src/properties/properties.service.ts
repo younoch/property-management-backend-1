@@ -15,7 +15,7 @@ export class PropertiesService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(createPropertyDto: CreatePropertyDto, userId: number): Promise<Property> {
+  async create(createPropertyDto: CreatePropertyDto, userId: string): Promise<Property> {
     // Validate user and ownership of the specified portfolio_id
     const user = await this.usersRepository.findOne({
       where: { id: userId },
@@ -30,7 +30,7 @@ export class PropertiesService {
       throw new UnauthorizedException('portfolio_id is required');
     }
 
-    const allowedPortfolioIds: number[] = Array.isArray(user.owned_portfolios)
+    const allowedPortfolioIds: string[] = Array.isArray(user.owned_portfolios)
       ? user.owned_portfolios.map((p) => p.id)
       : [];
 
@@ -73,11 +73,11 @@ export class PropertiesService {
       skip: (page - 1) * limit,
       take: limit,
     });
-
+    
     return { data, total, page, limit };
   }
 
-  async findOne(id: number): Promise<Property> {
+  async findOne(id: string): Promise<Property> {
     const property = await this.propertiesRepository.findOne({
       where: { id },
       relations: ['portfolio'],
@@ -90,7 +90,7 @@ export class PropertiesService {
     return property;
   }
 
-  async findByPortfolio(portfolioId: number, query?: { page?: number; limit?: number; search?: string }): Promise<{ data: Property[]; total: number; page: number; limit: number }> {
+  async findByPortfolio(portfolioId: string, query?: { page?: number; limit?: number; search?: string }): Promise<{ data: Property[]; total: number; page: number; limit: number }> {
     const page = query?.page ?? 1;
     const limit = query?.limit ?? 10;
     const search = (query?.search ?? '').trim();
@@ -128,13 +128,13 @@ export class PropertiesService {
     });
   }
 
-  async update(id: number, updatePropertyDto: UpdatePropertyDto): Promise<Property> {
+  async update(id: string, updatePropertyDto: UpdatePropertyDto): Promise<Property> {
     const property = await this.findOne(id);
     Object.assign(property, updatePropertyDto);
     return await this.propertiesRepository.save(property);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const property = await this.findOne(id);
     await this.propertiesRepository.remove(property);
   }

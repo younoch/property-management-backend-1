@@ -13,23 +13,23 @@ export class LeaseBillingController {
 
   @Get('invoices')
   findInvoices(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.invoicesService.findByLease(leaseId);
+    return this.invoicesService.findByLease(leaseId.toString());
   }
 
   @Post('invoices/generate-next')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
   generateNextInvoice(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.invoicesService.generateNextForLease(leaseId);
+    return this.invoicesService.generateNextForLease(leaseId.toString());
   }
 
   @Get('payments')
   findPayments(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.paymentsService.findByLease(leaseId);
+    return this.paymentsService.findByLease(leaseId.toString());
   }
 
   @Post('payments')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
   createPayment(@Param('leaseId', ParseIntPipe) leaseId: number, @Body() dto: CreatePaymentLeaseDto) {
-    return this.paymentsService.createForLease(leaseId, dto as any);
+    return this.paymentsService.createForLease(leaseId.toString(), dto as any);
   }
 }

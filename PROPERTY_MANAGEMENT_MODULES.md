@@ -47,8 +47,8 @@ Portfolio (1) ──── (Many) Property
 ```typescript
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -78,10 +78,10 @@ export class User {
   @Column({ type: 'varchar', length: 10, default: 'en' })
   language: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   // Relationships
@@ -99,8 +99,8 @@ export class User {
 @Index(['landlord'])
 @Index(['status'])
 export class Portfolio {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   @IsNotEmpty()
@@ -122,7 +122,7 @@ export class Portfolio {
   landlord: User;
 
   @Column()
-  landlord_id: number;
+  landlord_id: string;
 
   @Column()
   subscription_plan: string;
@@ -130,10 +130,10 @@ export class Portfolio {
   @Column()
   status: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   // Relationships
@@ -148,8 +148,8 @@ export class Portfolio {
 @Index(['city', 'state'])
 @Index(['property_type'])
 export class Property {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
   
   @DeleteDateColumn()
   deleted_at: Date;
@@ -159,7 +159,7 @@ export class Property {
   portfolio: Portfolio;
 
   @Column()
-  portfolio_id: number;
+  portfolio_id: string;
 
   @Column()
   name: string;
@@ -195,10 +195,10 @@ export class Property {
   @Column({ nullable: true, type: 'text' })
   description: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 }
 ```
@@ -287,8 +287,8 @@ export class CreatePortfolioDto {
   @IsString()
   name: string;
 
-  @IsNumber()
-  landlord_id: number;
+  @IsString()
+  landlord_id: string;
 
   @IsString()
   subscription_plan: string;
@@ -301,8 +301,8 @@ export class CreatePortfolioDto {
 ### CreatePropertyDto
 ```typescript
 export class CreatePropertyDto {
-  @IsNumber()
-  portfolio_id: number;
+  @IsString()
+  portfolio_id: string;
 
   @IsString()
   name: string;

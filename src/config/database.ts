@@ -14,7 +14,7 @@ if (isTest && process.env.USE_SQLITE_FOR_TESTS === 'true') {
     type: 'sqlite',
     database: ':memory:',
     dropSchema: true,
-    synchronize: true,
+    synchronize: false, // Always false - use migrations instead
     logging: false,
     entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
   } as TypeOrmModuleOptions;
@@ -24,7 +24,7 @@ if (isTest && process.env.USE_SQLITE_FOR_TESTS === 'true') {
     url: process.env.DATABASE_URL,
     ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
     autoLoadEntities: true,
-    synchronize: process.env.DB_SYNC === 'true',
+    synchronize: false, // Always false - use migrations instead
     migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
     logging: false,
     entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
@@ -34,15 +34,15 @@ if (isTest && process.env.USE_SQLITE_FOR_TESTS === 'true') {
   databaseConfig = {
     type: 'postgres',
     host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
+    port: parseInt(process.env.DB_PORT || '5433', 10),
     username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD || 'rR%jrYKNqQdnYVQUkzuN',
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     autoLoadEntities: true,
     synchronize: process.env.DB_SYNC === 'true',
-    migrationsRun: process.env.RUN_MIGRATIONS_ON_BOOT === 'true',
-    logging: false,
+    migrationsRun: false,
+    logging: true,
     entities: [join(__dirname, `../**/*.entity.${fileExtension}`)],
     migrations: [join(__dirname, `../database/migrations/*.${fileExtension}`)],
   } as TypeOrmModuleOptions;

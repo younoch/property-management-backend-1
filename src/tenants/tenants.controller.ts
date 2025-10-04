@@ -26,7 +26,7 @@ export class TenantsGlobalController {
   @ApiParam({ name: 'id', description: 'Tenant ID' })
   @ApiResponse({ status: 200, description: 'Tenant found successfully', type: Tenant })
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.tenantsService.findOne(id);
   }
 
@@ -35,7 +35,7 @@ export class TenantsGlobalController {
   @ApiResponse({ status: 200, description: 'Tenant updated successfully', type: Tenant })
   @Patch(':id')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTenantDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
     return this.tenantsService.update(id, dto);
   }
 
@@ -44,7 +44,7 @@ export class TenantsGlobalController {
   @ApiResponse({ status: 200, description: 'Tenant deleted successfully' })
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.tenantsService.remove(id);
   }
 }
@@ -58,14 +58,14 @@ export class TenantsController {
   @ApiResponse({ status: 201, description: 'Tenant created successfully', type: Tenant })
   @Post()
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  create(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Body() dto: CreateTenantDto) {
+  create(@Param('portfolioId') portfolioId: string, @Body() dto: CreateTenantDto) {
     return this.tenantsService.create({ ...dto, portfolio_id: portfolioId });
   }
 
   @ApiOperation({ summary: 'Get all tenants for a portfolio (paginated + search)' })
   @ApiResponse({ status: 200, description: 'Tenants retrieved successfully', type: PaginatedTenantsResponseDto })
   @Get()
-  findByPortfolio(@Param('portfolioId', ParseIntPipe) portfolioId: number, @Query() query: FindTenantsDto) {
+  findByPortfolio(@Param('portfolioId') portfolioId: string, @Query() query: FindTenantsDto) {
     return this.tenantsService.findByPortfolio(portfolioId, query);
   }
 }

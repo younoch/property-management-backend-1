@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class PortfolioShortDto {
   @ApiProperty({ description: 'Portfolio ID' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'Portfolio name' })
   name: string;

@@ -6,10 +6,10 @@ import { UnitShortDto } from '../../properties/dto/unit-short.dto';
 
 export class LeaseResponseDto {
   @ApiProperty({ description: 'Lease ID' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'Unit ID' })
-  unit_id: number;
+  unit_id: string;
 
   @ApiProperty({ 
     type: UnitShortDto,

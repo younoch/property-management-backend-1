@@ -3,7 +3,7 @@ import { AuditLog } from '../audit-log.entity';
 
 export class AuditLogResponseDto {
   @ApiProperty({ description: 'Unique identifier for the audit log entry' })
-  id: number;
+  id: string;
 
   @ApiProperty({ description: 'Type of the entity that was modified', example: 'Payment' })
   entityType: string;
@@ -21,13 +21,13 @@ export class AuditLogResponseDto {
     description: 'ID of the user who performed the action',
     required: false 
   })
-  userId?: number;
+  userId?: string;
 
   @ApiProperty({ 
     description: 'ID of the portfolio this action relates to',
     required: false 
   })
-  portfolioId?: number;
+  portfolioId?: string;
 
   @ApiProperty({ 
     description: 'Additional metadata about the action',
@@ -68,8 +68,8 @@ export class AuditLogResponseDto {
     this.entityType = auditLog.entity_type;
     this.entityId = auditLog.entity_id;
     this.action = auditLog.action;
-    this.userId = auditLog.user_id;
-    this.portfolioId = auditLog.portfolio_id;
+    this.userId = auditLog.user_id?.toString();
+    this.portfolioId = auditLog.portfolio_id?.toString();
     
     // Handle metadata - ensure it's always an object
     if (typeof auditLog.metadata === 'string') {

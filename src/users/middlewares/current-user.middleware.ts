@@ -27,17 +27,30 @@ export class CurrentUserMiddleware implements NestMiddleware {
         const payload = jwt.verify(
           token,
           this.configService.get<string>('JWT_ACCESS_SECRET') as string,
-        ) as { sub: string | number };
-        const userId = typeof payload.sub === 'string' ? parseInt(payload.sub, 10) : payload.sub;
-        if (userId) {
-          const user = await this.usersService.findOne(userId);
+        ) as { sub: string };
+        
+        if (!payload.sub) {
+          console.warn('No user ID found in token payload');
+          return next();
+        }
+        
+        try {
+          const user = await this.usersService.findOne(payload.sub);
           if (user) {
             req.currentUser = user;
+          } else {
+            console.warn(`User with ID ${payload.sub} not found`);
           }
+        } catch (error) {
+          console.error('Error fetching user in CurrentUserMiddleware:', error);
         }
       }
     } catch (err) {
-      // ignore invalid/expired token
+      if (err instanceof jwt.JsonWebTokenError) {
+        console.warn('Invalid JWT token:', err.message);
+      } else if (err instanceof Error) {
+        console.error('Error in CurrentUserMiddleware:', err.message, err.stack);
+      }
     }
     next();
   }

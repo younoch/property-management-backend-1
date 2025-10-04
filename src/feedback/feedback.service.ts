@@ -67,7 +67,7 @@ export class FeedbackService {
     return { data, total };
   }
 
-  async markAsReviewed(id: number): Promise<FeedbackDataDto> {
+  async markAsReviewed(id: string): Promise<FeedbackDataDto> {
     const feedback = await this.feedbackRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -80,13 +80,10 @@ export class FeedbackService {
     feedback.isReviewed = true;
     const updatedFeedback = await this.feedbackRepository.save(feedback);
     
-    return this.mapToResponseDto(updatedFeedback, feedback.user.email);
+    return this.mapToResponseDto(updatedFeedback, feedback.user?.email || '');
   }
 
-  private mapToResponseDto(
-    feedback: Feedback,
-    userEmail: string,
-  ): FeedbackDataDto {
+  private mapToResponseDto(feedback: Feedback, userEmail: string): FeedbackDataDto {
     return {
       id: feedback.id,
       message: feedback.message,
@@ -94,7 +91,8 @@ export class FeedbackService {
       metadata: feedback.metadata,
       isReviewed: feedback.isReviewed,
       createdAt: feedback.createdAt,
-      userId: feedback.userId,
+      // Convert string ID to number for backward compatibility with DTO
+      userId: feedback.userId ? parseInt(feedback.userId, 10) : null,
       userEmail: userEmail,
     };
   }

@@ -1,10 +1,10 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  ManyToOne, 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
   OneToMany,
-  CreateDateColumn, 
+  CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
   Index,
@@ -13,7 +13,7 @@ import {
 import { Portfolio } from "../portfolios/portfolio.entity";
 import { Unit } from "../units/unit.entity";
 import { IsNotEmpty } from 'class-validator';
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 
 import type { Expense } from '../expenses/expense.entity';
 
@@ -21,67 +21,68 @@ import type { Expense } from '../expenses/expense.entity';
 @Index(['city', 'state'])
 @Index(['property_type'])
 export class Property {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'portfolio_id' })
-    portfolio: Portfolio;
+  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'portfolio_id' })
+  portfolio: Portfolio;
 
-    @Column()
-    @IsNotEmpty()
-    portfolio_id: number;
+  @Column({ name: 'portfolio_id', nullable: true })
+  portfolio_id: string | null;
 
-    @Column()
-    @IsNotEmpty()
-    name: string;
 
-    @Column({ nullable: true })
-    address_line1: string;
+  @Column()
+  @IsNotEmpty()
+  name: string;
 
-    @Column({ nullable: true })
-    address_line2: string;
+  @Column({ nullable: true })
+  address_line1: string;
 
-    @Column({ nullable: true })
-    city: string;
+  @Column({ nullable: true })
+  address_line2: string;
 
-    @Column({ nullable: true })
-    state: string;
+  @Column({ nullable: true })
+  city: string;
 
-    @Column({ name: 'postal_code', nullable: true })
-    zip_code: string;
+  @Column({ nullable: true })
+  state: string;
 
-    @Column({ nullable: true })
-    country: string;
+  @OneToMany(() => Unit, unit => unit.property, {
+    onDelete: 'CASCADE'
+  })
+  @ApiProperty({ type: () => [Unit], description: 'List of units in this property' })
+  units: Unit[];
 
-    @Column("decimal", { precision: 10, scale: 6, nullable: true })
-    latitude: number;
+  @Column({ name: 'postal_code', nullable: true })
+  zip_code: string;
 
-    @Column("decimal", { precision: 10, scale: 6, nullable: true })
-    longitude: number;
+  @Column({ nullable: true })
+  country: string;
 
-    @Column()
-    @IsNotEmpty()
-    property_type: string;
+  @Column("decimal", { precision: 10, scale: 6, nullable: true })
+  latitude: number;
 
-    // number_of_units removed; derive by counting units
+  @Column("decimal", { precision: 10, scale: 6, nullable: true })
+  longitude: number;
 
-    @OneToMany(() => Unit, (unit) => unit.property)
-    units: Unit[];
+  @Column()
+  @IsNotEmpty()
+  property_type: string;
 
-    @OneToMany('Expense', 'property', { cascade: true })
-    @ApiHideProperty() // keep to prevent Swagger circular dependency
-    expenses: Promise<Expense[]>;
+  @OneToMany('Expense', 'property', { cascade: true })
+  @ApiHideProperty()
+  expenses: Promise<Expense[]>;
 
-    @Column({ nullable: true, type: "text" })
-    description: string;
+  @Column({ nullable: true, type: "text" })
+  description: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date;
 
-    @DeleteDateColumn()
-    deleted_at: Date | null;
-} 
+  @DeleteDateColumn({ type: 'timestamptz' })
+  deleted_at: Date | null;
+}

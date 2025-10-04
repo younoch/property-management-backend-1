@@ -14,8 +14,8 @@ export class RefreshTokenDto {
 
 // Portfolio DTO for owned portfolios
 export class PortfolioDto {
-  @ApiProperty({ description: 'Portfolio ID', example: 1 })
-  id: number;
+  @ApiProperty({ description: 'Portfolio ID', example: '1' })
+  id: string;
 
   @ApiProperty({ description: 'Portfolio name', example: 'Rental Portfolio A' })
   name: string;
@@ -31,9 +31,9 @@ export class PortfolioDto {
 export class NotificationDto {
   @ApiProperty({
     description: 'Notification ID',
-    example: 1,
+    example: '1',
   })
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'Notification title',
@@ -71,7 +71,7 @@ export class RefreshTokenResponseDto {
     description: 'Complete user information including relationships',
     type: 'object',
     properties: {
-      id: { type: 'number', example: 1 },
+      id: { type: 'string', example: '1' },
       email: { type: 'string', example: 'user@example.com' },
       name: { type: 'string', example: 'John Doe' },
       phone: { type: 'string', example: '+1234567890' },
@@ -85,7 +85,7 @@ export class RefreshTokenResponseDto {
         items: { $ref: '#/components/schemas/PortfolioDto' },
         example: [
           {
-            id: 1,
+            id: '1',
             name: 'Rental Portfolio A',
             status: 'active',
             created_at: '2024-01-01T00:00:00.000Z'
@@ -97,7 +97,7 @@ export class RefreshTokenResponseDto {
         items: { $ref: '#/components/schemas/NotificationDto' },
         example: [
           {
-            id: 1,
+            id: '1',
             title: 'Maintenance Request Update',
             message: 'Your maintenance request has been updated',
             is_read: false,
@@ -108,7 +108,7 @@ export class RefreshTokenResponseDto {
     },
   })
   user: {
-    id: number;
+    id: string;
     email: string;
     name: string;
     phone: string;
