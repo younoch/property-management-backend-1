@@ -20,7 +20,7 @@ export class FeedbackDataDto {
   createdAt: Date;
 
   @ApiProperty({ description: 'ID of the user who submitted the feedback', nullable: true })
-  userId: number | null;
+  userId: string  | null;
 
   @ApiProperty({ description: 'Email of the user who submitted the feedback' })
   userEmail: string;

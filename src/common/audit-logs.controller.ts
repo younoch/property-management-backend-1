@@ -65,9 +65,9 @@ export class AuditLogsController {
           (query.portfolioId === 'null' || query.portfolioId === '' ? null : query.portfolioId) : 
           undefined,
           
-        // Convert other IDs to numbers if they exist
-        propertyId: query.propertyId ? parseInt(query.propertyId, 10) : undefined,
-        userId: query.userId ? parseInt(query.userId, 10) : undefined,
+        // Keep IDs as strings
+        propertyId: query.propertyId || undefined,
+        userId: query.userId || undefined,
         
         // Preserve other query parameters
         action: query.action,
@@ -200,7 +200,7 @@ export class AuditLogsController {
   @ApiResponse({ status: 400, description: 'Invalid parameters' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async getPortfolioLogs(
-    @Param('portfolioId', ParseIntPipe) portfolioId: number,
+    @Param('portfolioId', ParseIntPipe) portfolioId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 50

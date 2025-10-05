@@ -7,25 +7,25 @@ export class AuditLogQueryDto {
 
   @ApiPropertyOptional({ 
     description: 'Filter by portfolio ID. Use null to filter for logs with no portfolio.',
-    type: Number,
+    type: String,
     nullable: true,
     example: 1
   })
-  @Type(() => Number)
+  @Type(() => String)
   @IsInt()
   @Min(1)
   @IsOptional()
-  portfolioId?: number | null;
+  portfolioId?: string | null;
 
   @ApiPropertyOptional({ 
     description: 'Filter by property ID',
-    type: Number
+    type: String
   })
-  @Type(() => Number)
+  @Type(() => String)
   @IsInt()
   @Min(1)
   @IsOptional()
-  propertyId?: number;
+  propertyId?: string;
 
   @ApiPropertyOptional({ 
     description: 'Filter by user ID who performed the action',
@@ -35,7 +35,7 @@ export class AuditLogQueryDto {
   @IsInt()
   @Min(1)
   @IsOptional()
-  userId?: number;
+  userId?: string;
 
   @ApiPropertyOptional({ 
     description: 'Filter by action type',

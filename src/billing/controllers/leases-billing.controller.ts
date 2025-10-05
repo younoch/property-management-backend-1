@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InvoicesService } from '../invoices.service';
 import { PaymentsService } from '../payments.service';
@@ -12,24 +12,25 @@ export class LeaseBillingController {
   constructor(private readonly invoicesService: InvoicesService, private readonly paymentsService: PaymentsService) {}
 
   @Get('invoices')
-  findInvoices(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.invoicesService.findByLease(leaseId.toString());
+  async findInvoices(@Param('leaseId') leaseId: string) {
+    const invoices = await this.invoicesService.findByLease(leaseId);
+    return invoices;
   }
 
   @Post('invoices/generate-next')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  generateNextInvoice(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.invoicesService.generateNextForLease(leaseId.toString());
+  generateNextInvoice(@Param('leaseId') leaseId: string) {
+    return this.invoicesService.generateNextForLease(leaseId);
   }
 
   @Get('payments')
-  findPayments(@Param('leaseId', ParseIntPipe) leaseId: number) {
-    return this.paymentsService.findByLease(leaseId.toString());
+  findPayments(@Param('leaseId') leaseId: string) {
+    return this.paymentsService.findByLease(leaseId);
   }
 
   @Post('payments')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  createPayment(@Param('leaseId', ParseIntPipe) leaseId: number, @Body() dto: CreatePaymentLeaseDto) {
-    return this.paymentsService.createForLease(leaseId.toString(), dto as any);
+  createPayment(@Param('leaseId') leaseId: string, @Body() dto: CreatePaymentLeaseDto) {
+    return this.paymentsService.createForLease(leaseId, dto as any);
   }
 }

@@ -146,7 +146,7 @@ export class ExpensesController {
   @ApiResponse({ status: 200, description: 'Expense summary' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getSummary(@Param('propertyId') propertyId: string) {
-    return this.expensesService.getExpenseSummary(parseInt(propertyId, 10));
+    return this.expensesService.getExpenseSummary(propertyId);
   }
 
   @Get(':id')
@@ -159,7 +159,7 @@ export class ExpensesController {
     @Param('propertyId') propertyId: string,
     @Param('id') id: string
   ): Promise<ExpenseDto> {
-    const expense = await this.expensesService.findOne(parseInt(id, 10));
+    const expense = await this.expensesService.findOne(id);
     return this.mapToDto(expense);
   }
 
@@ -180,7 +180,7 @@ export class ExpensesController {
       ...updateExpenseDto,
       property_id: propertyId // The DTO should handle the string to number conversion
     };
-    const expense = await this.expensesService.update(parseInt(id, 10), updateData as any);
+    const expense = await this.expensesService.update(id, updateData as any);
     return this.mapToDto(expense);
   }
 
@@ -194,6 +194,6 @@ export class ExpensesController {
     @Param('propertyId') propertyId: string,
     @Param('id') id: string
   ): Promise<void> {
-    await this.expensesService.removeForProperty(parseInt(id, 10), parseInt(propertyId, 10));
+    await this.expensesService.removeForProperty(id, propertyId);
   }
 }
