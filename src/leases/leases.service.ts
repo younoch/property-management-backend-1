@@ -42,14 +42,14 @@ export class LeasesService {
 
   async findAll(): Promise<Lease[]> {
     return this.repo.find({
-      relations: ['unit', 'tenants', 'tenants.tenant'],
+      relations: ['unit', 'lease_tenants', 'lease_tenants.tenant'],
     });
   }
 
   async findByUnit(unitId: string): Promise<Lease[]> {
     return this.repo.find({ 
       where: { unit_id: unitId },
-      relations: ['unit', 'tenants', 'tenants.tenant']
+      relations: ['unit', 'lease_tenants', 'lease_tenants.tenant']
     });
   }
 
@@ -59,7 +59,7 @@ export class LeasesService {
   async findOne(id: string): Promise<Lease> {
     const lease = await this.repo.findOne({
       where: { id },
-      relations: ['unit', 'tenants', 'tenants.tenant']
+      relations: ['unit', 'lease_tenants', 'lease_tenants.tenant']
     });
     
     if (!lease) throw new NotFoundException('Lease not found');

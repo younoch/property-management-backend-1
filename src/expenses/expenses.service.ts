@@ -51,11 +51,14 @@ export class ExpensesService {
   }
 
   async findAll(
-    propertyId?: number,
-    startDate?: Date,
-    endDate?: Date,
-    category?: string,
+    options: {
+      propertyId?: string;
+      startDate?: Date | string;
+      endDate?: Date | string;
+      category?: string;
+    } = {}
   ): Promise<Expense[]> {
+    const { propertyId, startDate, endDate, category } = options;
     // Don't include the property relation to prevent circular references
     // The DTO will handle adding the property_id
     const query = this.expenseRepository
@@ -63,15 +66,18 @@ export class ExpensesService {
       .orderBy('expense.date_incurred', 'DESC');
 
     if (propertyId) {
+      // Use propertyId as string since it's a UUID
       query.andWhere('expense.property_id = :propertyId', { propertyId });
     }
 
     if (startDate) {
-      query.andWhere('expense.date_incurred >= :startDate', { startDate });
+      const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+      query.andWhere('expense.date_incurred >= :startDate', { startDate: start });
     }
 
     if (endDate) {
-      query.andWhere('expense.date_incurred <= :endDate', { endDate });
+      const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+      query.andWhere('expense.date_incurred <= :endDate', { endDate: end });
     }
 
     if (category) {
@@ -81,11 +87,11 @@ export class ExpensesService {
     return query.orderBy('expense.date_incurred', 'DESC').getMany();
   }
 
-  async findOne(id: number): Promise<Expense> {
+  async findOne(id: string): Promise<Expense> {
     return this.findOneForProperty(id);
   }
 
-  async findOneForProperty(id: number, propertyId?: number): Promise<Expense> {
+  async findOneForProperty(id: string, propertyId?: string): Promise<Expense> {
     const query = this.expenseRepository.createQueryBuilder('expense')
       .where('expense.id = :id', { id });
 
@@ -107,9 +113,9 @@ export class ExpensesService {
   }
 
   async update(
-    id: number,
+    id: string,
     updateExpenseDto: UpdateExpenseDto,
-    propertyId?: number
+    propertyId?: string
   ): Promise<Expense> {
     const expense = propertyId 
       ? await this.findOneForProperty(id, propertyId)
@@ -139,18 +145,18 @@ export class ExpensesService {
   }
 
   async updateForProperty(
-    id: number,
-    propertyId: number,
+    id: string,
+    propertyId: string,
     updateExpenseDto: UpdateExpenseDto,
   ): Promise<Expense> {
     return this.update(id, updateExpenseDto, propertyId);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.removeForProperty(id);
   }
 
-  async removeForProperty(id: number, propertyId?: number): Promise<void> {
+  async removeForProperty(id: string, propertyId?: string): Promise<void> {
     const query = this.expenseRepository
       .createQueryBuilder()
       .delete()
@@ -172,7 +178,7 @@ export class ExpensesService {
     }
   }
 
-  async getExpenseSummary(propertyId?: number): Promise<{
+  async getExpenseSummary(propertyId?: string): Promise<{
     total: number;
     byCategory: Record<string, number>;
     byStatus: Record<string, number>;

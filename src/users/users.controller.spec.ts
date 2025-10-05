@@ -13,15 +13,15 @@ describe('UsersController', () => {
 
   beforeEach(async () => {
     fakeUsersService = {
-      findOne: (id: number) => {
+      findOne: (id: string) => {
         return Promise.resolve({
           id,
           email: 'asdf@asdf.com',
           password: 'asdf',
-        } as User);
+        } as unknown as User);
       },
       find: (email: string) => {
-        return Promise.resolve([{ id: 1, email, password: 'asdf' } as User]);
+        return Promise.resolve([{ id: '1', email, password: 'asdf' } as unknown as User]);
       },
       // remove: () => {},
       // update: () => {},
@@ -40,7 +40,7 @@ describe('UsersController', () => {
           created_at: new Date('2024-01-01'),
           updated_at: new Date('2024-01-01'),
           admin: false,
-        } as User);
+        } as unknown as User);
       },
     };
 
@@ -99,7 +99,7 @@ describe('UsersController', () => {
     const res: any = { setHeader: jest.fn() };
     // Create a mock user with all fields
     const mockUser = {
-      id: 1,
+      id: '1',
       email: 'asdf@asdf.com',
       name: 'Test User',
       phone: '+1234567890',
@@ -144,7 +144,7 @@ describe('UsersController', () => {
   it('whoAmI returns full user data for authenticated user', () => {
     // Create a mock user with all fields
     const mockUser = {
-      id: 1,
+      id: '1',
       email: 'test@example.com',
       name: 'Test User',
       phone: '+1234567890',
@@ -156,10 +156,10 @@ describe('UsersController', () => {
       admin: false,
     };
 
-    const result = controller.whoAmI(mockUser as User);
+    const result = controller.whoAmI(mockUser as unknown as User);
 
     // Verify all user fields are returned
-    expect(result.id).toEqual(1);
+    expect(result.id).toEqual('1');
     expect(result.email).toEqual('test@example.com');
     expect(result.name).toEqual('Test User');
     expect(result.phone).toEqual('+1234567890');

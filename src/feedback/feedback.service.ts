@@ -92,7 +92,7 @@ export class FeedbackService {
       isReviewed: feedback.isReviewed,
       createdAt: feedback.createdAt,
       // Convert string ID to number for backward compatibility with DTO
-      userId: feedback.userId ? parseInt(feedback.userId, 10) : null,
+      userId: feedback.userId ? feedback.userId : null,
       userEmail: userEmail,
     };
   }

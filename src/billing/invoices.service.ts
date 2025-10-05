@@ -254,8 +254,9 @@ export class InvoicesService {
 
   async findByLease(leaseId: string) {
     return this.repo.find({ 
-      where: { lease: { id: leaseId } },
-      relations: ['lease', 'items']
+      where: { lease_id: leaseId },
+      relations: ['lease'],
+      order: { issue_date: 'DESC' }
     });
   }
 
