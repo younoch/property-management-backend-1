@@ -93,4 +93,22 @@ export class TenantsService {
     await this.repo.remove(tenant);
     return { success: true };
   }
+
+  async updateInPortfolio(portfolioId: string, id: string, dto: UpdateTenantDto) {
+    // Verify tenant exists and belongs to the specified portfolio
+    const tenant = await this.repo.findOne({ 
+      where: { 
+        id,
+        portfolio_id: portfolioId 
+      } 
+    });
+    
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found in the specified portfolio');
+    }
+    
+    // Update the tenant
+    Object.assign(tenant, dto);
+    return this.repo.save(tenant);
+  }
 }

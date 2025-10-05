@@ -87,9 +87,7 @@ export class LeasesGlobalController {
     @Param('id') id: string, 
     @Body() dto: AttachTenantsDto
   ): Promise<LeaseResponseDto> {
-    // Convert tenant_ids to strings if they're numbers
-    const tenantIds = dto.tenant_ids.map(id => String(id));
-    await this.leasesService.attachTenants(id, tenantIds);
+    await this.leasesService.attachTenants(id, dto.tenant_ids);
     const lease = await this.leasesService.findOne(id);
     return this.leaseMapper.toResponseDto(lease);
   }
@@ -219,9 +217,7 @@ export class LeasesController {
     @Param('id') id: string, 
     @Body() dto: AttachTenantsDto
   ): Promise<LeaseResponseDto> {
-    // Convert tenant_ids to strings if they're numbers
-    const tenantIds = dto.tenant_ids.map(id => String(id));
-    await this.leasesService.attachTenants(id, tenantIds);
+    await this.leasesService.attachTenants(id, dto.tenant_ids);
     const lease = await this.leasesService.findOne(id);
     return this.leaseMapper.toResponseDto(lease);
   }
