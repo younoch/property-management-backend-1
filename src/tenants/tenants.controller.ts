@@ -1,6 +1,6 @@
 // src/tenants/tenants.controller.ts
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -30,12 +30,38 @@ export class TenantsGlobalController {
     return this.tenantsService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Update tenant by ID' })
-  @ApiParam({ name: 'id', description: 'Tenant ID' })
-  @ApiResponse({ status: 200, description: 'Tenant updated successfully', type: Tenant })
+  @ApiOperation({ 
+    summary: 'Update tenant by ID',
+    description: 'Update a tenant. This endpoint supports partial updates. Only the fields provided in the request body will be updated.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'The ID of the tenant to update',
+    example: '69f7bb02-a487-40dc-86f8-8d09dcaedcc8'
+  })
+  @ApiBody({
+    type: UpdateTenantDto,
+    description: 'The tenant data to update. Only include the fields you want to update.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Tenant updated successfully', 
+    type: Tenant 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input data' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Tenant not found' 
+  })
   @Patch(':id')
   @UseGuards(AuthGuard, PortfolioScopeGuard)
-  update(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
+  async update(
+    @Param('id') id: string, 
+    @Body() dto: UpdateTenantDto
+  ) {
     return this.tenantsService.update(id, dto);
   }
 
@@ -67,6 +93,47 @@ export class TenantsController {
   @Get()
   findByPortfolio(@Param('portfolioId') portfolioId: string, @Query() query: FindTenantsDto) {
     return this.tenantsService.findByPortfolio(portfolioId, query);
+  }
+
+  @ApiOperation({ 
+    summary: 'Update a tenant in a portfolio',
+    description: 'Update a tenant. This endpoint supports both full and partial updates. Only the fields provided in the request body will be updated.'
+  })
+  @ApiParam({ 
+    name: 'portfolioId', 
+    description: 'The ID of the portfolio',
+    example: 'cf395326-9591-49b9-94de-7abcdfa1f123'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'The ID of the tenant to update',
+    example: '69f7bb02-a487-40dc-86f8-8d09dcaedcc8'
+  })
+  @ApiBody({
+    type: UpdateTenantDto,
+    description: 'The tenant data to update. Only include the fields you want to update.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Tenant updated successfully', 
+    type: Tenant 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input data' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Tenant not found' 
+  })
+  @Patch(':id')
+  @UseGuards(AuthGuard, PortfolioScopeGuard)
+  async updateInPortfolio(
+    @Param('portfolioId') portfolioId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTenantDto,
+  ) {
+    return this.tenantsService.updateInPortfolio(portfolioId, id, dto);
   }
 }
 

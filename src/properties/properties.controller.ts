@@ -1,14 +1,16 @@
-import {
+import { 
   Controller,
   Get,
   Post,
   Body,
   Put,
+  Patch,
   Param,
   Delete,
   Query,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
 import { 
   ApiTags, 
@@ -30,29 +32,27 @@ import { PortfolioScopeGuard } from '../guards/portfolio.guard';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AccessTokenPayload } from '../common/types/jwt.types';
+import { Logger } from '@nestjs/common';
 
 @ApiTags('properties')
 @Controller('properties')
 export class PropertiesGlobalController {
+  private readonly logger = new Logger(PropertiesGlobalController.name);
+
   constructor(
     private readonly propertiesService: PropertiesService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+    this.logger.log('PropertiesGlobalController initialized');
+  }
 
-  @ApiOperation({ summary: 'Get all properties (paginated + search)' })
   @ApiResponse({ status: 200, description: 'Properties retrieved successfully', type: PaginatedPropertiesResponseDto })
+  @ApiOperation({ summary: 'Get all properties (paginated + search)' })
   findAll(@Query() query: FindPropertiesDto) {
     return this.propertiesService.findAll(query);
   }
 
-  @ApiOperation({ summary: 'Get a single property by ID' })
-  @ApiResponse({ status: 200, description: 'Property found', type: Property })
-  @ApiResponse({ status: 404, description: 'Property not found' })
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.propertiesService.findOne(id);
-  }
 
   @ApiOperation({ summary: 'Search properties by location' })
   @ApiQuery({ name: 'city', description: 'City name', required: false })
@@ -65,16 +65,73 @@ export class PropertiesGlobalController {
     return this.propertiesService.findByLocation(city, state);
   }
 
-  @ApiOperation({ summary: 'Update a property' })
-  @ApiParam({ name: 'id', description: 'Property ID' })
-  @ApiResponse({ status: 200, description: 'Property updated successfully', type: Property })
-  @ApiResponse({ status: 404, description: 'Property not found' })
-  @Put(':id')
-  update(
+    @ApiOperation({ 
+    summary: 'Update a property (PATCH)',
+    description: 'Update a property. This endpoint supports both full and partial updates. Only the fields provided in the request body will be updated.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'The ID of the property to update',
+    example: '28f06083-28db-4f0c-ad3c-871e3ae99be1'
+  })
+  @ApiBody({
+    type: UpdatePropertyDto,
+    description: 'The property data to update. Only include the fields you want to update.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Property updated successfully', 
+    type: Property 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input data' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Property not found' 
+  })
+  @ApiOperation({ 
+    summary: 'Update a property',
+    description: 'Update a property. This endpoint supports both full and partial updates. Only the fields provided in the request body will be updated.'
+  })
+  @ApiParam({ 
+    name: 'id', 
+    description: 'The ID of the property to update',
+    example: '28f06083-28db-4f0c-ad3c-871e3ae99be1'
+  })
+  @ApiBody({
+    type: UpdatePropertyDto,
+    description: 'The property data to update. Only include the fields you want to update.'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Property updated successfully', 
+    type: Property 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input data' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Property not found' 
+  })
+  @Patch(':id')
+  @HttpCode(200)
+  async update(
     @Param('id') id: string,
     @Body() updatePropertyDto: UpdatePropertyDto,
   ) {
-    return this.propertiesService.update(id, updatePropertyDto);
+    this.logger.log(`PATCH /properties/${id} called`);
+    try {
+      const result = await this.propertiesService.update(id, updatePropertyDto);
+      this.logger.log(`PATCH /properties/${id} completed successfully`);
+      return result;
+    } catch (error) {
+      this.logger.error(`PATCH /properties/${id} failed: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   @ApiOperation({ summary: 'Delete a property' })
