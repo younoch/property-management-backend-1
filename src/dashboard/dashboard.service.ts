@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Payment } from '../billing/payment.entity';
+import { Payment } from '../billing/payments/entities/payment.entity';
 
 import {
   LessThanOrEqual,
@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Unit } from '../units/unit.entity';
 import { Tenant } from '../tenants/tenant.entity';
-import { Invoice } from '../billing/entities/invoice.entity';
+import { Invoice } from '../billing/invoices/entities/invoice.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Lease } from '../leases/lease.entity';
 import {

@@ -15,7 +15,7 @@ import { Property } from '../properties/property.entity';
 import { IsNotEmpty } from 'class-validator';
 
 // Import LeaseCharge as a type only to avoid circular dependency
-type LeaseChargeType = import('../billing/lease-charge.entity').LeaseCharge;
+type LeaseChargeType = import('../billing/lease-charges/entities/lease-charge.entity').LeaseCharge;
 
 @Entity()
 @Index(['landlord'])

@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LeaseCharge } from './lease-charge.entity';
-import { Invoice } from './entities/invoice.entity';
+import { LeaseCharge } from '../../billing/lease-charges/entities/lease-charge.entity';
+import { Invoice } from '../../billing/invoices/entities/invoice.entity';
 @Injectable()
 export class InvoiceGenerationScheduler {
   private readonly logger = new Logger(InvoiceGenerationScheduler.name);

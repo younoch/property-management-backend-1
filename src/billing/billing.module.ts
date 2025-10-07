@@ -4,26 +4,25 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 
 // Controllers and services
-import { InvoiceEmailController } from './controllers/invoice-email.controller';
-import { InvoiceEmailService } from './services/invoice-email.service';
-import { LeaseBillingController } from './controllers/leases-billing.controller';
-import { LeaseToInvoiceMapper } from './mappers/lease-to-invoice.mapper';
+import { InvoiceEmailController } from './invoices/controllers/invoice-email.controller';
+import { InvoiceEmailService } from './invoices/services/invoice-email.service';
+import { LeaseBillingController } from './invoices/controllers/leases-billing.controller';
+import { LeaseToInvoiceMapper } from './invoices/mappers/lease-to-invoice.mapper';
 
 // Modules
 import { AuditLogModule } from '../common/audit-log.module';
-import { LeaseChargesModule } from './lease-charges.module';
-import { EmailModule } from '../email/email.module';
-import { PdfModule } from '../pdf/pdf.module';
-import { InvoicesModule } from './invoices.module';
-import { PaymentsModule } from './payments.module';
+import { LeaseChargesModule } from './lease-charges/lease-charges.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { PaymentsModule } from './payments/payments.module';
 import { PortfoliosModule } from '../portfolios/portfolios.module';
+import { EmailModule } from '../email/email.module'
 
 // Entities
-import { Invoice } from './entities/invoice.entity';
-import { Payment } from './payment.entity';
-import { PaymentApplication } from './payment-application.entity';
+import { Invoice } from './invoices/entities/invoice.entity';
+import { Payment } from './payments/entities/payment.entity';
+import { PaymentApplication } from './payments/entities/payment-application.entity';
 import { Lease } from '../leases/lease.entity';
-import { Portfolio } from '../portfolios/portfolio.entity';
+import { PdfService } from '../pdf/pdf.service';
 
 @Module({
   imports: [
@@ -34,17 +33,14 @@ import { Portfolio } from '../portfolios/portfolio.entity';
       Payment,
       PaymentApplication,
       Lease,
-      Portfolio,
     ]),
     forwardRef(() => InvoicesModule),
     forwardRef(() => PaymentsModule),
     forwardRef(() => LeaseChargesModule),
-    AuditLogModule,
-    EmailModule,
-    PdfModule,
+    forwardRef(() => EmailModule),
   ],
   controllers: [LeaseBillingController, InvoiceEmailController],
-  providers: [InvoiceEmailService, LeaseToInvoiceMapper],
+  providers: [InvoiceEmailService, LeaseToInvoiceMapper, PdfService],
   exports: [
     TypeOrmModule,
     InvoiceEmailService,

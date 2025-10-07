@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { LeaseChargesService } from './lease-charges.service';
-import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
-import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
-import { LeaseCharge } from './lease-charge.entity';
-import { AuthGuard } from '../guards/auth.guard';
-import { PortfolioScopeGuard } from '../guards/portfolio.guard';
+import { CreateLeaseChargeDto } from '../invoices/dto/create-lease-charge.dto';
+import { UpdateLeaseChargeDto } from '../invoices/dto/update-lease-charge.dto';
+import { LeaseCharge } from './entities/lease-charge.entity';
+import { AuthGuard } from '../../guards/auth.guard';
+import { PortfolioScopeGuard } from '../../guards/portfolio.guard';
 
 @ApiTags('lease-charges')
 @Controller('lease-charges')

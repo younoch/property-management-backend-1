@@ -1,15 +1,20 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { Payment } from './payment.entity';
-import { PaymentApplication } from './payment-application.entity';
-import { Invoice } from './entities/invoice.entity';
+
+// Entities
+import { Payment } from './entities/payment.entity';
+import { PaymentApplication } from './entities/payment-application.entity';
+import { Invoice } from '../invoices/entities/invoice.entity';
+import { Lease } from '../../leases/lease.entity';
+import { LeaseTenant } from '../../tenancy/lease-tenant.entity';
+
+// Modules
+import { AuditLogModule } from '../../common/audit-log.module';
+
+// Controllers and Services
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
-import { AuditLogModule } from '../common/audit-log.module';
-import { Lease } from '../leases/lease.entity';
-import { LeaseTenant } from '../tenancy/lease-tenant.entity';
-import { BillingModule } from './billing.module';
 
 @Module({
   imports: [
@@ -21,13 +26,9 @@ import { BillingModule } from './billing.module';
       LeaseTenant,
     ]),
     AuditLogModule,
-    forwardRef(() => BillingModule),
   ],
-  controllers: [
-    PaymentsController
-  ],
+  controllers: [PaymentsController],
   providers: [
-    PaymentsService,
     {
       provide: 'DATA_SOURCE',
       useFactory: (dataSource: DataSource) => dataSource,
@@ -36,28 +37,29 @@ import { BillingModule } from './billing.module';
     {
       provide: 'PAYMENT_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Payment),
-      inject: [DataSource],
+      inject: ['DATA_SOURCE'],
     },
     {
       provide: 'PAYMENT_APPLICATION_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(PaymentApplication),
-      inject: [DataSource],
+      inject: ['DATA_SOURCE'],
     },
     {
       provide: 'INVOICE_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Invoice),
-      inject: [DataSource],
+      inject: ['DATA_SOURCE'],
     },
     {
       provide: 'LEASE_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(Lease),
-      inject: [DataSource],
+      inject: ['DATA_SOURCE'],
     },
     {
       provide: 'LEASE_TENANT_REPOSITORY',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(LeaseTenant),
-      inject: [DataSource],
+      inject: ['DATA_SOURCE'],
     },
+    PaymentsService,
     PaymentsService,
   ],
   exports: [
