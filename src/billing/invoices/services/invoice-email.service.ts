@@ -1,13 +1,13 @@
 import { Injectable, Logger, Inject, forwardRef, BadRequestException } from '@nestjs/common';
-import { EmailService } from '../../email/email.service';
-import { PdfService, InvoicePdfData } from '../../pdf/pdf.service';
+import { EmailService } from '../../../email/email.service';
+import { PdfService, InvoicePdfData } from '../../../pdf/pdf.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invoice } from '../entities/invoice.entity';
 import { format } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
-import { Lease } from '../../leases/lease.entity';
+import { Lease } from '../../../leases/lease.entity';
 
 interface EmailResult {
   success: boolean;

@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LeaseCharge } from './lease-charge.entity';
-import { CreateLeaseChargeDto } from './dto/create-lease-charge.dto';
-import { UpdateLeaseChargeDto } from './dto/update-lease-charge.dto';
-import { Unit } from '../units/unit.entity';
-import { Property } from '../properties/property.entity';
-import { Lease } from '../leases/lease.entity';
+import { LeaseCharge } from '../lease-charges/entities/lease-charge.entity';
+import { CreateLeaseChargeDto } from 'src/billing/invoices/dto/create-lease-charge.dto';
+import { UpdateLeaseChargeDto } from 'src/billing/invoices/dto/update-lease-charge.dto';
+import { Unit } from '../../units/unit.entity';
+import { Property } from '../../properties/property.entity';
+import { Lease } from '../../leases/lease.entity';
 
 @Injectable()
 export class LeaseChargesService {

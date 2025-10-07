@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InvoicesService } from '../invoices.service';
-import { PaymentsService } from '../payments.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { CreatePaymentLeaseDto } from '../dto/create-payment-lease.dto';
-import { AuthGuard } from '../../guards/auth.guard';
-import { PortfolioScopeGuard } from '../../guards/portfolio.guard';
+import { AuthGuard } from '../../../guards/auth.guard';
+import { PortfolioScopeGuard } from '../../../guards/portfolio.guard';
 
 @ApiTags('lease-billing')
 @Controller('leases/:leaseId')

@@ -18,9 +18,9 @@ import {
   ApiBody, 
   ApiParam,
 } from '@nestjs/swagger';
-import { AuthGuard } from '../../guards/auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { AuthGuard } from '../../../guards/auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { InvoiceEmailService } from '../services/invoice-email.service';
 import { SendInvoiceEmailDto } from '../dto/send-invoice-email.dto';
 

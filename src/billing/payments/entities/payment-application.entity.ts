@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index, PrimaryColumn } from 'typeorm';
 import { Payment } from './payment.entity';
-import { Invoice } from './entities/invoice.entity';
+import { Invoice } from '../../invoices/entities/invoice.entity';
 
 @Entity()
 @Index(['invoice_id'])

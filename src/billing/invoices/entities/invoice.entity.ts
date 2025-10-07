@@ -23,8 +23,8 @@ import {
   format,
   differenceInDays
 } from 'date-fns';
-import { Lease } from '../../leases/lease.entity';
-import { PaymentApplication } from '../../billing/payment-application.entity';
+import { Lease } from '../../../leases/lease.entity';
+import { PaymentApplication } from '../../../billing/payments/entities/payment-application.entity';
 
 // Types for invoice statuses
 export type InvoiceStatus = 'draft' | 'open' | 'partially_paid' | 'paid' | 'void' | 'overdue';
@@ -308,53 +308,33 @@ export class Invoice {
   })
   terms: string | null;
 
-  @Column({
-    type: 'timestamp with time zone',
-    nullable: true,
-    comment: 'When the invoice was sent to the customer',
-    name: 'sent_at'
-  })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiProperty({
     description: 'When the invoice was sent to the customer',
     format: 'date-time',
     required: false,
     example: '2023-01-01T12:00:00Z'
   })
-  sent_at: Date | null;
+  sent_at?: Date | null;
 
-  @Column({
-    type: 'timestamp with time zone',
-    nullable: true,
-    comment: 'When the invoice was paid',
-    name: 'paid_at'
-  })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiProperty({
     description: 'When the invoice was paid',
     format: 'date-time',
     required: false,
     example: '2023-01-15T10:30:00Z'
   })
-  paid_at: Date | null;
+  paid_at?: Date | null;
 
-  @Column({
-    type: 'timestamp with time zone',
-    nullable: true,
-    comment: 'When the invoice was voided',
-    name: 'voided_at'
-  })
+  @Column({ type: 'timestamptz', nullable: true })
   @ApiProperty({
     description: 'When the invoice was voided',
     format: 'date-time',
     required: false
   })
-  voided_at: Date | null;
+  voided_at?: Date | null;
 
-  @Column({
-    type: 'jsonb',
-    nullable: true,
-    comment: 'Additional metadata for the invoice',
-    name: 'metadata'
-  })
+  @Column({ type: 'jsonb', nullable: true })
   @ApiProperty({
     description: 'Additional metadata for the invoice',
     required: false,
@@ -374,10 +354,9 @@ export class Invoice {
   })
   is_issued: boolean;
 
-  @Column({
+  @Column({ 
     type: 'jsonb',
     default: () => "'[]'::jsonb",
-    comment: 'Line items on this invoice',
     name: 'items',
     transformer: {
       to: (value: InvoiceItem[]) => {
@@ -413,37 +392,27 @@ export class Invoice {
   @OneToMany(() => PaymentApplication, paymentApp => paymentApp.invoice)
   payment_applications: PaymentApplication[];
 
-  @CreateDateColumn({
-    type: 'timestamp with time zone',
-    name: 'created_at'
-  })
+  @CreateDateColumn({ type: 'timestamptz' })
   @ApiProperty({
     description: 'When the invoice was created',
     format: 'date-time'
   })
   created_at: Date;
 
-  @UpdateDateColumn({
-    type: 'timestamp with time zone',
-    name: 'updated_at'
-  })
+  @UpdateDateColumn({ type: 'timestamptz' })
   @ApiProperty({
     description: 'When the invoice was last updated',
     format: 'date-time'
   })
   updated_at: Date;
 
-  @DeleteDateColumn({
-    type: 'timestamp with time zone',
-    name: 'deleted_at',
-    nullable: true
-  })
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   @ApiProperty({
     description: 'When the invoice was soft deleted',
     format: 'date-time',
     required: false
   })
-  deleted_at: Date | null;
+  deleted_at?: Date | null;
 
   // Helper method to handle number values safely
   private toNumber(value: string | number): number {

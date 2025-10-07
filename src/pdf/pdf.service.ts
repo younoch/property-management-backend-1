@@ -1,10 +1,11 @@
+// src/pdf/pdf.service.ts
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import { format, parseISO } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { Readable } from 'stream';
-import { Invoice } from '../billing/entities/invoice.entity';
+import { Invoice } from '../billing/invoices/entities/invoice.entity';
 import * as ejs from 'ejs';
 import { readFileSync } from 'fs';
 import * as path from 'path';

@@ -4,10 +4,10 @@ import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 import { Unit } from '../units/unit.entity';
 import { Tenant } from '../tenants/tenant.entity';
-import { Invoice } from '../billing/entities/invoice.entity';
+import { Invoice } from '../billing/invoices/entities/invoice.entity';
 import { Expense } from '../expenses/expense.entity';
 import { Lease } from '../leases/lease.entity';
-import { Payment } from '../billing/payment.entity';
+import { Payment } from '../billing/payments/entities/payment.entity';
 
 @Module({
   imports: [

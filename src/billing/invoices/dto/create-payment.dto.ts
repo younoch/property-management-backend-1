@@ -1,6 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
-import { PaymentMethod } from '../../common/enums/payment-method.enum';
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { PaymentMethod } from '../../../common/enums/payment-method.enum';
+
+class PaymentApplicationDto {
+  @ApiProperty({ example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', description: 'ID of the invoice to apply payment to' })
+  @IsString()
+  @IsUUID()
+  invoice_id: string;
+
+  @ApiProperty({ example: 100.00, description: 'Amount to apply to this invoice' })
+  @IsNumber()
+  amount: number;
+}
 
 export class CreatePaymentDto {
 
@@ -48,6 +60,17 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   reference?: string;
+
+  @ApiProperty({ 
+    type: [PaymentApplicationDto],
+    description: 'List of invoice applications for this payment',
+    required: false 
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PaymentApplicationDto)
+  applications?: PaymentApplicationDto[];
 
   @ApiProperty({ enum: ['pending','succeeded','failed','refunded'], required: false })
   @IsOptional()

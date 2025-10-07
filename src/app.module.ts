@@ -2,8 +2,7 @@ import { Module, ValidationPipe, MiddlewareConsumer, NestModule, Scope } from '@
 import { APP_PIPE, APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthGuard } from '@/guards/auth.guard';
-import { join } from 'path';
+import { AuthGuard } from './guards/auth.guard';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -24,7 +23,7 @@ import { LeasesModule } from './leases/leases.module';
 import { BillingModule } from './billing/billing.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { DocumentsModule } from './documents/documents.module';
-import { LeaseChargesModule } from './billing/lease-charges.module';
+import { LeaseChargesModule } from './billing/lease-charges/lease-charges.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { MonitoringModule } from './monitoring/monitoring.module';

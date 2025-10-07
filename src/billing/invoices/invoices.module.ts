@@ -1,25 +1,30 @@
-// src/billing/invoices.module.ts
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+
+// Entities
 import { Invoice } from './entities/invoice.entity';
+import { LeaseCharge } from '../lease-charges/entities/lease-charge.entity';
+import { Lease } from '../../leases/lease.entity';
+import { Portfolio } from '../../portfolios/portfolio.entity';
+
+// Modules
+import { PaymentsModule } from '../payments/payments.module';
+import { EmailModule } from '../../email/email.module';
+import { PdfModule } from '../../pdf/pdf.module';
+
+// Controllers and Services
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
-import { LeaseCharge } from './lease-charge.entity';
-import { Lease } from '../leases/lease.entity';
-import { PaymentsModule } from './payments.module';
-import { EmailModule } from '../email/email.module';
-import { PdfModule } from '../pdf/pdf.module';
-import { ConfigModule } from '@nestjs/config';
-import { BillingModule } from './billing.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Invoice,
       LeaseCharge,
-      Lease
+      Lease,
+      Portfolio
     ]),
-    forwardRef(() => BillingModule),
     forwardRef(() => PaymentsModule),
     EmailModule,
     PdfModule,
@@ -27,6 +32,6 @@ import { BillingModule } from './billing.module';
   ],
   controllers: [InvoicesController],
   providers: [InvoicesService],
-  exports: [InvoicesService]
+  exports: [InvoicesService, TypeOrmModule]
 })
 export class InvoicesModule {}

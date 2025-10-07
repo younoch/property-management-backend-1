@@ -4,13 +4,11 @@ import { Repository, In, Between, DataSource, Not, IsNull } from 'typeorm';
 import { Invoice, InvoiceStatus, InvoiceItem, InvoiceItemType } from './entities/invoice.entity';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { Lease } from '../leases/lease.entity';
-import { Portfolio } from '../portfolios/portfolio.entity';
-import { EmailService } from '../email/email.service';
-import { PdfService } from '../pdf/pdf.service';
+import { Lease } from '../../leases/lease.entity';
+import { Portfolio } from '../../portfolios/portfolio.entity';
+import { EmailService } from '../../email/email.service';
+import { PdfService } from '../../pdf/pdf.service';
 import { ConfigService } from '@nestjs/config';
-import { SentMessageInfo } from 'nodemailer';
-import { Tenant } from '../tenants/tenant.entity';
 
 type InvoiceWithRelations = Omit<Invoice, 'lease' | 'items'> & {
   portfolio: Portfolio;

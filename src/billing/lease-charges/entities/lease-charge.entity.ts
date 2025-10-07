@@ -9,9 +9,9 @@ import {
   Index,
   JoinColumn,
 } from 'typeorm';
-import { Lease } from '../leases/lease.entity';
-import { Unit } from '../units/unit.entity';
-import { Property } from '../properties/property.entity';
+import { Lease } from '../../../leases/lease.entity';
+import { Unit } from '../../../units/unit.entity';
+import { Property } from '../../../properties/property.entity';
 
 @Entity()
 @Index(['lease_id'])

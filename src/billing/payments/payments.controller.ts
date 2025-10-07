@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { Payment } from './payment.entity';
-import { AuthGuard } from '../guards/auth.guard';
+import { CreatePaymentDto } from '../invoices/dto/create-payment.dto';
+import { UpdatePaymentDto } from '../invoices/dto/update-payment.dto';
+import { Payment } from '../payments/entities/payment.entity';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @ApiTags('billing-payments')
 @Controller('payments')
