@@ -1,22 +1,10 @@
-// src/tenancy/lease.entity.ts
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  Index,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, Index, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Unit } from '../units/unit.entity';
 import { Tenant } from '../tenants/tenant.entity';
 import { LeaseTenant } from '../tenancy/lease-tenant.entity';
 import { BadRequestException } from '@nestjs/common';
 
-// Keep string union or switch to a TS enum shared with DTO
 export type LeaseStatus = 'draft' | 'active' | 'ended' | 'evicted' | 'broken';
 
 // Optional: number transformer if you want JS numbers from numeric columns
@@ -28,9 +16,7 @@ export type LeaseStatus = 'draft' | 'active' | 'ended' | 'evicted' | 'broken';
 @Entity()
 @Index(['unit_id'])
 @Index(['status'])
-export class Lease {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class Lease extends BaseEntity {
 
   @ManyToOne(() => Unit, { onDelete: 'RESTRICT', eager: true })
   @JoinColumn({ name: 'unit_id' })
@@ -109,21 +95,62 @@ export class Lease {
     const leaseTenant = new LeaseTenant();
     leaseTenant.tenant = tenant;
     leaseTenant.is_primary = isPrimary;
-    leaseTenant.relationship = relationship;
     leaseTenant.moved_in_date = new Date().toISOString().split('T')[0];
+    
+    if (relationship) {
+      leaseTenant.relationship = relationship;
+    }
     
     if (!this.lease_tenants) {
       this.lease_tenants = [];
     }
+    
     this.lease_tenants.push(leaseTenant);
   }
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  // Remove a tenant from the lease (soft delete)
+  async removeTenant(tenantId: string): Promise<void> {
+    const leaseTenant = this.lease_tenants.find(lt => lt.tenant_id === tenantId && lt.deleted_at === null);
+    if (!leaseTenant) {
+      throw new BadRequestException('Tenant is not associated with this lease');
+    }
+    
+    leaseTenant.deleted_at = new Date();
+    
+    // If this was the primary tenant, try to assign a new primary
+    if (leaseTenant.is_primary) {
+      const anotherTenant = this.lease_tenants.find(lt => 
+        lt.tenant_id !== tenantId && 
+        lt.deleted_at === null
+      );
+      
+      if (anotherTenant) {
+        anotherTenant.is_primary = true;
+      }
+    }
+  }
 
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Update tenant details in the lease
+  async updateTenant(tenantId: string, updates: Partial<LeaseTenant>): Promise<void> {
+    const leaseTenant = this.lease_tenants.find(lt => lt.tenant_id === tenantId && lt.deleted_at === null);
+    if (!leaseTenant) {
+      throw new BadRequestException('Tenant is not associated with this lease');
+    }
+    
+    // Handle primary tenant change
+    if (updates.is_primary && !leaseTenant.is_primary) {
+      const currentPrimary = this.lease_tenants.find(lt => 
+        lt.is_primary && 
+        lt.tenant_id !== tenantId && 
+        lt.deleted_at === null
+      );
+      
+      if (currentPrimary) {
+        currentPrimary.is_primary = false;
+      }
+    }
+    
+    // Update other fields
+    Object.assign(leaseTenant, updates);
+  }
 }

@@ -1,14 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, Index, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Property } from '../properties/property.entity';
 import { Unit } from '../units/unit.entity';
 import { Tenant } from '../tenants/tenant.entity';
 
 @Entity()
 @Index(['status'])
-export class MaintenanceRequest {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class MaintenanceRequest extends BaseEntity {
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'property_id' })
   property: Property;
@@ -41,21 +39,4 @@ export class MaintenanceRequest {
 
   @Column({ type: 'varchar', default: 'open' })
   status: 'open' | 'in_progress' | 'completed' | 'canceled';
-
-  @Column({ type: 'timestamptz', default: () => 'now()' })
-  requested_at: Date;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  completed_at: Date | null;
-
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
 }
-
-

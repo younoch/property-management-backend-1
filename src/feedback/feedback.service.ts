@@ -33,12 +33,12 @@ export class FeedbackService {
 
     const feedback = this.feedbackRepository.create({
       message: createFeedbackDto.message,
-      pageUrl: createFeedbackDto.page_url,
+      page_url: createFeedbackDto.page_url,
       metadata: {
         ...(createFeedbackDto.metadata || {}),
-        userAgent: createFeedbackDto.metadata?.userAgent || null,
+        user_agent: createFeedbackDto.metadata?.userAgent || null,
       },
-      userId: user?.id || null,
+      user_id: user?.id || null,
     });
 
     const savedFeedback = await this.feedbackRepository.save(feedback);
@@ -53,8 +53,8 @@ export class FeedbackService {
   ): Promise<{ data: FeedbackDataDto[]; total: number }> {
     const [result, total] = await this.feedbackRepository.findAndCount({
       relations: ['user'],
-      where: reviewed !== undefined ? { isReviewed: reviewed } : {},
-      order: { createdAt: 'DESC' },
+      where: reviewed !== undefined ? { is_reviewed: reviewed } : {},
+      order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -77,7 +77,7 @@ export class FeedbackService {
       throw new NotFoundException(`Feedback with ID ${id} not found`);
     }
 
-    feedback.isReviewed = true;
+    feedback.is_reviewed = true;
     const updatedFeedback = await this.feedbackRepository.save(feedback);
     
     return this.mapToResponseDto(updatedFeedback, feedback.user?.email || '');
@@ -87,13 +87,13 @@ export class FeedbackService {
     return {
       id: feedback.id,
       message: feedback.message,
-      pageUrl: feedback.pageUrl,
+      page_url: feedback.page_url,
       metadata: feedback.metadata,
-      isReviewed: feedback.isReviewed,
-      createdAt: feedback.createdAt,
+      is_reviewed: feedback.is_reviewed,
+      created_at: feedback.created_at,
       // Convert string ID to number for backward compatibility with DTO
-      userId: feedback.userId ? feedback.userId : null,
-      userEmail: userEmail,
+      user_id: feedback.user_id || null,
+      user_email: userEmail,
     };
   }
 }

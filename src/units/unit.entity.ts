@@ -1,41 +1,29 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  Unique,
-  JoinColumn,
-  DeleteDateColumn
-} from 'typeorm';
+import { Entity, Column, ManyToOne, Index, Unique, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Property } from '../properties/property.entity';
 
-@Entity()
+@Entity('units')
 @Index(['property'])
 @Unique(['property', 'label'])
-export class Unit {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class Unit extends BaseEntity {
 
   @ManyToOne(() => Property, property => property.units, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'property_id' })
   property: Property;
 
-  @Column({ nullable: true })
-  property_id: string | null;
+  @Column({ name: 'property_id', nullable: true })
+  propertyId: string | null;
 
-  @Column()
+  @Column({ name: 'label' })
   label: string; // e.g., "Unit 2B"
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', name: 'bedrooms', nullable: true })
   bedrooms: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', name: 'bathrooms', nullable: true })
   bathrooms: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', name: 'sqft', nullable: true })
   sqft: number | null;
 
   @Column({
@@ -43,22 +31,15 @@ export class Unit {
     precision: 12,
     scale: 2,
     nullable: true,
+    name: 'market_rent',
     transformer: {
       to: (value: number | null) => value,
       from: (value: string | null) => value ? parseFloat(value) : null
     }
   })
-  market_rent: number | null;
+  marketRent: number | null;
 
-  @Column({ type: 'varchar', default: 'vacant' })
+  @Column({ type: 'varchar', name: 'status', default: 'vacant' })
   status: 'vacant' | 'occupied' | 'maintenance';
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
 }

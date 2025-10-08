@@ -1,15 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  Index,
-  DeleteDateColumn
-} from "typeorm";
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from "typeorm";
+import { BaseEntity } from "../common/base.entity";
 import { Portfolio } from "../portfolios/portfolio.entity";
 import { Unit } from "../units/unit.entity";
 import { IsNotEmpty } from 'class-validator';
@@ -20,11 +10,8 @@ import type { Expense } from '../expenses/expense.entity';
 @Entity()
 @Index(['city', 'state'])
 @Index(['property_type'])
-export class Property {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE', nullable: true })
+export class Property extends BaseEntity {
+@ManyToOne(() => Portfolio, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
@@ -77,12 +64,5 @@ export class Property {
   @Column({ nullable: true, type: "text" })
   description: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Timestamp fields (created_at, updated_at, deleted_at) are inherited from BaseEntity
 }

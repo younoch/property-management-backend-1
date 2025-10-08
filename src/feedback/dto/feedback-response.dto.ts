@@ -7,23 +7,23 @@ export class FeedbackDataDto {
   @ApiProperty({ description: 'The feedback message' })
   message: string;
 
-  @ApiProperty({ description: 'URL of the page where feedback was submitted from', required: false })
-  pageUrl?: string;
+  @ApiProperty({ description: 'URL of the page where feedback was submitted from', required: false, name: 'page_url' })
+  page_url?: string;
 
   @ApiProperty({ description: 'Additional metadata', required: false })
   metadata?: Record<string, any>;
 
-  @ApiProperty({ description: 'Whether the feedback has been reviewed' })
-  isReviewed: boolean;
+  @ApiProperty({ description: 'Whether the feedback has been reviewed', name: 'is_reviewed' })
+  is_reviewed: boolean;
 
-  @ApiProperty({ description: 'When the feedback was created' })
-  createdAt: Date;
+  @ApiProperty({ description: 'When the feedback was created', name: 'created_at' })
+  created_at: Date;
 
-  @ApiProperty({ description: 'ID of the user who submitted the feedback', nullable: true })
-  userId: string  | null;
+  @ApiProperty({ description: 'ID of the user who submitted the feedback', name: 'user_id', nullable: true })
+  user_id: string | null;
 
-  @ApiProperty({ description: 'Email of the user who submitted the feedback' })
-  userEmail: string;
+  @ApiProperty({ description: 'Email of the user who submitted the feedback', name: 'user_email' })
+  user_email: string;
 }
 
 export class FeedbackResponseDto {

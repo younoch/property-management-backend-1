@@ -49,6 +49,10 @@ export class AuthService {
       throw new BadRequestException('The password you entered is incorrect. Please try again or reset your password if needed.');
     }
 
+    // Update last login time
+    user.last_login_at = new Date();
+    await this.usersService.update(user.id, { last_login_at: user.last_login_at });
+
     return user;
   }
 
@@ -95,6 +99,7 @@ profile_image_url: user.profile_image_url,
       notifications: user.notifications || [],
       requires_onboarding: user.requires_onboarding,
       onboarding_completed_at: user.onboarding_completed_at,
+      last_login_at: user.last_login_at,
       accessToken,
       refreshToken,
     };

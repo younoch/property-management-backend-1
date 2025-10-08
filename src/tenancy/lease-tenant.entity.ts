@@ -1,22 +1,22 @@
-// src/tenancy/lease-tenant.entity.ts
-import {
-  Entity,
+import { 
+  Entity, 
+  Column, 
+  ManyToOne, 
+  JoinColumn, 
+  Index, 
   PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
-  JoinColumn,
-  Index,
+  DeleteDateColumn 
 } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Lease } from '../leases/lease.entity';
 import { Tenant } from '../tenants/tenant.entity';
 
-@Entity()
+@Entity('lease_tenants')
 @Index(['lease_id'])
 @Index(['tenant_id'])
-export class LeaseTenant {
+export class LeaseTenant extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -50,6 +50,9 @@ export class LeaseTenant {
 
   @Column({ type: 'date', nullable: true })
   moved_out_date: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;

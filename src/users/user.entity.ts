@@ -1,23 +1,12 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  OneToMany,
-  Index,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-} from 'typeorm';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Notification } from '../notifications/notification.entity';
 
 @Entity({ name: 'users' })
 @Index(['email'])
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
+export class User extends BaseEntity {
+@Column()
   name: string;
 
   @Column({ unique: true })
@@ -39,6 +28,9 @@ export class User {
   @Column({ name: 'is_active', default: true })
   is_active: boolean;
 
+  @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
+  last_login_at: Date | null;
+
   @Column({ name: 'requires_onboarding', default: true })
   requires_onboarding: boolean;
 
@@ -48,16 +40,7 @@ export class User {
   @Column({ type: 'varchar', length: 10, default: 'en' })
   language: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updated_at: Date;
-
-  // Legacy fields removed for production readiness
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Timestamp fields (created_at, updated_at, deleted_at) are inherited from BaseEntity
 
   @OneToMany(() => Portfolio, (portfolio) => portfolio.landlord)
   owned_portfolios: Portfolio[];

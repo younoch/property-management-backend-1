@@ -1,11 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, Index, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 
 @Entity()
 @Index(['subject_type', 'subject_id'])
-export class Document {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Document extends BaseEntity {
   @Column()
   subject_type: string;
 
@@ -19,19 +17,11 @@ export class Document {
   storage_key: string; // e.g., S3 path
 
   @Column({ nullable: true })
-  mime_type: string | null;
+  mime_type: string;
 
-  @Column({ type: 'bigint', nullable: true })
-  size_bytes: number | null;
+  @Column({ type: 'int', nullable: true })
+  size: number;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any>;
 }
-
-

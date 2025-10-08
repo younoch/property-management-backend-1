@@ -1,14 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  Index,
-  DeleteDateColumn
-} from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, Index } from "typeorm";
+import { BaseEntity } from "../common/base.entity";
 import { User } from "../users/user.entity";
 import { Portfolio } from "../portfolios/portfolio.entity";
 
@@ -17,11 +8,8 @@ import { Portfolio } from "../portfolios/portfolio.entity";
 @Index(['is_read'])
 @Index(['sent_at'])
 @Index(['portfolio_id'])
-export class Notification {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
+export class Notification extends BaseEntity {
+@ManyToOne(() => Portfolio, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
@@ -57,12 +45,5 @@ export class Notification {
   @Column({ type: 'timestamptz', nullable: true })
   sent_at: Date | null;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Timestamp fields (created_at, updated_at, deleted_at) are inherited from BaseEntity
 } 
