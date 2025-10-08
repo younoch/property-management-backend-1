@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository, DataSource } from 'typeorm';
 import { Portfolio } from './portfolio.entity';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
+import { Property } from '../properties/property.entity';
+import { Unit } from '../units/unit.entity';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
 import { FindPortfoliosDto } from './dto/find-portfolios.dto';
 import { TimezoneService } from '../common/services/timezone.service';
@@ -166,12 +168,37 @@ export class PortfoliosService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Find all tenants in this portfolio
+      // 1. Find all properties in this portfolio
+      const properties = await queryRunner.manager
+        .getRepository(Property)
+        .find({ where: { portfolio_id: id } });
+      
+      const propertyIds = properties.map(p => p.id);
+
+      if (propertyIds.length > 0) {
+        // 2. Delete all units in these properties
+        await queryRunner.manager
+          .createQueryBuilder()
+          .delete()
+          .from(Unit)
+          .where('property_id IN (:...propertyIds)', { propertyIds })
+          .execute();
+      }
+
+      // 3. Delete all properties in this portfolio
+      await queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(Property)
+        .where('portfolio_id = :id', { id })
+        .execute();
+
+      // 4. Find all tenants in this portfolio
       const tenants = await this.tenantRepository.find({ where: { portfolio_id: id } });
       const tenantIds = tenants.map(t => t.id);
 
       if (tenantIds.length > 0) {
-        // 2. Delete all lease_tenant records for these tenants
+        // 5. Delete all lease_tenant records for these tenants
         await this.leaseTenantRepository
           .createQueryBuilder()
           .delete()
@@ -179,10 +206,10 @@ export class PortfoliosService {
           .execute();
       }
 
-      // 3. Delete all tenants in this portfolio
+      // 6. Delete all tenants in this portfolio
       await this.tenantRepository.delete({ portfolio_id: id });
 
-      // 5. Finally, delete the portfolio
+      // 7. Finally, delete the portfolio
       await this.portfoliosRepository.delete(id);
       
       await queryRunner.commitTransaction();
