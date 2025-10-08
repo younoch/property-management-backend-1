@@ -3,7 +3,8 @@ import { User } from '../../users/user.entity';
 
 export class ReportFactory {
   static create(overrides: Partial<Report> = {}, user?: User): Report {
-    return {
+    const report = new Report();
+    Object.assign(report, {
       id: '00000000-0000-0000-0000-000000000001',
       approved: false,
       price: 25000,
@@ -14,11 +15,10 @@ export class ReportFactory {
       lat: 37.7749,
       mileage: 50000,
       user: user || null,
-      created_at: new Date(),
-      updated_at: new Date(),
-      deleted_at: null,
+      // BaseEntity fields will be handled by TypeORM
       ...overrides,
-    };
+    });
+    return report;
   }
 
   static createApproved(overrides: Partial<Report> = {}, user?: User): Report {

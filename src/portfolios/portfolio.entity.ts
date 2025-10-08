@@ -1,15 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  Index,
-  DeleteDateColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { User } from '../users/user.entity';
 import { Property } from '../properties/property.entity';
 import { IsNotEmpty } from 'class-validator';
@@ -20,11 +10,8 @@ type LeaseChargeType = import('../billing/lease-charges/entities/lease-charge.en
 @Entity()
 @Index(['landlord'])
 @Index(['status'])
-export class Portfolio {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
+export class Portfolio extends BaseEntity {
+@Column()
   @IsNotEmpty()
   name: string;
 
@@ -107,13 +94,5 @@ export class Portfolio {
   @OneToMany('LeaseCharge', 'portfolio')
   leaseCharges: LeaseChargeType[];
 
-  /** Timestamps */
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Timestamp fields (created_at, updated_at, deleted_at) are inherited from BaseEntity
 }

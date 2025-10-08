@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Index, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, Index } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
 import { User } from '../users/user.entity';
 
 @Entity()
@@ -6,11 +7,8 @@ import { User } from '../users/user.entity';
 @Index(['lat', 'lng'])
 @Index(['year'])
 @Index(['approved'])
-export class Report {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ default: false })
+export class Report extends BaseEntity {
+@Column({ default: false })
   approved: boolean;
 
   @Column()
@@ -37,12 +35,5 @@ export class Report {
   @ManyToOne(() => User)
   user: User;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz' })
-  deleted_at: Date | null;
+  // Timestamp fields (created_at, updated_at, deleted_at) are inherited from BaseEntity
 }

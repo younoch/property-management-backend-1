@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Property } from '../properties/property.entity';
 import { ExpenseCategory, EXPENSE_CATEGORIES, getExpenseCategoryLabel } from '../common/enums/expense-category.enum';
 import { PaymentMethod } from '../common/enums/payment-method.enum';
+import { BaseEntity } from '../common/base.entity';
 
 export type ExpenseStatus = 'paid' | 'pending' | 'overdue';
 
@@ -12,9 +13,7 @@ export const EXPENSE_STATUSES: ExpenseStatus[] = ['paid', 'pending', 'overdue'];
 @Index(['property_id'])
 @Index(['date_incurred'])
 @Index(['category'])
-export class Expense {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class Expense extends BaseEntity {
 
   @Column()
   property_id: string;
@@ -65,25 +64,9 @@ export class Expense {
     nullable: true
   })
   payment_method?: PaymentMethod;
-
   @Column({ nullable: true })
   receipt_url?: string;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   tax_amount: number = 0;
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
-  tax_rate: number = 0;
-
-  @Column({ type: 'text', nullable: true })
-  notes?: string;
-
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
-
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
-  deleted_at?: Date;
 }
