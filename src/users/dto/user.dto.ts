@@ -223,6 +223,14 @@ export class UserResponseDto {
 
   @Expose()
   @ApiProperty({
+    description: 'User last login timestamp',
+    example: '2024-01-20T14:45:00.000Z',
+    nullable: true
+  })
+  last_login_at: Date | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Whether the user account is active',
     example: true
   })
