@@ -207,10 +207,10 @@ export class PortfoliosService {
       }
 
       // 6. Delete all tenants in this portfolio
-      await this.tenantRepository.delete({ portfolio_id: id });
+      await queryRunner.manager.delete(Tenant, { portfolio_id: id })
 
       // 7. Finally, delete the portfolio
-      await this.portfoliosRepository.delete(id);
+      await queryRunner.manager.delete(Portfolio, { id })
       
       await queryRunner.commitTransaction();
     } catch (err) {
@@ -221,5 +221,3 @@ export class PortfoliosService {
     }
   }
 }
-
-
