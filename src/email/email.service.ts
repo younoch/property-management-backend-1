@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { SentMessageInfo } from 'nodemailer';
@@ -18,42 +18,43 @@ export interface SendEmailWithAttachmentDto extends Omit<SendEmailDto, 'attachme
 }
 
 @Injectable()
-export class EmailService implements OnModuleInit, OnModuleDestroy {
+export class EmailService implements OnModuleDestroy {
   private transporter: nodemailer.Transporter | null = null;
   private readonly logger = new Logger(EmailService.name);
   private from: string;
 
   constructor(private configService: ConfigService) {}
 
-  async onModuleInit() {
+  /**
+   * Lazy init transporter
+   */
+  private async initTransporter() {
+    if (this.transporter) return;
+
     const isEmailEnabled = this.configService.get('EMAIL_ENABLED', 'true') === 'true';
     if (!isEmailEnabled) return;
-  
+
     const host = this.configService.get('SMTP_HOST');
     const port = this.configService.get('SMTP_PORT');
     const secure = this.configService.get('SMTP_SECURE') === 'true';
     const user = this.configService.get('SMTP_USER');
     const pass = this.configService.get('SMTP_PASSWORD');
     this.from = this.configService.get('DEFAULT_FROM_EMAIL') || `"Lease Director" <${user}>`;
-  
+
     const auth = user && pass ? { user, pass } : undefined;
-  
+
     this.transporter = nodemailer.createTransport({
       host,
       port: parseInt(port, 10),
       secure,
       auth,
-      tls: {
-        rejectUnauthorized: this.configService.get('NODE_ENV') === 'production',
-      },
+      tls: { rejectUnauthorized: this.configService.get('NODE_ENV') === 'production' },
     });
-  
+
     this.logger.log(
       `Email transport created → host=${host}, port=${port}, secure=${secure}, auth=${auth ? 'YES' : 'NO'}`
     );
-  
-    // Skip verify entirely or log warning only
-    // await this.verifyTransporter(this.transporter); <-- remove or comment
+
     this.logger.log('Email service initialized successfully ✅');
   }
 
@@ -63,29 +64,12 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async verifyTransporter(transporter: nodemailer.Transporter) {
-    let retries = 2; // Reduced from 5 to 2 to fail faster
-    while (retries > 0) {
-      try {
-        await transporter.verify();
-        this.logger.log('SMTP connection verified ✅');
-        return;
-      } catch (err) {
-        retries--;
-        // Log as warning instead of error to avoid triggering alerts
-        this.logger.warn(`SMTP verification attempt failed (${retries} retries left). Emails may not be sent.`);
-        if (retries > 0) {
-          await new Promise((res) => setTimeout(res, 2000)); // Reduced wait time
-        }
-      }
-    }
-    this.logger.warn('SMTP verification failed. The application will continue to run, but emails may not be sent.');
-  }
-
   /**
    * Send a basic email
    */
   async sendEmail(sendEmailDto: SendEmailDto): Promise<SentMessageInfo> {
+    await this.initTransporter();
+
     if (!this.transporter) {
       this.logger.warn('Email service not initialized. Email not sent.');
       return { messageId: `local-${Date.now()}` } as SentMessageInfo;
@@ -109,7 +93,6 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
       return info;
     } catch (error) {
       this.logger.warn(`Failed to send email: ${error.message}`);
-      // Return a mock response instead of throwing to prevent the application from crashing
       return { messageId: `failed-${Date.now()}` } as SentMessageInfo;
     }
   }
