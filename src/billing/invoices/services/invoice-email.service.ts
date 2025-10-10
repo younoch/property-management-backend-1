@@ -67,10 +67,10 @@ export class InvoiceEmailService {
     sendInvoiceEmailDto?: Partial<SendInvoiceEmailDto>,
   ): Promise<EmailResult> {
     try {
-      // Fetch the invoice with relations
+      // Fetch the invoice with lease relation
       const invoice = await this.invoiceRepository.findOne({
         where: { id: invoiceId },
-        relations: ['lease', 'items'],
+        relations: ['lease'],
       });
 
       if (!invoice) {
