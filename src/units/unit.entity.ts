@@ -1,45 +1,51 @@
-import { Entity, Column, ManyToOne, Index, Unique, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, Index, Unique, JoinColumn, OneToMany } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { Property } from '../properties/property.entity';
+import { IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('units')
 @Index(['property'])
 @Unique(['property', 'label'])
 export class Unit extends BaseEntity {
-
   @ManyToOne(() => Property, property => property.units, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'property_id' })
+  @ApiProperty({ type: () => Property, description: 'The property this unit belongs to' })
   property: Property;
 
-  @Column({ name: 'property_id', nullable: true })
-  propertyId: string | null;
+  @Column({ nullable: true })
+  property_id: string;
 
-  @Column({ name: 'label' })
-  label: string; // e.g., "Unit 2B"
+  @Column()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'Unit identifier (e.g., "Unit 2B")' })
+  label: string;
 
-  @Column({ type: 'int', name: 'bedrooms', nullable: true })
-  bedrooms: number | null;
+  @Column('int', { nullable: true })
+  @IsOptional()
+  bedrooms: number;
 
-  @Column({ type: 'int', name: 'bathrooms', nullable: true })
-  bathrooms: number | null;
+  @Column('int', { nullable: true })
+  @IsOptional()
+  bathrooms: number;
 
-  @Column({ type: 'int', name: 'sqft', nullable: true })
-  sqft: number | null;
+  @Column('int', { nullable: true })
+  @IsOptional()
+  sqft: number;
 
-  @Column({
-    type: 'numeric',
+  @Column('decimal', { 
     precision: 12,
     scale: 2,
     nullable: true,
-    name: 'market_rent',
-    transformer: {
-      to: (value: number | null) => value,
-      from: (value: string | null) => value ? parseFloat(value) : null
-    }
   })
-  marketRent: number | null;
+  @IsOptional()
+  market_rent: number;
 
-  @Column({ type: 'varchar', name: 'status', default: 'vacant' })
+  @Column({ 
+    type: 'enum',
+    enum: ['vacant', 'occupied', 'maintenance'],
+    default: 'vacant'
+  })
+  @IsIn(['vacant', 'occupied', 'maintenance'])
   status: 'vacant' | 'occupied' | 'maintenance';
-
 }

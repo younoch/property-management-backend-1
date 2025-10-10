@@ -14,7 +14,6 @@
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:prod": "node dist/main",
-    "start:with-migrations": "npm run migration:run:prod && npm run start:prod",
     "test": "cross-env NODE_ENV=test jest",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage",
@@ -23,7 +22,7 @@
     "migration:run:prod": "typeorm -d dist/database/data-source.js migration:run",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "postinstall": "puppeteer browsers install chrome"
+    "postinstall:manual": "puppeteer browsers install chrome"
   },
   "overrides": {
     "is-arrayish": "^0.2.1"

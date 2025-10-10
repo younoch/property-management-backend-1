@@ -54,7 +54,7 @@ export class LeaseMapper {
       bedrooms: lease.unit.bedrooms || null,
       bathrooms: lease.unit.bathrooms || null,
       sqft: lease.unit.sqft || null,
-      market_rent: lease.unit.marketRent ? toNumber(lease.unit.marketRent) : null,
+      market_rent: lease.unit.market_rent ? toNumber(lease.unit.market_rent) : null,
       status: lease.unit.status || 'vacant'
     } : null;
 

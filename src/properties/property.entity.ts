@@ -15,7 +15,7 @@ export class Property extends BaseEntity {
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: Portfolio;
 
-  @Column({ name: 'portfolio_id', nullable: true })
+  @Column({ nullable: true })
   portfolio_id: string | null;
 
 
@@ -41,7 +41,7 @@ export class Property extends BaseEntity {
   @ApiProperty({ type: () => [Unit], description: 'List of units in this property' })
   units: Unit[];
 
-  @Column({ name: 'postal_code', nullable: true })
+  @Column({ nullable: true })
   zip_code: string;
 
   @Column({ nullable: true })
