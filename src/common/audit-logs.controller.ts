@@ -44,32 +44,32 @@ export class AuditLogsController {
   @ApiResponse({ status: 400, description: 'Invalid query parameters' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async findAll(
-    @Query() query: any // Use 'any' to access raw query parameters
+    @Query() query: any // Access raw query parameters
   ): Promise<PaginatedAuditLogsResponseDto> {
     try {
-      // Log raw query parameters and their types
+      // Log raw query parameters for debugging
       console.log('=== RAW QUERY PARAMETERS ===');
       Object.entries(query).forEach(([key, value]) => {
         console.log(`${key}:`, value, `(type: ${typeof value})`);
       });
       
-      // Create a new object to avoid mutating the original query
+      // Transform query parameters
       const transformedQuery: AuditLogQueryDto = {
         ...query,
-        // Convert page and limit to numbers with defaults
+        // Convert page and limit to numbers
         page: query.page ? parseInt(query.page, 10) : 1,
         limit: query.limit ? parseInt(query.limit, 10) : 10,
         
-        // Handle portfolioId - keep as string to handle 'null' case
+        // Handle portfolioId (supports null/empty values)
         portfolioId: query.portfolioId !== undefined ? 
           (query.portfolioId === 'null' || query.portfolioId === '' ? null : query.portfolioId) : 
           undefined,
           
-        // Keep IDs as strings
+        // Other ID fields
         propertyId: query.propertyId || undefined,
         userId: query.userId || undefined,
         
-        // Preserve other query parameters
+        // Additional query parameters
         action: query.action,
         entityType: query.entityType,
         entityId: query.entityId,

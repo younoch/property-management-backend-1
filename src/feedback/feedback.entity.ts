@@ -10,6 +10,10 @@ export class Feedback extends BaseEntity {
   @Column({ name: 'user_id', nullable: true })
   user_id: string | null;
 
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User | null;
+
   @Column({ type: 'varchar', length: 500, nullable: true })
   page_url: string;
 
@@ -18,11 +22,4 @@ export class Feedback extends BaseEntity {
 
   @Column({ type: 'boolean', default: false })
   is_reviewed: boolean;
-
-  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'user_id' })
-  user: User | null;
-
-  @Column({ type: 'varchar', nullable: true })
-  userId: string | null;
 }

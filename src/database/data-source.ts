@@ -19,6 +19,7 @@ import { WorkOrder } from '../maintenance/work-order.entity';
 import { Document } from '../documents/document.entity';
 import { Expense } from '../expenses/expense.entity';
 import { AuditLog } from '../common/audit-log.entity';
+import { Feedback } from '../feedback/feedback.entity';
 
 // Load environment variables for CLI context
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
@@ -66,6 +67,7 @@ export const AppDataSource = new DataSource({
     Notification,
     Expense,
     AuditLog,
+    Feedback,
   ],
   subscribers: [],
   ssl: sslConfig, // ✅ Neon SSL fix
