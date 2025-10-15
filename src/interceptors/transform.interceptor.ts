@@ -64,6 +64,8 @@ export class TransformInterceptor<T> implements NestInterceptor<T, SuccessRespon
         message = 'User signed in successfully';
       } else if (url.includes('/auth/signout')) {
         message = 'User signed out successfully';
+      } else if (path.includes('/feedback')) {
+        message = 'Thank you for your feedback! We appreciate you taking the time to share your thoughts with us.';
       } else if (url.includes('/properties')) {
         message = 'Property created successfully';
       } else if (url.includes('/portfolios') && url.includes('/payments')) {

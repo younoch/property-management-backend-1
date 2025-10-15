@@ -24,8 +24,6 @@ import { Feedback } from '../feedback/feedback.entity';
 // Load environment variables for CLI context
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
-console.log('🔎 DB_HOST:', process.env.DB_HOST);
-console.log('🔎 DB_SSL:', process.env.DB_SSL);
 
 // Helper to determine SSL configuration
 const sslConfig = process.env.DB_SSL === 'true' 

@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
-import { FeedbackResponseDto } from './dto/feedback-response.dto';
+import { FeedbackResponseDto, FeedbackDataDto } from './dto/feedback-response.dto';
 import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
 
@@ -27,19 +27,14 @@ export class FeedbackController {
   @ApiResponse({
     status: 201,
     description: 'Feedback submitted successfully',
-    type: FeedbackResponseDto,
+    type: FeedbackDataDto,
   })
   async create(
     @Body() createFeedbackDto: CreateFeedbackDto,
-  ): Promise<FeedbackResponseDto> {
+  ): Promise<FeedbackDataDto> {
+    // Return raw payload; TransformInterceptor will wrap into standard response
     const feedbackData = await this.feedbackService.create(createFeedbackDto);
-    const response = new FeedbackResponseDto();
-    response.success = true;
-    response.message = 'Thank you for your feedback! We appreciate you taking the time to share your thoughts with us.';
-    response.data = feedbackData;
-    response.timestamp = new Date().toISOString();
-    response.path = '/feedback';
-    return response;
+    return feedbackData as unknown as FeedbackDataDto;
   }
 
   @Get()
@@ -59,18 +54,11 @@ export class FeedbackController {
     @Query('reviewed') reviewed?: boolean,
   ): Promise<FeedbackResponseDto> {
     const { data, total } = await this.feedbackService.findAll(page, limit, reviewed);
-    const response = new FeedbackResponseDto();
-    response.success = true;
-    response.message = 'Feedback retrieved successfully';
-    response.data = data;
-    response.meta = {
-      total,
-      page,
-      limit,
-    };
-    response.timestamp = new Date().toISOString();
-    response.path = '/feedback';
-    return response;
+    // Return data with meta inside; interceptor will wrap once
+    return {
+      data,
+      meta: { total, page, limit },
+    } as unknown as FeedbackResponseDto;
   }
 
   @Patch(':id/review')
@@ -79,19 +67,13 @@ export class FeedbackController {
   @ApiResponse({
     status: 200,
     description: 'Feedback marked as reviewed',
-    type: FeedbackResponseDto,
+    type: FeedbackDataDto,
   })
   @ApiParam({ name: 'id', type: String, description: 'Feedback ID (UUID)' })
   async markAsReviewed(
     @Param('id') id: string,
-  ): Promise<FeedbackResponseDto> {
+  ): Promise<FeedbackDataDto> {
     const feedbackData = await this.feedbackService.markAsReviewed(id);
-    const response = new FeedbackResponseDto();
-    response.success = true;
-    response.message = 'Feedback marked as reviewed successfully';
-    response.data = feedbackData;
-    response.timestamp = new Date().toISOString();
-    response.path = `/feedback/${id}/review`;
-    return response;
+    return feedbackData as unknown as FeedbackDataDto;
   }
 }

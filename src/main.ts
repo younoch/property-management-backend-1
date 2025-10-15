@@ -9,17 +9,12 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { AuditLogService } from './common/audit-log.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: ['warn', 'error'],
+  });
   app.disable('x-powered-by');
   app.use(cookieParser());
-
-  // 🔎 Debug DB config on startup
-  console.log('🔎 Database Config (from ENV):');
-  console.log('   DB_HOST:', process.env.DB_HOST);
-  console.log('   DB_PORT:', process.env.DB_PORT);
-  console.log('   DB_NAME:', process.env.DB_NAME);
-  console.log('   DB_USERNAME:', process.env.DB_USERNAME);
-  console.log('   DB_SSL:', process.env.DB_SSL);
+  
   
   // CORS configuration for production
   const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -207,14 +202,14 @@ async function bootstrap() {
     })
   );
 
-  const port = process.env.PORT || 8000;
+  const port = Number(process.env.PORT) || 8000;
   // Bind to all interfaces for containerized environments
   // Apply global interceptor for audit logging
   const auditLogService = app.get(AuditLogService);
   app.useGlobalInterceptors(new AuditInterceptor(auditLogService));
 
   // Start the application
-  await app.listen(process.env.PORT || 3000);
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 Application is running on: ${await app.getUrl()}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
