@@ -7,7 +7,14 @@ import { User } from './user.entity';
 export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
-  create(email: string, password_hash: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
+  create(
+    email: string, 
+    password_hash: string | null, 
+    name: string, 
+    phone: string, 
+    role: 'super_admin' | 'landlord' | 'manager' | 'tenant',
+    additionalFields: Partial<User> = {}
+  ) {
     const user = this.repo.create({ 
       email, 
       password_hash, 
@@ -16,10 +23,48 @@ export class UsersService {
       role,
       is_active: true,
       requires_onboarding: true, // New users need to complete onboarding
-      onboarding_completed_at: null // Will be set when onboarding is completed
+      onboarding_completed_at: null, // Will be set when onboarding is completed
+      ...additionalFields
     });
 
     return this.repo.save(user);
+  }
+
+  async findOrCreateWithGoogle(googleUser: { email: string; name: string; googleId: string; picture?: string }) {
+    let user = await this.repo.findOne({ 
+      where: [
+        { email: googleUser.email },
+        { googleId: googleUser.googleId }
+      ]
+    });
+
+    if (!user) {
+      user = this.repo.create({
+        email: googleUser.email,
+        name: googleUser.name,
+        googleId: googleUser.googleId,
+        profile_image_url: googleUser.picture,
+        isEmailVerified: true,
+        is_active: true,
+        requires_onboarding: true,
+        role: 'tenant' // Default role, can be updated later
+      });
+      await this.repo.save(user);
+    } else if (!user.googleId) {
+      // User exists but doesn't have Google ID, update it
+      user.googleId = googleUser.googleId;
+      user.isEmailVerified = true;
+      if (googleUser.picture) {
+        user.profile_image_url = googleUser.picture;
+      }
+      await this.repo.save(user);
+    }
+
+    return user;
+  }
+
+  async findByGoogleId(googleId: string) {
+    return this.repo.findOne({ where: { googleId } });
   }
 
   async findOne(id: string) {

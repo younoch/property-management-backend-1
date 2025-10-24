@@ -25,6 +25,12 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   profile_image_url: string;
 
+  @Column({ name: 'google_id', nullable: true })
+  googleId: string;
+
+  @Column({ name: 'is_email_verified', default: false })
+  isEmailVerified: boolean;
+
   @Column({ default: true })
   is_active: boolean;
 
