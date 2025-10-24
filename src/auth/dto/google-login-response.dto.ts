@@ -1,19 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class TokensDto {
-  @ApiProperty({
-    description: 'JWT access token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  access_token: string;
-
-  @ApiProperty({
-    description: 'JWT refresh token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-  })
-  refresh_token: string;
-}
-
 export class UserProfileDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   id: string;
@@ -24,23 +10,45 @@ export class UserProfileDto {
   @ApiProperty({ example: 'John Doe' })
   name: string;
 
-  @ApiProperty({ example: 'tenant' })
+  @ApiProperty({ example: '+1234567890', nullable: true })
+  phone: string | null;
+
+  @ApiProperty({ enum: ['super_admin', 'landlord', 'manager', 'tenant'] })
   role: string;
 
-  @ApiProperty({ example: 'https://example.com/profile.jpg', required: false })
-  profile_image_url?: string;
+  @ApiProperty({ example: 'https://example.com/profile.jpg', nullable: true })
+  profile_image_url: string | null;
 
   @ApiProperty({ example: true })
-  is_email_verified: boolean;
+  is_active: boolean;
+
+  @ApiProperty({ example: '2025-10-24T17:13:09.403Z' })
+  created_at: string;
+
+  @ApiProperty({ example: '2025-10-24T19:38:35.674Z' })
+  updated_at: string;
+
+  @ApiProperty({ type: [String], example: [] })
+  owned_portfolios: string[];
+
+  @ApiProperty({ type: [String], example: [] })
+  notifications: string[];
 
   @ApiProperty({ example: true })
   requires_onboarding: boolean;
+
+  @ApiProperty({ example: null, nullable: true })
+  onboarding_completed_at: string | null;
+
+  @ApiProperty({ example: '2025-10-24T19:41:33.214Z' })
+  last_login_at: string;
+
+  @ApiProperty({ example: true })
+  is_email_verified: boolean;
 }
 
-export class GoogleLoginResponseDto {
-  @ApiProperty({ type: UserProfileDto })
-  user: UserProfileDto;
-
-  @ApiProperty({ type: TokensDto })
-  tokens: TokensDto;
+export class GoogleLoginResponseDto extends UserProfileDto {
+  // This class now extends UserProfileDto to match the actual response structure
+  // All properties from UserProfileDto are included directly in the response
+  // This matches the controller's response which returns the user object directly
 }

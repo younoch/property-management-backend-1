@@ -4,11 +4,11 @@ import {
   HttpCode, 
   HttpStatus, 
   Post, 
-  UseGuards, 
   Res, 
   UseInterceptors, 
-  ClassSerializerInterceptor 
+  ClassSerializerInterceptor
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { GoogleAuthService } from './google-auth.service';
 import { GoogleLoginDto } from './dto/google-login.dto';
@@ -35,33 +35,47 @@ export class GoogleAuthController {
     description: 'Invalid Google token or email not verified',
   })
   @UseInterceptors(ClassSerializerInterceptor)
-  @HttpCode(HttpStatus.OK)
-  async login(@Body() googleLoginDto: GoogleLoginDto, @Res({ passthrough: true }) response: any) {
+  async login(
+    @Body() googleLoginDto: GoogleLoginDto, 
+    @Res({ passthrough: true }) response: Response
+  ) {
     console.log('[GoogleAuthController] Login request received:', {
       hasToken: !!googleLoginDto.token,
       hasAccessToken: !!googleLoginDto.accessToken,
       role: googleLoginDto.role
     });
-    
-    const timestamp = new Date().toISOString();
-    
+
     try {
       const userData = await this.googleAuthService.authenticate({
         token: googleLoginDto.token,
         accessToken: googleLoginDto.accessToken,
         role: googleLoginDto.role
       });
-      
+
       console.log('[GoogleAuthController] Login successful for user ID:', userData.id);
+
+      // Set HTTP-only cookies
+      response.cookie('access_token', userData.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        path: '/',
+      });
+
+      response.cookie('refresh_token', userData.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/auth/refresh-token',
+      });
+
+      // Remove tokens from response
+      const { accessToken, refreshToken, ...user } = userData;
       
-      // Return the response in the expected format
-      return {
-        success: true,
-        message: 'User signed in successfully',
-        data: userData,
-        timestamp: timestamp,
-        path: '/auth/google/login'
-      };
+      // Return consistent response format
+      return user;
     } catch (error) {
       console.error('[GoogleAuthController] Login failed:', error.message, error.stack);
       throw error;

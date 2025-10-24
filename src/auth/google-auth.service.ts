@@ -146,7 +146,7 @@ export class GoogleAuthService {
       },
     );
 
-    // Return just the user data with tokens - let the controller handle the response structure
+    // Return user data with tokens
     return {
       id: user.id,
       email: user.email,
@@ -162,6 +162,7 @@ export class GoogleAuthService {
       requires_onboarding: user.requires_onboarding !== undefined ? user.requires_onboarding : true,
       onboarding_completed_at: user.onboarding_completed_at || null,
       last_login_at: user.last_login_at || new Date().toISOString(),
+      is_email_verified: true,
       accessToken: accessToken,
       refreshToken: refreshToken
     };
