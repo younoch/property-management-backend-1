@@ -31,16 +31,25 @@ export class UsersService {
   }
 
   async findOrCreateWithGoogle(googleUser: { email: string; name: string; googleId: string; picture?: string }) {
+    // First, try to find a user with the exact Google ID
     let user = await this.repo.findOne({ 
-      where: [
-        { email: googleUser.email },
-        { googleId: googleUser.googleId }
-      ]
+      where: { googleId: googleUser.googleId }
     });
 
+    // If no user found with this Google ID, check if a user with this email exists
     if (!user) {
-      // Generate a random password hash for Google OAuth users
-      // This is a placeholder since the user will always authenticate via Google
+      const existingUser = await this.repo.findOne({
+        where: { email: googleUser.email }
+      });
+
+      if (existingUser) {
+        // If a user with this email exists but doesn't have a Google ID,
+        // it means they signed up with email/password
+        // We should not automatically link these accounts as it could be a security issue
+        throw new Error('An account with this email already exists. Please log in using your email and password.');
+      }
+      
+      // No existing user found, create a new one
       const randomPassword = Math.random().toString(36).slice(2) + Date.now();
       
       user = this.repo.create({
@@ -54,18 +63,6 @@ export class UsersService {
         requires_onboarding: true,
         role: 'tenant' // Default role, can be updated later
       });
-      await this.repo.save(user);
-    } else if (!user.googleId) {
-      // User exists but doesn't have Google ID, update it
-      user.googleId = googleUser.googleId;
-      user.isEmailVerified = true;
-      if (googleUser.picture) {
-        user.profile_image_url = googleUser.picture;
-      }
-      // Ensure password_hash is set if it's null
-      if (!user.password_hash) {
-        user.password_hash = Math.random().toString(36).slice(2) + Date.now();
-      }
       await this.repo.save(user);
     }
 
