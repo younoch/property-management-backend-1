@@ -61,7 +61,7 @@ export class UsersService {
         isEmailVerified: true,
         is_active: true,
         requires_onboarding: true,
-        role: 'tenant' // Default role, can be updated later
+        role: 'landlord' // Default role for new users, can be updated later
       });
       await this.repo.save(user);
     }

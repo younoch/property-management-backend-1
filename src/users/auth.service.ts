@@ -19,7 +19,7 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async signup(email: string, password: string, name: string, phone: string, role: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
+  async signup(email: string, password: string, name: string, phone: string, role?: 'super_admin' | 'landlord' | 'manager' | 'tenant') {
     // See if email is in use
     const users = await this.usersService.find(email);
     if (users.length) {
@@ -30,8 +30,9 @@ export class AuthService {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create a new user and save it
-    const user = await this.usersService.create(email, hashedPassword, name, phone, role);
+    // Create a new user and save it with default role 'landlord' if not provided
+    const userRole = role || 'landlord';
+    const user = await this.usersService.create(email, hashedPassword, name, phone, userRole);
 
     // return the user
     return user;
