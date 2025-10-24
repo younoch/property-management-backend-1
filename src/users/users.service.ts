@@ -30,41 +30,53 @@ export class UsersService {
     return this.repo.save(user);
   }
 
-  async findOrCreateWithGoogle(googleUser: { email: string; name: string; googleId: string; picture?: string }) {
+  async findOrCreateWithGoogle(googleUser: { email: string; name: string; googleId: string; picture?: string, role?: 'super_admin' | 'landlord' | 'manager' | 'tenant' }) {
     // First, try to find a user with the exact Google ID
     let user = await this.repo.findOne({ 
       where: { googleId: googleUser.googleId }
     });
 
-    // If no user found with this Google ID, check if a user with this email exists
-    if (!user) {
-      const existingUser = await this.repo.findOne({
-        where: { email: googleUser.email }
-      });
-
-      if (existingUser) {
-        // If a user with this email exists but doesn't have a Google ID,
-        // it means they signed up with email/password
-        // We should not automatically link these accounts as it could be a security issue
-        throw new Error('An account with this email already exists. Please log in using your email and password.');
-      }
-      
-      // No existing user found, create a new one
-      const randomPassword = Math.random().toString(36).slice(2) + Date.now();
-      
-      user = this.repo.create({
-        email: googleUser.email,
-        name: googleUser.name,
-        googleId: googleUser.googleId,
-        password_hash: randomPassword, // Required field, but not used for Google auth
-        profile_image_url: googleUser.picture,
-        isEmailVerified: true,
-        is_active: true,
-        requires_onboarding: true,
-        role: 'landlord' // Default role for new users, can be updated later
-      });
-      await this.repo.save(user);
+    // If user found with Google ID, return it
+    if (user) {
+      return user;
     }
+
+    // Check if a user with this email already exists
+    const existingUser = await this.repo.findOne({
+      where: { email: googleUser.email }
+    });
+
+    if (existingUser) {
+      // If the existing user doesn't have a Google ID, update it
+      if (!existingUser.googleId) {
+        existingUser.googleId = googleUser.googleId;
+        existingUser.isEmailVerified = true;
+        if (googleUser.picture) {
+          existingUser.profile_image_url = googleUser.picture;
+        }
+        return this.repo.save(existingUser);
+      } else {
+        // If the existing user has a different Google ID, it's a security issue
+        throw new Error('An account with this email already exists with a different Google account.');
+      }
+    }
+    
+    // No existing user found, create a new one
+    const randomPassword = Math.random().toString(36).slice(2) + Date.now();
+    
+    user = this.repo.create({
+      email: googleUser.email,
+      name: googleUser.name,
+      googleId: googleUser.googleId,
+      password_hash: randomPassword, // Required field, but not used for Google auth
+      profile_image_url: googleUser.picture,
+      isEmailVerified: true,
+      is_active: true,
+      requires_onboarding: true,
+      role: (googleUser.role as 'super_admin' | 'landlord' | 'manager' | 'tenant') || 'landlord' // Use provided role or default to 'landlord'
+    });
+    
+    return this.repo.save(user);
 
     return user;
   }
