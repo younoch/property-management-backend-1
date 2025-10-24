@@ -32,14 +32,22 @@ export class GoogleAuthController {
     });
     
     try {
-      const result = await this.googleAuthService.authenticate({
+      const userData = await this.googleAuthService.authenticate({
         token: googleLoginDto.token,
         accessToken: googleLoginDto.accessToken,
         role: googleLoginDto.role
       });
       
-      console.log('[GoogleAuthController] Login successful for user ID:', result.user?.id);
-      return result;
+      console.log('[GoogleAuthController] Login successful for user ID:', userData.id);
+      
+      // Wrap the response to match email/password login structure
+      return {
+        success: true,
+        message: 'User signed in successfully',
+        data: userData,
+        timestamp: new Date().toISOString(),
+        path: '/auth/google/login'
+      };
     } catch (error) {
       console.error('[GoogleAuthController] Login failed:', error.message, error.stack);
       throw error;

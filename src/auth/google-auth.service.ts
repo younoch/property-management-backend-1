@@ -146,20 +146,24 @@ export class GoogleAuthService {
       },
     );
 
+    // Return response matching email/password structure
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        profile_image_url: user.profile_image_url,
-        is_email_verified: user.isEmailVerified,
-        requires_onboarding: user.requires_onboarding,
-      },
-      tokens: {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      },
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone || null,
+      role: user.role,
+      profile_image_url: user.profile_image_url || null,
+      is_active: user.is_active !== undefined ? user.is_active : true,
+      created_at: user.created_at || new Date().toISOString(),
+      updated_at: user.updated_at || new Date().toISOString(),
+      owned_portfolios: user.owned_portfolios || [],
+      notifications: user.notifications || [],
+      requires_onboarding: user.requires_onboarding !== undefined ? user.requires_onboarding : true,
+      onboarding_completed_at: user.onboarding_completed_at || null,
+      last_login_at: user.last_login_at || new Date().toISOString(),
+      accessToken: accessToken,
+      refreshToken: refreshToken
     };
   }
 }
