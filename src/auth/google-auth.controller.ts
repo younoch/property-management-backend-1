@@ -77,21 +77,8 @@ export class GoogleAuthController {
         path: '/auth/refresh-token',
       });
 
-      // Include tokens in the response data to match regular login
-      const { ...user } = userData;
-      
-      // Match the regular login response format including tokens in data
-      return {
-        success: true,
-        message: 'User signed in successfully',
-        data: {
-          ...user,
-          accessToken: userData.accessToken,
-          refreshToken: userData.refreshToken
-        },
-        timestamp: new Date().toISOString(),
-        path: '/auth/google/login'
-      };
+      // Return the user data with tokens - the response will be handled by the interceptor
+      return userData;
     } catch (error) {
       console.error('[GoogleAuthController] Login failed:', error.message, error.stack);
       throw error;
