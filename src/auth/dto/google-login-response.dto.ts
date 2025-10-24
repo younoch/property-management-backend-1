@@ -45,10 +45,27 @@ export class UserProfileDto {
 
   @ApiProperty({ example: true })
   is_email_verified: boolean;
+
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+  accessToken: string;
+
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
+  refreshToken: string;
 }
 
-export class GoogleLoginResponseDto extends UserProfileDto {
-  // This class now extends UserProfileDto to match the actual response structure
-  // All properties from UserProfileDto are included directly in the response
-  // This matches the controller's response which returns the user object directly
+export class GoogleLoginResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean;
+
+  @ApiProperty({ example: 'User signed in successfully' })
+  message: string;
+
+  @ApiProperty({ type: UserProfileDto })
+  data: UserProfileDto;
+
+  @ApiProperty({ example: '2025-10-24T20:11:45.466Z' })
+  timestamp: string;
+
+  @ApiProperty({ example: '/auth/google/login' })
+  path: string;
 }
