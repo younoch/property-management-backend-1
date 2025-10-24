@@ -6,7 +6,8 @@ import {
   Post, 
   Res, 
   UseInterceptors, 
-  ClassSerializerInterceptor
+  ClassSerializerInterceptor,
+  BadRequestException
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -44,6 +45,11 @@ export class GoogleAuthController {
       hasAccessToken: !!googleLoginDto.accessToken,
       role: googleLoginDto.role
     });
+
+    // Ensure at least one token is provided
+    if (!googleLoginDto.token && !googleLoginDto.accessToken) {
+      throw new BadRequestException('Either token or accessToken is required');
+    }
 
     try {
       const userData = await this.googleAuthService.authenticate({
