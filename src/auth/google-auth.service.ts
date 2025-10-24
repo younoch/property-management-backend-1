@@ -146,7 +146,7 @@ export class GoogleAuthService {
       },
     );
 
-    // Return response matching email/password structure
+    // Return just the user data with tokens - let the controller handle the response structure
     return {
       id: user.id,
       email: user.email,

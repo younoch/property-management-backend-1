@@ -1,4 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { 
+  Body, 
+  Controller, 
+  HttpCode, 
+  HttpStatus, 
+  Post, 
+  UseGuards, 
+  Res, 
+  UseInterceptors, 
+  ClassSerializerInterceptor 
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { GoogleAuthService } from './google-auth.service';
 import { GoogleLoginDto } from './dto/google-login.dto';
@@ -24,12 +34,16 @@ export class GoogleAuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid Google token or email not verified',
   })
-  async login(@Body() googleLoginDto: GoogleLoginDto) {
+  @UseInterceptors(ClassSerializerInterceptor)
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() googleLoginDto: GoogleLoginDto, @Res({ passthrough: true }) response: any) {
     console.log('[GoogleAuthController] Login request received:', {
       hasToken: !!googleLoginDto.token,
       hasAccessToken: !!googleLoginDto.accessToken,
       role: googleLoginDto.role
     });
+    
+    const timestamp = new Date().toISOString();
     
     try {
       const userData = await this.googleAuthService.authenticate({
@@ -40,12 +54,12 @@ export class GoogleAuthController {
       
       console.log('[GoogleAuthController] Login successful for user ID:', userData.id);
       
-      // Wrap the response to match email/password login structure
+      // Return the response in the expected format
       return {
         success: true,
         message: 'User signed in successfully',
         data: userData,
-        timestamp: new Date().toISOString(),
+        timestamp: timestamp,
         path: '/auth/google/login'
       };
     } catch (error) {
