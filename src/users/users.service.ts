@@ -31,39 +31,60 @@ export class UsersService {
   }
 
   async findOrCreateWithGoogle(googleUser: { email: string; name: string; googleId: string; picture?: string, role?: 'super_admin' | 'landlord' | 'manager' | 'tenant' }) {
+    console.log('[UsersService] findOrCreateWithGoogle - Start', { email: googleUser.email, googleId: googleUser.googleId });
+    
     // First, try to find a user with the exact Google ID
+    console.log('[UsersService] Searching for user by Google ID:', googleUser.googleId);
     let user = await this.repo.findOne({ 
       where: { googleId: googleUser.googleId }
     });
 
     // If user found with Google ID, return it
     if (user) {
+      console.log('[UsersService] Found existing user by Google ID:', { userId: user.id, email: user.email });
       return user;
     }
 
     // Check if a user with this email already exists
+    console.log('[UsersService] No user found with Google ID, searching by email:', googleUser.email);
     const existingUser = await this.repo.findOne({
       where: { email: googleUser.email }
     });
 
     if (existingUser) {
+      console.log('[UsersService] Found user with matching email:', { 
+        userId: existingUser.id, 
+        email: existingUser.email,
+        hasGoogleId: !!existingUser.googleId
+      });
+
       // If the existing user doesn't have a Google ID, update it
       if (!existingUser.googleId) {
+        console.log('[UsersService] Linking Google account to existing user');
         existingUser.googleId = googleUser.googleId;
         existingUser.isEmailVerified = true;
         if (googleUser.picture) {
           existingUser.profile_image_url = googleUser.picture;
         }
-        return this.repo.save(existingUser);
+        const updatedUser = await this.repo.save(existingUser);
+        console.log('[UsersService] Successfully linked Google account to user:', updatedUser.id);
+        return updatedUser;
       } else {
         // If the existing user has a different Google ID, it's a security issue
+        console.error('[UsersService] Email already in use with different Google account', {
+          existingGoogleId: existingUser.googleId,
+          newGoogleId: googleUser.googleId
+        });
         throw new Error('An account with this email already exists with a different Google account.');
       }
     }
     
     // No existing user found, create a new one
+    console.log('[UsersService] No existing user found, creating new user');
     const randomPassword = Math.random().toString(36).slice(2) + Date.now();
+    const role = (googleUser.role as 'super_admin' | 'landlord' | 'manager' | 'tenant') || 'landlord';
     
+    console.log('[UsersService] Creating new user with role:', role);
     user = this.repo.create({
       email: googleUser.email,
       name: googleUser.name,
@@ -73,12 +94,12 @@ export class UsersService {
       isEmailVerified: true,
       is_active: true,
       requires_onboarding: true,
-      role: (googleUser.role as 'super_admin' | 'landlord' | 'manager' | 'tenant') || 'landlord' // Use provided role or default to 'landlord'
+      role: role
     });
     
-    return this.repo.save(user);
-
-    return user;
+    const savedUser = await this.repo.save(user);
+    console.log('[UsersService] Successfully created new user:', { userId: savedUser.id, email: savedUser.email });
+    return savedUser;
   }
 
   async findByGoogleId(googleId: string) {

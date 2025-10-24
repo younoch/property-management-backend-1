@@ -25,10 +25,24 @@ export class GoogleAuthController {
     description: 'Invalid Google token or email not verified',
   })
   async login(@Body() googleLoginDto: GoogleLoginDto) {
-    return this.googleAuthService.authenticate({
-      token: googleLoginDto.token,
-      accessToken: googleLoginDto.accessToken,
+    console.log('[GoogleAuthController] Login request received:', {
+      hasToken: !!googleLoginDto.token,
+      hasAccessToken: !!googleLoginDto.accessToken,
       role: googleLoginDto.role
     });
+    
+    try {
+      const result = await this.googleAuthService.authenticate({
+        token: googleLoginDto.token,
+        accessToken: googleLoginDto.accessToken,
+        role: googleLoginDto.role
+      });
+      
+      console.log('[GoogleAuthController] Login successful for user ID:', result.user?.id);
+      return result;
+    } catch (error) {
+      console.error('[GoogleAuthController] Login failed:', error.message, error.stack);
+      throw error;
+    }
   }
 }

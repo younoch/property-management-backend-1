@@ -27,42 +27,55 @@ export class GoogleAuthService {
   }
 
   async verifyToken(credentials: { token?: string; accessToken?: string }): Promise<GoogleUser> {
+    console.log('[GoogleAuthService] Verifying Google token...');
     try {
       let payload;
       
       if (credentials.token) {
-        // Verify ID token (for mobile or when using Google Sign-In button)
+        console.log('[GoogleAuthService] Verifying ID token...');
         const ticket = await this.client.verifyIdToken({
           idToken: credentials.token,
           audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
         });
         payload = ticket.getPayload();
+        console.log('[GoogleAuthService] ID token verified for email:', payload?.email);
       } else if (credentials.accessToken) {
-        // Verify access token (for web with Google Sign-In SDK)
+        console.log('[GoogleAuthService] Verifying access token...');
         const ticket = await this.client.verifyIdToken({
           idToken: credentials.accessToken,
           audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
         });
         payload = ticket.getPayload();
+        console.log('[GoogleAuthService] Access token verified for email:', payload?.email);
       } else {
+        console.error('[GoogleAuthService] No token or accessToken provided');
         throw new BadRequestException('Either token or accessToken is required');
       }
       
       if (!payload) {
+        console.error('[GoogleAuthService] Invalid Google token - no payload');
         throw new BadRequestException('Invalid Google token');
       }
 
       // Check if email is verified by Google
       if (!payload.email_verified) {
+        console.error('[GoogleAuthService] Email not verified with Google:', payload.email);
         throw new BadRequestException('Email not verified with Google');
       }
 
-      return {
+      const userData = {
         email: payload.email!,
         name: payload.name || payload.email!.split('@')[0],
         googleId: payload.sub,
         picture: payload.picture,
       };
+      
+      console.log('[GoogleAuthService] Token verified successfully:', {
+        email: userData.email,
+        googleId: userData.googleId
+      });
+      
+      return userData;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -72,10 +85,17 @@ export class GoogleAuthService {
   }
 
   async authenticate(loginDto: { token?: string; accessToken?: string; role?: string }) {
+    console.log('[GoogleAuthService] Starting authentication...');
+    
     // Verify the Google token
     const googleUser = await this.verifyToken({
       token: loginDto.token,
       accessToken: loginDto.accessToken
+    });
+    
+    console.log('[GoogleAuthService] Finding or creating user with Google data:', {
+      email: googleUser.email,
+      googleId: googleUser.googleId
     });
     
     // Find or create the user in our database
@@ -84,13 +104,23 @@ export class GoogleAuthService {
       name: googleUser.name,
       googleId: googleUser.googleId,
       picture: googleUser.picture,
+      role: loginDto.role as any
+    });
+
+    console.log('[GoogleAuthService] User found/created:', {
+      userId: user.id,
+      email: user.email,
+      googleId: user.googleId,
+      role: user.role
     });
 
     // Update last login time
     user.last_login_at = new Date();
+    console.log('[GoogleAuthService] Updating last login time for user:', user.id);
     await this.usersService.update(user.id, { last_login_at: user.last_login_at });
 
     // Generate JWT tokens
+    console.log('[GoogleAuthService] Generating JWT tokens for user:', user.id);
     const accessToken = this.jwtService.sign(
       { 
         sub: user.id, 
