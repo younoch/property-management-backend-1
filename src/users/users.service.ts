@@ -39,10 +39,15 @@ export class UsersService {
     });
 
     if (!user) {
+      // Generate a random password hash for Google OAuth users
+      // This is a placeholder since the user will always authenticate via Google
+      const randomPassword = Math.random().toString(36).slice(2) + Date.now();
+      
       user = this.repo.create({
         email: googleUser.email,
         name: googleUser.name,
         googleId: googleUser.googleId,
+        password_hash: randomPassword, // Required field, but not used for Google auth
         profile_image_url: googleUser.picture,
         isEmailVerified: true,
         is_active: true,
@@ -56,6 +61,10 @@ export class UsersService {
       user.isEmailVerified = true;
       if (googleUser.picture) {
         user.profile_image_url = googleUser.picture;
+      }
+      // Ensure password_hash is set if it's null
+      if (!user.password_hash) {
+        user.password_hash = Math.random().toString(36).slice(2) + Date.now();
       }
       await this.repo.save(user);
     }
