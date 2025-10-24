@@ -25,6 +25,10 @@ export class GoogleAuthController {
     description: 'Invalid Google token or email not verified',
   })
   async login(@Body() googleLoginDto: GoogleLoginDto) {
-    return this.googleAuthService.authenticate(googleLoginDto.token);
+    return this.googleAuthService.authenticate({
+      token: googleLoginDto.token,
+      accessToken: googleLoginDto.accessToken,
+      role: googleLoginDto.role
+    });
   }
 }

@@ -26,14 +26,27 @@ export class GoogleAuthService {
     );
   }
 
-  async verifyToken(token: string): Promise<GoogleUser> {
+  async verifyToken(credentials: { token?: string; accessToken?: string }): Promise<GoogleUser> {
     try {
-      const ticket = await this.client.verifyIdToken({
-        idToken: token,
-        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-      });
-
-      const payload = ticket.getPayload();
+      let payload;
+      
+      if (credentials.token) {
+        // Verify ID token (for mobile or when using Google Sign-In button)
+        const ticket = await this.client.verifyIdToken({
+          idToken: credentials.token,
+          audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        });
+        payload = ticket.getPayload();
+      } else if (credentials.accessToken) {
+        // Verify access token (for web with Google Sign-In SDK)
+        const ticket = await this.client.verifyIdToken({
+          idToken: credentials.accessToken,
+          audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        });
+        payload = ticket.getPayload();
+      } else {
+        throw new BadRequestException('Either token or accessToken is required');
+      }
       
       if (!payload) {
         throw new BadRequestException('Invalid Google token');
@@ -58,9 +71,12 @@ export class GoogleAuthService {
     }
   }
 
-  async authenticate(googleToken: string) {
+  async authenticate(loginDto: { token?: string; accessToken?: string; role?: string }) {
     // Verify the Google token
-    const googleUser = await this.verifyToken(googleToken);
+    const googleUser = await this.verifyToken({
+      token: loginDto.token,
+      accessToken: loginDto.accessToken
+    });
     
     // Find or create the user in our database
     const user = await this.usersService.findOrCreateWithGoogle({
