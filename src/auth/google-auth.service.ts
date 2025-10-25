@@ -1,9 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import fetch from 'node-fetch';
 
 interface GoogleUserInfo {
   sub: string;
@@ -25,48 +24,177 @@ export interface GoogleUser {
 
 @Injectable()
 export class GoogleAuthService {
+  private readonly logger = new Logger(GoogleAuthService.name);
   private readonly client: OAuth2Client;
+  private readonly clientId: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly httpService: HttpService
   ) {
-    this.client = new OAuth2Client(
-      this.configService.get<string>('GOOGLE_CLIENT_ID'),
-      this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
-    );
+    this.clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    
+    if (!this.clientId || !clientSecret) {
+      this.logger.error('Google OAuth client ID or secret is not configured');
+      throw new Error('Google OAuth is not properly configured');
+    }
+    
+    this.client = new OAuth2Client({
+      clientId: this.clientId,
+      clientSecret: clientSecret,
+    });
+    
+    this.logger.log(`Google OAuth initialized with client ID: ${this.clientId.substring(0, 10)}...`);
   }
 
   async verifyToken(credentials: { token?: string; accessToken?: string }): Promise<GoogleUser> {
-    console.log('[GoogleAuthService] Verifying Google token...');
+    this.logger.debug('Verifying Google token...');
+    
+    if (!credentials.token && !credentials.accessToken) {
+      this.logger.error('No token or accessToken provided');
+      throw new BadRequestException('Either token or accessToken is required');
+    }
+    
     try {
-      let payload;
-      
       if (credentials.token) {
-        console.log('[GoogleAuthService] Verifying ID token...');
-        const ticket = await this.client.verifyIdToken({
-          idToken: credentials.token,
-          audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-        });
-        payload = ticket.getPayload();
-        console.log('[GoogleAuthService] ID token verified for email:', payload?.email);
+        return await this.verifyIdToken(credentials.token);
       } else if (credentials.accessToken) {
-        console.log('[GoogleAuthService] Verifying access token...');
-        // For access token, we need to get user info from Google's userinfo endpoint
-        try {
-          const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { 'Authorization': `Bearer ${credentials.accessToken}` }
+        return await this.verifyAccessToken(credentials.accessToken);
+      }
+    } catch (error) {
+      this.logger.error('Token verification failed', error.stack);
+      throw new BadRequestException(error.message || 'Invalid Google token');
+    }
+  }
+  
+  private async verifyIdToken(token: string): Promise<GoogleUser> {
+    this.logger.debug('Verifying Google ID token...');
+    
+    try {
+      // Verify the ID token using Google's API
+      const ticket = await this.client.verifyIdToken({
+        idToken: token,
+        audience: this.clientId,
+      });
+      
+      const payload = ticket.getPayload();
+      
+      if (!payload) {
+        this.logger.error('No payload returned from Google token verification');
+        throw new Error('No payload returned from Google token verification');
+      }
+      
+      this.logger.debug(`Token verified for email: ${payload.email}`);
+      
+      // Verify the token's issuer
+      const isGoogleIssued = [
+        'https://accounts.google.com', 
+        'accounts.google.com'
+      ].includes(payload.iss || '');
+      
+      if (!isGoogleIssued) {
+        this.logger.error(`Invalid token issuer: ${payload.iss}`);
+        throw new Error('Invalid token issuer');
+      }
+      
+      // Check if the token is expired
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        this.logger.error(`Token expired at ${new Date(payload.exp * 1000).toISOString()}`);
+        throw new Error('Token has expired');
+      }
+      
+      // Check if the token was issued for our client ID
+      if (payload.aud !== this.clientId) {
+        this.logger.error(`Token audience mismatch: expected ${this.clientId}, got ${payload.aud}`);
+        throw new Error('Token audience mismatch');
+      }
+      
+      // Check if email is verified
+      if (!payload.email_verified) {
+        this.logger.error(`Email not verified: ${payload.email}`);
+        throw new Error('Email not verified with Google');
+      }
+      
+      return {
+        email: payload.email!,
+        name: payload.name || payload.email!.split('@')[0],
+        googleId: payload.sub,
+        picture: payload.picture
+      };
+    } catch (error) {
+      this.logger.error('Error verifying ID token', error.stack);
+      throw new Error(`Invalid Google ID token: ${error.message}`);
+    }
+  }
+  
+  private async verifyAccessToken(accessToken: string): Promise<GoogleUser> {
+    this.logger.debug('Verifying Google access token...');
+    
+    try {
+      // Use the access token to get user info
+      const response = await this.httpService.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      }).toPromise();
+      
+      if (!response.data || !response.data.email) {
+        this.logger.error('Invalid user info response from Google');
+        throw new Error('Failed to fetch user info from Google');
+      }
+      
+      this.logger.debug(`Successfully verified access token for email: ${response.data.email}`);
+      
+      return {
+        email: response.data.email,
+        name: response.data.name || response.data.email.split('@')[0],
+        googleId: response.data.sub,
+        picture: response.data.picture
+      };
+    } catch (error) {
+      this.logger.error('Error verifying access token', error.stack);
+      throw new Error(`Invalid Google access token: ${error.message}`);
+    }
+  }
+
+  async authenticate(credentials: { token?: string; accessToken?: string; role?: string }): Promise<any> {
+    this.logger.debug('Starting Google authentication...');
+    
+    try {
+      // Verify the Google token
+      const googleUser = await this.verifyToken({
+        token: credentials.token,
+        accessToken: credentials.accessToken
+      });
+      
+      this.logger.debug(`Finding or creating user with Google data:`, {
+        email: googleUser.email,
+        googleId: googleUser.googleId
+      });
+      
+      // Find or create the user in your database
+      let user = await this.usersService.findByEmail(googleUser.email);
+      
+      if (!user) {
+        // Create a new user if they don't exist
+        user = await this.usersService.createUser({
+          email: googleUser.email,
+          name: googleUser.name,
+          googleId: googleUser.googleId,
+          role: credentials.role || 'user',
+          isEmailVerified: true
+        });
+        this.logger.debug(`Created new user: ${user.id}`);
+      } else {
+        // Update existing user if needed
+        if (!user.googleId) {
+          user = await this.usersService.updateUser(user.id, {
+            googleId: googleUser.googleId,
+            isEmailVerified: true
           });
-          
-          if (!response.ok) {
-            console.error('[GoogleAuthService] Failed to fetch user info:', await response.text());
-            throw new BadRequestException('Invalid Google access token');
-          }
-          
-          const userInfo = await response.json() as GoogleUserInfo;
-          console.log('[GoogleAuthService] User info retrieved:', userInfo);
-          
+          this.logger.debug(`Updated user with Google ID: ${user.id}`);
           // Map the user info to match our expected payload structure
           payload = {
             ...userInfo,

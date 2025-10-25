@@ -40,15 +40,63 @@ export class GoogleAuthController {
     @Body() googleLoginDto: GoogleLoginDto, 
     @Res({ passthrough: true }) response: Response
   ) {
-    console.log('[GoogleAuthController] Login request received:', {
+    console.log('\n===== [GoogleAuthController] New Login Request =====');
+    console.log('[GoogleAuthController] Request body:', {
       hasToken: !!googleLoginDto.token,
+      tokenPrefix: googleLoginDto.token ? `${googleLoginDto.token.substring(0, 10)}...` : 'None',
       hasAccessToken: !!googleLoginDto.accessToken,
-      role: googleLoginDto.role
+      accessTokenPrefix: googleLoginDto.accessToken ? `${googleLoginDto.accessToken.substring(0, 10)}...` : 'None',
+      role: googleLoginDto.role,
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log('[GoogleAuthController] Environment:', {
+      nodeEnv: process.env.NODE_ENV,
+      googleClientId: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not Set',
+      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not Set'
     });
 
     // Ensure at least one token is provided
     if (!googleLoginDto.token && !googleLoginDto.accessToken) {
-      throw new BadRequestException('Please sign in with Google first. No authentication token was provided.');
+      const error = new BadRequestException('Please sign in with Google first. No authentication token was provided.');
+      console.error('[GoogleAuthController] No token provided:', error);
+      throw error;
+    }
+    
+    // Validate token format if provided
+    if (googleLoginDto.token) {
+      const tokenParts = googleLoginDto.token.split('.');
+      if (tokenParts.length !== 3) {
+        const error = new BadRequestException('Invalid token format. Expected a JWT with 3 parts');
+        console.error('[GoogleAuthController] Invalid token format:', {
+          tokenLength: googleLoginDto.token.length,
+          tokenParts: tokenParts.length,
+          error: error.message
+        });
+        throw error;
+      }
+      
+      try {
+        const header = JSON.parse(Buffer.from(tokenParts[0], 'base64').toString());
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+        
+        console.log('[GoogleAuthController] Token details:', {
+          header,
+          payload: {
+            ...payload,
+            iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : null,
+            exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+            email: payload.email,
+            email_verified: payload.email_verified,
+            aud: payload.aud,
+            iss: payload.iss
+          }
+        });
+      } catch (error) {
+        console.error('[GoogleAuthController] Error parsing token:', error.message);
+        // Continue with the authentication even if we can't parse the token
+        // The actual verification will happen in the service
+      }
     }
 
     try {
