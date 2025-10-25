@@ -36,7 +36,8 @@ export class AuthGuard implements CanActivate {
       '/auth/refresh',
       '/auth/forgot-password',
       '/auth/reset-password',
-      '/auth/google',  // Google auth endpoints
+      '/auth/google/login',  // Google auth endpoints
+      '/auth/google/callback',
       '/csrf/refresh',
       '/csrf/token',   // Only the token endpoint is public
       '/health'        // Health check endpoint
