@@ -106,7 +106,7 @@ export class GoogleAuthController {
         role: googleLoginDto.role
       });
 
-      console.log('[GoogleAuthController] Login successful for user ID:', userData.id);
+      console.log('[GoogleAuthController] Login successful for user ID:', userData.user.id);
 
       // Set HTTP-only cookies
       response.cookie('access_token', userData.accessToken, {
