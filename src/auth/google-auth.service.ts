@@ -187,6 +187,9 @@ export class GoogleAuthService {
     accessToken: string;
     refreshToken: string;
   }> {
+    if (!credentials.token && !credentials.accessToken) {
+      throw new BadRequestException('Either token or accessToken is required');
+    }
     this.logger.debug('Starting Google authentication...');
     
     try {
@@ -265,7 +268,24 @@ export class GoogleAuthService {
       };
     } catch (error) {
       this.logger.error('Authentication failed', error instanceof Error ? error.stack : String(error));
-      throw new BadRequestException(error instanceof Error ? error.message : 'Authentication failed');
+      
+      // Handle specific error cases
+      if (error.message.includes('already exists') || 
+          error.message.includes('already registered')) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: error.message,
+          error: 'ACCOUNT_EXISTS',
+          existingAccount: true
+        });
+      }
+      
+      // For other errors, provide a generic message
+      throw new BadRequestException({
+        statusCode: 400,
+        message: error instanceof Error ? error.message : 'Authentication failed',
+        error: 'AUTHENTICATION_FAILED'
+      });
     }
   }
 }

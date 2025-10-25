@@ -46,37 +46,18 @@ export class UsersService {
     }
 
     // Check if a user with this email already exists
-    console.log('[UsersService] No user found with Google ID, searching by email:', googleUser.email);
+    console.log('[UsersService] Checking if email is already registered:', googleUser.email);
     const existingUser = await this.repo.findOne({
       where: { email: googleUser.email }
     });
 
     if (existingUser) {
-      console.log('[UsersService] Found user with matching email:', { 
-        userId: existingUser.id, 
-        email: existingUser.email,
-        hasGoogleId: !!existingUser.googleId
+      // Don't automatically link to existing email accounts
+      console.error('[UsersService] Email already registered with password-based login', { 
+        userId: existingUser.id,
+        email: existingUser.email 
       });
-
-      // If the existing user doesn't have a Google ID, update it
-      if (!existingUser.googleId) {
-        console.log('[UsersService] Linking Google account to existing user');
-        existingUser.googleId = googleUser.googleId;
-        existingUser.isEmailVerified = true;
-        if (googleUser.picture) {
-          existingUser.profile_image_url = googleUser.picture;
-        }
-        const updatedUser = await this.repo.save(existingUser);
-        console.log('[UsersService] Successfully linked Google account to user:', updatedUser.id);
-        return updatedUser;
-      } else {
-        // If the existing user has a different Google ID, it's a security issue
-        console.error('[UsersService] Email already in use with different Google account', {
-          existingGoogleId: existingUser.googleId,
-          newGoogleId: googleUser.googleId
-        });
-        throw new Error('An account with this email already exists with a different Google account.');
-      }
+      throw new Error('An account with this email already exists. Please log in with your password instead.');
     }
     
     // No existing user found, create a new one
