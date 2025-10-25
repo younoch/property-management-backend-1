@@ -41,14 +41,36 @@ export class GoogleAuthController {
     @Res({ passthrough: true }) response: Response
   ) {
     console.log('\n===== [GoogleAuthController] New Login Request =====');
-    console.log('[GoogleAuthController] Request body:', {
+    
+    // Log request details (without full tokens for security)
+    const logInfo = {
       hasToken: !!googleLoginDto.token,
       tokenPrefix: googleLoginDto.token ? `${googleLoginDto.token.substring(0, 10)}...` : 'None',
       hasAccessToken: !!googleLoginDto.accessToken,
       accessTokenPrefix: googleLoginDto.accessToken ? `${googleLoginDto.accessToken.substring(0, 10)}...` : 'None',
       role: googleLoginDto.role,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    console.log('[GoogleAuthController] Request details:', JSON.stringify(logInfo, null, 2));
+    
+    // Validate that we have either token or accessToken
+    if (!googleLoginDto.token && !googleLoginDto.accessToken) {
+      throw new BadRequestException('Either token (ID token) or accessToken is required');
+    }
+    
+    // If token is provided, validate it's a JWT
+    if (googleLoginDto.token) {
+      const tokenParts = googleLoginDto.token.split('.');
+      if (tokenParts.length !== 3) {
+        console.error('[GoogleAuthController] Invalid token format:', {
+          tokenLength: googleLoginDto.token.length,
+          tokenParts: tokenParts.length,
+          error: 'Expected a JWT with 3 parts (header.payload.signature)'
+        });
+        throw new BadRequestException('Invalid token format. Expected a JWT with 3 parts (header.payload.signature)');
+      }
+    }
     
     console.log('[GoogleAuthController] Environment:', {
       nodeEnv: process.env.NODE_ENV,

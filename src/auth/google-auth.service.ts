@@ -53,20 +53,48 @@ export class GoogleAuthService {
     this.logger.debug('Verifying Google token...');
     
     if (!credentials.token && !credentials.accessToken) {
-      this.logger.error('No token or accessToken provided');
-      throw new BadRequestException('Either token or accessToken is required');
+      const error = new Error('Either token (ID token) or accessToken is required');
+      this.logger.error(error.message);
+      throw new BadRequestException(error.message);
     }
     
     try {
       if (credentials.token) {
+        // Verify this is a valid JWT token
+        const tokenParts = credentials.token.split('.');
+        if (tokenParts.length !== 3) {
+          const errorMsg = 'Invalid ID token format. Expected a JWT with 3 parts (header.payload.signature)';
+          this.logger.error(errorMsg, {
+            tokenLength: credentials.token.length,
+            tokenParts: tokenParts.length
+          });
+          throw new BadRequestException(errorMsg);
+        }
+        
         return await this.verifyIdToken(credentials.token);
-      } else if (credentials.accessToken) {
+      } 
+      
+      if (credentials.accessToken) {
+        this.logger.debug('Using access token for authentication');
         return await this.verifyAccessToken(credentials.accessToken);
       }
-      throw new BadRequestException('No valid token provided');
+      
+      throw new BadRequestException('No valid authentication method provided');
     } catch (error) {
-      this.logger.error('Token verification failed', error instanceof Error ? error.stack : String(error));
-      throw new BadRequestException(error instanceof Error ? error.message : 'Invalid Google token');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during token verification';
+      this.logger.error(`Token verification failed: ${errorMessage}`, 
+        error instanceof Error ? error.stack : undefined);
+      
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Authentication failed',
+        error: 'AUTHENTICATION_FAILED',
+        details: errorMessage
+      });
     }
   }
   
