@@ -140,12 +140,6 @@ async function bootstrap() {
   };
   
   app.enableCors(corsOptions);
-      'X-CSRF-Token',
-    ],
-    exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials', 'X-CSRF-Token'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
   
   // Security headers
   (app as any).set('etag', false);
