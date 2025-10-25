@@ -165,38 +165,68 @@ export class GoogleAuthService {
     this.logger.debug('Verifying Google access token...');
     
     try {
-      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      // First, verify the access token with Google's token info endpoint
+      const tokenInfoUrl = `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`;
+      const tokenInfoResponse = await fetch(tokenInfoUrl);
+      
+      if (!tokenInfoResponse.ok) {
+        const errorText = await tokenInfoResponse.text();
+        this.logger.error(`Failed to verify access token: ${errorText}`);
+        throw new Error('Failed to verify access token with Google');
+      }
+      
+      const tokenInfo = await tokenInfoResponse.json();
+      
+      // Check if the token is valid and has the correct audience
+      if (tokenInfo.aud !== this.clientId) {
+        this.logger.error('Access token audience does not match client ID', {
+          expected: this.clientId,
+          actual: tokenInfo.aud
+        });
+        throw new Error('Invalid access token: audience mismatch');
+      }
+      
+      // Now fetch user info
+      const userInfoUrl = 'https://www.googleapis.com/oauth2/v3/userinfo';
+      const userInfoResponse = await fetch(userInfoUrl, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!userInfoResponse.ok) {
+        const errorText = await userInfoResponse.text();
         this.logger.error(`Failed to fetch user info: ${errorText}`);
         throw new Error('Failed to fetch user info from Google');
       }
       
-      const data = await response.json() as GoogleUserInfo;
+      const userInfo = await userInfoResponse.json() as GoogleUserInfo;
       
-      if (!data || !data.email) {
-        this.logger.error('Invalid user info response from Google');
+      if (!userInfo || !userInfo.email) {
+        this.logger.error('Invalid user info response from Google', userInfo);
         throw new Error('Invalid user info response from Google');
       }
       
-      this.logger.debug(`Successfully verified access token for email: ${data.email}`);
+      this.logger.debug(`Successfully verified access token for email: ${userInfo.email}`);
       
       return {
-        email: data.email,
-        name: data.name || data.email.split('@')[0],
-        sub: data.sub,
-        picture: data.picture,
-        email_verified: data.email_verified || true,
-        given_name: data.given_name,
-        family_name: data.family_name,
-        locale: data.locale
+        email: userInfo.email,
+        name: userInfo.name || userInfo.email.split('@')[0],
+        sub: userInfo.sub || tokenInfo.sub, // Use sub from token info if not in user info
+        picture: userInfo.picture,
+        email_verified: userInfo.email_verified || tokenInfo.email_verified || false,
+        given_name: userInfo.given_name,
+        family_name: userInfo.family_name,
+        locale: userInfo.locale
       };
     } catch (error) {
-      this.logger.error('Error verifying access token', error instanceof Error ? error.stack : String(error));
-      throw new Error(`Failed to verify access token: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error('Error verifying access token', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      if (error instanceof Error) {
+        throw new Error(`Failed to verify access token: ${error.message}`);
+      }
+      throw new Error('Failed to verify access token: Unknown error');
     }
   }
 

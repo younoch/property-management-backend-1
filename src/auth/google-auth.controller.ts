@@ -7,7 +7,8 @@ import {
   Res, 
   UseInterceptors, 
   ClassSerializerInterceptor,
-  BadRequestException
+  BadRequestException,
+  Logger
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
@@ -19,6 +20,7 @@ import { Public } from '../common/decorators/public.decorator';
 @ApiTags('auth')
 @Controller('auth/google')
 export class GoogleAuthController {
+  private readonly logger = new Logger(GoogleAuthController.name);
   constructor(private readonly googleAuthService: GoogleAuthService) {}
 
   @Post('login')
@@ -40,42 +42,54 @@ export class GoogleAuthController {
     @Body() googleLoginDto: GoogleLoginDto, 
     @Res({ passthrough: true }) response: Response
   ) {
-    console.log('\n===== [GoogleAuthController] New Login Request =====');
+    this.logger.log('===== New Google Login Request =====');
     
     // Log request details (without full tokens for security)
     const logInfo = {
       hasToken: !!googleLoginDto.token,
       tokenPrefix: googleLoginDto.token ? `${googleLoginDto.token.substring(0, 10)}...` : 'None',
+      tokenType: googleLoginDto.token ? (googleLoginDto.token.split('.').length === 3 ? 'JWT' : 'OAuth') : 'None',
       hasAccessToken: !!googleLoginDto.accessToken,
       accessTokenPrefix: googleLoginDto.accessToken ? `${googleLoginDto.accessToken.substring(0, 10)}...` : 'None',
       role: googleLoginDto.role,
       timestamp: new Date().toISOString()
     };
     
-    console.log('[GoogleAuthController] Request details:', JSON.stringify(logInfo, null, 2));
+    this.logger.debug('Request details:', JSON.stringify(logInfo, null, 2));
     
     // Validate that we have either token or accessToken
     if (!googleLoginDto.token && !googleLoginDto.accessToken) {
       throw new BadRequestException('Either token (ID token) or accessToken is required');
     }
     
-    // If token is provided, validate it's a JWT
+    // If token is provided, check if it's a JWT or an access token
     if (googleLoginDto.token) {
       const tokenParts = googleLoginDto.token.split('.');
-      if (tokenParts.length !== 3) {
+      if (tokenParts.length === 3) {
+        // It's a JWT ID token
+        this.logger.debug('Detected JWT ID token');
+      } else if (googleLoginDto.token.startsWith('ya29.')) {
+        // It's a Google OAuth access token (starts with 'ya29.')
+        this.logger.debug('Detected Google OAuth access token');
+        // Convert the access token to be used in the accessToken field
+        googleLoginDto.accessToken = googleLoginDto.token;
+        googleLoginDto.token = undefined;
+      } else {
+        // Invalid token format
         console.error('[GoogleAuthController] Invalid token format:', {
           tokenLength: googleLoginDto.token.length,
           tokenParts: tokenParts.length,
-          error: 'Expected a JWT with 3 parts (header.payload.signature)'
+          error: 'Expected a JWT ID token or Google OAuth access token'
         });
-        throw new BadRequestException('Invalid token format. Expected a JWT with 3 parts (header.payload.signature)');
+        throw new BadRequestException('Invalid token format. Expected a JWT ID token or Google OAuth access token');
       }
     }
     
-    console.log('[GoogleAuthController] Environment:', {
-      nodeEnv: process.env.NODE_ENV,
+    this.logger.debug('Environment check:', {
+      nodeEnv: process.env.NODE_ENV || 'development',
       googleClientId: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not Set',
-      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not Set'
+      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not Set',
+      googleAuthUrl: process.env.GOOGLE_AUTH_URL || 'Using default'
     });
 
     // Ensure at least one token is provided
