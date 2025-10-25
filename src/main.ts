@@ -15,44 +15,131 @@ async function bootstrap() {
   app.disable('x-powered-by');
   app.use(cookieParser());
   
-  
   // CORS configuration for production
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS
         .split(',')
         .map((o) => o.trim())
         .filter((o) => !!o)
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173',
+        'https://www.leasedirector.com',
+        'https://leasedirector.com',
+        'https://*.leasedirector.com',
+        'https://staging.leasedirector.com',
+        'https://app.leasedirector.com',
+        'https://api.leasedirector.com',
+        'https://accounts.google.com',
+        'https://*.googleusercontent.com'
+      ];
   
-  // Enhanced CORS configuration for JWT cookies
-  app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or Postman)
+  // Enhanced CORS configuration for JWT cookies and Google Auth
+  const corsOptions = {
+    origin: (origin: string, callback: (error: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps, curl, or server-to-server requests)
       if (!origin) {
         return callback(null, true);
       }
       
-      // Check if origin is in allowed list
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Check if origin is in allowed list or is a subdomain of an allowed origin
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        // Exact match
+        if (origin === allowedOrigin) return true;
+        
+        // Wildcard subdomain match (e.g., https://*.example.com)
+        if (allowedOrigin.includes('*')) {
+          const regex = new RegExp(`^${allowedOrigin.replace(/\./g, '\\.').replace('*', '.*')}$`);
+          return regex.test(origin);
+        }
+        
+        // Subdomain match (e.g., https://sub.example.com matches example.com)
+        try {
+          const originUrl = new URL(origin);
+          
+          // Special handling for Google OAuth redirects
+          if (originUrl.hostname.endsWith('.googleusercontent.com') || 
+              originUrl.hostname === 'accounts.google.com') {
+            return true;
+          }
+          
+          const allowedUrl = new URL(allowedOrigin);
+          return (
+            originUrl.hostname === allowedUrl.hostname ||
+            originUrl.hostname.endsWith(`.${allowedUrl.hostname}`) ||
+            originUrl.hostname.replace(/^www\./i, '') === allowedUrl.hostname.replace(/^www\./i, '')
+          );
+        } catch (e) {
+          console.warn(`Error parsing URL in CORS check: ${e.message}`, { origin, allowedOrigin });
+          return false;
+        }
+      });
+      
+      if (isAllowed) {
         return callback(null, true);
       }
       
-      // For development, allow localhost variations
-      if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+      // For development, allow common localhost variations
+      const isLocalhost = process.env.NODE_ENV !== 'production' && 
+        (origin.includes('localhost') || 
+         origin.includes('127.0.0.1') ||
+         origin.includes('0.0.0.0') ||
+         /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+         /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin));
+      
+      if (isLocalhost) {
+        console.log(`Allowing localhost origin in development: ${origin}`);
         return callback(null, true);
       }
       
-      return callback(new Error('Not allowed by CORS'), false);
+      console.warn(`CORS blocked request from origin: ${origin}`);
+      console.log('Allowed origins:', allowedOrigins);
+      return callback(new Error(`Not allowed by CORS: ${origin}`), false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
     allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
+      'Content-Type',
+      'Authorization',
       'X-Requested-With',
-      'Cookie',
+      'X-XSRF-TOKEN',
       'Accept',
-      'Origin',
+      'X-Forwarded-For',
+      'X-Forwarded-Proto',
+      'X-Forwarded-Host',
+      'X-Real-IP',
+      'X-Request-ID',
+      'X-Response-Time',
+      'Set-Cookie',
+      'Cookie',
+      'Access-Control-Allow-Origin',
+      'Access-Control-Allow-Credentials',
+      'Access-Control-Allow-Headers',
+      'Access-Control-Allow-Methods',
+      'X-CSRF-Token'
+    ],
+    exposedHeaders: [
+      'Content-Length',
+      'Content-Type',
+      'X-Request-ID',
+      'X-Response-Time',
+      'X-Total-Count',
+      'X-Page',
+      'X-Per-Page',
+      'X-Total-Pages',
+      'Set-Cookie',
+      'Authorization',
+      'X-Access-Token',
+      'X-Refresh-Token',
+      'X-CSRF-Token'
+    ],
+    maxAge: 86400, // 24 hours for preflight requests
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+  };
+  
+  app.enableCors(corsOptions);
       'X-CSRF-Token',
     ],
     exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials', 'X-CSRF-Token'],

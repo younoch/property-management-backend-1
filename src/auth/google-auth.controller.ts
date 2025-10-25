@@ -144,21 +144,39 @@ export class GoogleAuthController {
 
       console.log('[GoogleAuthController] Login successful for user ID:', userData.user.id);
 
-      // Set HTTP-only cookies
+      // Set HTTP-only cookies with proper configuration
+      const isProduction = process.env.NODE_ENV === 'production';
+      const domain = isProduction ? '.yourdomain.com' : undefined; // Replace with your actual domain
+      
+      // Access token cookie (short-lived)
       response.cookie('access_token', userData.accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction, // Only send over HTTPS in production
+        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production
         maxAge: 15 * 60 * 1000, // 15 minutes
         path: '/',
+        domain, // Set domain for production
+        // Add Partitioned attribute for cross-site cookies if needed
+        ...(isProduction && { partitioned: true })
       });
 
+      // Refresh token cookie (longer-lived)
       response.cookie('refresh_token', userData.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction, // Only send over HTTPS in production
+        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/auth/refresh-token',
+        path: '/',
+        domain, // Set domain for production
+        // Add Partitioned attribute for cross-site cookies if needed
+        ...(isProduction && { partitioned: true })
+      });
+      
+      this.logger.debug('Cookies set successfully', {
+        accessTokenSet: !!userData.accessToken,
+        refreshTokenSet: !!userData.refreshToken,
+        isProduction,
+        domain
       });
 
       // Return the user data with tokens - the response will be handled by the interceptor
