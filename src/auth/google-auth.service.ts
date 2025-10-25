@@ -3,6 +3,18 @@ import { OAuth2Client } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import fetch from 'node-fetch';
+
+interface GoogleUserInfo {
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  given_name?: string;
+  family_name?: string;
+  picture?: string;
+  locale?: string;
+}
 
 export interface GoogleUser {
   email: string;
@@ -41,12 +53,35 @@ export class GoogleAuthService {
         console.log('[GoogleAuthService] ID token verified for email:', payload?.email);
       } else if (credentials.accessToken) {
         console.log('[GoogleAuthService] Verifying access token...');
-        const ticket = await this.client.verifyIdToken({
-          idToken: credentials.accessToken,
-          audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-        });
-        payload = ticket.getPayload();
-        console.log('[GoogleAuthService] Access token verified for email:', payload?.email);
+        // For access token, we need to get user info from Google's userinfo endpoint
+        try {
+          const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { 'Authorization': `Bearer ${credentials.accessToken}` }
+          });
+          
+          if (!response.ok) {
+            console.error('[GoogleAuthService] Failed to fetch user info:', await response.text());
+            throw new BadRequestException('Invalid Google access token');
+          }
+          
+          const userInfo = await response.json() as GoogleUserInfo;
+          console.log('[GoogleAuthService] User info retrieved:', userInfo);
+          
+          // Map the user info to match our expected payload structure
+          payload = {
+            ...userInfo,
+            email: userInfo.email,
+            name: userInfo.name || userInfo.email.split('@')[0],
+            sub: userInfo.sub,
+            email_verified: userInfo.email_verified ?? true, // Default to true if not provided
+            picture: userInfo.picture
+          };
+          
+          console.log('[GoogleAuthService] Access token verified for email:', payload?.email);
+        } catch (error) {
+          console.error('[GoogleAuthService] Error verifying access token:', error);
+          throw new BadRequestException('Failed to verify Google access token');
+        }
       } else {
         console.error('[GoogleAuthService] No token or accessToken provided');
         throw new BadRequestException('Either token or accessToken is required');
