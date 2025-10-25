@@ -48,7 +48,7 @@ export class GoogleAuthController {
 
     // Ensure at least one token is provided
     if (!googleLoginDto.token && !googleLoginDto.accessToken) {
-      throw new BadRequestException('Either token or accessToken is required');
+      throw new BadRequestException('Please sign in with Google first. No authentication token was provided.');
     }
 
     try {
