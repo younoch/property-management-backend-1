@@ -142,7 +142,7 @@ export class GoogleAuthController {
         role: googleLoginDto.role
       });
 
-      console.log('[GoogleAuthController] Login successful for user ID:', userData.user.id);
+      console.log('[GoogleAuthController] User data:', userData);
 
       // Set HTTP-only cookies with proper configuration
       const isProduction = process.env.NODE_ENV === 'production';
