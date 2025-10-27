@@ -144,20 +144,38 @@ export class GoogleAuthController {
 
       console.log('[GoogleAuthController] User data:', userData);
 
-      // Set HTTP-only cookies with proper configuration
+      // Clear any existing auth cookies first
       const isProduction = process.env.NODE_ENV === 'production';
       const domain = isProduction ? '.yourdomain.com' : undefined; // Replace with your actual domain
+      const cookieOptions: {
+        httpOnly: boolean;
+        secure: boolean;
+        sameSite: boolean | 'none' | 'lax' | 'strict';
+        path: string;
+        domain?: string;
+        partitioned?: boolean;
+      } = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/',
+        domain,
+        ...(isProduction && { partitioned: true })
+      };
       
+      // Create a separate options object for CSRF token (non-httpOnly)
+      const csrfCookieOptions = { ...cookieOptions, httpOnly: false };
+
+      // Clear existing auth cookies
+      response.clearCookie('access_token', cookieOptions);
+      response.clearCookie('refresh_token', cookieOptions);
+      response.clearCookie('csrf_token', csrfCookieOptions);
+      
+      // Set new HTTP-only cookies with proper configuration
       // Access token cookie (short-lived)
       response.cookie('access_token', userData.accessToken, {
-        httpOnly: true,
-        secure: isProduction, // Only send over HTTPS in production
-        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production
-        maxAge: 15 * 60 * 1000, // 15 minutes
-        path: '/',
-        domain, // Set domain for production
-        // Add Partitioned attribute for cross-site cookies if needed
-        ...(isProduction && { partitioned: true })
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       // Refresh token cookie (longer-lived)
