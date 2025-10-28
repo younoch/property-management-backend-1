@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
       this.jwtService = new JwtService({
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         signOptions: {
-          expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m')
+          expiresIn: 900 // 15 minutes in seconds
         }
       });
     }

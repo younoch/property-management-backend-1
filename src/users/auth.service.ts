@@ -69,8 +69,9 @@ export class AuthService {
       type: 'refresh'
     };
 
-    const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m';
-    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d';
+    // Convert time strings to seconds
+    const accessExpiresIn = 15 * 60; // 15 minutes in seconds
+    const refreshExpiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
@@ -135,7 +136,7 @@ profile_image_url: user.profile_image_url,
       }
 
       // Generate new access token
-      const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m'; // 15 minutes default
+      const accessExpiresIn = 900; // 15 minutes in seconds
       const newAccessToken = this.jwtService.sign(
         { 
           sub: payload.sub, 
@@ -144,7 +145,7 @@ profile_image_url: user.profile_image_url,
         } as AccessTokenPayload,
         { 
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-          expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '15m' 
+          expiresIn: accessExpiresIn 
         }
       );
 

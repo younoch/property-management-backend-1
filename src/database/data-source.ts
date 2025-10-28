@@ -1,6 +1,7 @@
 // src/database/data-source.ts
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 import { User } from '../users/user.entity';
 import { Portfolio } from '../portfolios/portfolio.entity';
 import { Property } from '../properties/property.entity';
@@ -21,31 +22,36 @@ import { Expense } from '../expenses/expense.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { Feedback } from '../feedback/feedback.entity';
 
-// Load environment variables for CLI context
-dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
-
+// Load environment variables from .env.development or .env.production
+dotenv.config({
+  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`)
+});
 
 // Helper to determine SSL configuration
 const sslConfig = process.env.DB_SSL === 'true' 
   ? { rejectUnauthorized: false } 
   : undefined;
 
+// Create a new DataSource instance
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT || 5432),
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'rR%jrYKNqQdnYVQUkzuN',
-  database: process.env.DB_NAME || 'property_management',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT, 10),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  
   // Disable synchronize in all environments - use migrations instead
-  synchronize: false, // Always false since we're using migrations
-  // Ensure migrations auto-run in production boot flow
+  synchronize: false,
   migrationsRun: process.env.NODE_ENV === 'production',
   migrationsTableName: 'migrations',
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
-  // Disable all logging
-  logging: [],
+  
+  // Logging configuration
+  logging: ['error'],
   logger: 'advanced-console',
+  
+  // Entities
   entities: [
     User,
     Portfolio,
@@ -67,6 +73,15 @@ export const AppDataSource = new DataSource({
     AuditLog,
     Feedback,
   ],
+  
   subscribers: [],
-  ssl: sslConfig, // ✅ Neon SSL fix
+  ssl: sslConfig,
+  
+  // Extra connection options
+  extra: {
+    // Connection pool settings
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
+  },
 });

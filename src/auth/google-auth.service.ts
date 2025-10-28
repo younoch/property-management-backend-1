@@ -289,7 +289,7 @@ export class GoogleAuthService {
           role: user.role 
         },
         { 
-          expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
+          expiresIn: 900, // 15 minutes in seconds
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         }
       );
@@ -299,12 +299,11 @@ export class GoogleAuthService {
           sub: user.id, 
           email: user.email, 
           role: user.role,
-          isRefreshToken: true,
+          isRefreshToken: true
         },
-        { 
-          expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
-          secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 
-                 this.configService.get<string>('JWT_ACCESS_SECRET'),
+        {
+          expiresIn: 604800, // 7 days in seconds
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET') || this.configService.get<string>('JWT_ACCESS_SECRET'),
         }
       );
 
