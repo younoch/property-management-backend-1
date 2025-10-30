@@ -1,6 +1,7 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index, PrimaryColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index, AfterInsert } from 'typeorm';
 import { Payment } from './payment.entity';
 import { Invoice } from '../../invoices/entities/invoice.entity';
+import { getManager } from 'typeorm';
 
 @Entity()
 @Index(['invoice_id'])
@@ -40,4 +41,32 @@ export class PaymentApplication {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
-}
+
+  @AfterInsert()
+  async afterInsert() {
+    // Get the invoice and apply the payment
+    const entityManager = getManager();
+    const invoice = await entityManager.findOne(Invoice, {
+      where: { id: this.invoice_id },
+      relations: ['payment_applications', 'payment_applications.payment']
+    });
+
+    if (invoice) {
+      // Calculate total payment amount for this invoice from all payment applications
+      const totalPaid = invoice.payment_applications
+        .reduce((sum, app) => sum + parseFloat(app.amount.toString() || '0'), 0);
+      
+      // Get the payment date from the associated payment
+      const payment = await entityManager.findOne(Payment, {
+        where: { id: this.payment_id }
+      });
+      
+      const paymentDate = payment?.payment_date || new Date();
+      
+      // Apply the payment to update the invoice status
+      await invoice.applyPayment(parseFloat(this.amount.toString() || '0'), paymentDate);
+      
+      // Save the updated invoice
+      await entityManager.save(Invoice, invoice);
+    }
+  }
