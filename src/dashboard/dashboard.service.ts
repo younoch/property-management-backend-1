@@ -109,7 +109,7 @@ export class DashboardService {
         .createQueryBuilder('payment')
         .leftJoinAndSelect('payment.lease', 'lease')
         .leftJoin('lease.unit', 'unit')
-        .where('payment.status = :status', { status: 'completed' })
+        .where('payment.status = :status', { status: 'succeeded' })
         .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
         .andWhere(propertyId ? 'unit.property_id = :propertyId' : '1=1', { propertyId })
         .getMany()
@@ -128,7 +128,7 @@ export class DashboardService {
       ])
       .leftJoin('payment.lease', 'lease')
       .leftJoin('lease.unit', 'unit')
-      .where('payment.status = :status', { status: 'completed' })
+      .where('payment.status = :status', { status: 'succeeded' })
       .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
       .groupBy('year, month')
       .orderBy('year, month', 'ASC');
