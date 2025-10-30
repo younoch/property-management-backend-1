@@ -107,8 +107,7 @@ export class DashboardService {
         .getMany(),
       this.paymentRepository
         .createQueryBuilder('payment')
-        .leftJoinAndSelect('payment.invoice', 'invoice')
-        .leftJoin('invoice.lease', 'lease')
+        .leftJoinAndSelect('payment.lease', 'lease')
         .leftJoin('lease.unit', 'unit')
         .where('payment.status = :status', { status: 'completed' })
         .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
@@ -127,8 +126,7 @@ export class DashboardService {
         'EXTRACT(MONTH FROM payment.payment_date) AS month',
         'COALESCE(SUM(CAST(payment.amount AS DECIMAL)), 0) AS amount'
       ])
-      .leftJoin('payment.invoice', 'invoice')
-      .leftJoin('invoice.lease', 'lease')
+      .leftJoin('payment.lease', 'lease')
       .leftJoin('lease.unit', 'unit')
       .where('payment.status = :status', { status: 'completed' })
       .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
@@ -136,10 +134,7 @@ export class DashboardService {
       .orderBy('year, month', 'ASC');
 
     if (propertyId) {
-      monthlyRevenueQuery
-        .innerJoin('p.lease', 'lease')
-        .innerJoin('lease.unit', 'unit')
-        .andWhere('unit.property_id = :propertyId', { propertyId });
+      monthlyRevenueQuery.andWhere('unit.property_id = :propertyId', { propertyId });
     }
 
     const monthlyExpensesQuery = this.expenseRepository
