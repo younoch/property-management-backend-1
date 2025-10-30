@@ -98,38 +98,40 @@ export class DashboardService {
     }
     const activeTenants = await activeTenantsQuery.getCount();
 
-    // Revenue and expenses
-    const [invoices, expenses] = await Promise.all([
-      this.invoiceRepository
-        .createQueryBuilder('invoice')
-        .leftJoinAndSelect('invoice.lease', 'lease')
-        .leftJoin('lease.unit', 'unit')
-        .where('invoice.status = :status', { status: 'paid' })
-        .andWhere('invoice.paid_at BETWEEN :startDate AND :endDate', { startDate, endDate })
-        .andWhere(propertyId ? 'unit.property_id = :propertyId' : '1=1', { propertyId })
-        .getMany(),
+    // Get expenses and payments
+    const [expenses, payments] = await Promise.all([
       this.expenseRepository
         .createQueryBuilder('expense')
         .where('expense.created_at BETWEEN :startDate AND :endDate', { startDate, endDate })
         .andWhere(propertyId ? 'expense.property_id = :propertyId' : '1=1', { propertyId })
+        .getMany(),
+      this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.invoice', 'invoice')
+        .leftJoin('invoice.lease', 'lease')
+        .leftJoin('lease.unit', 'unit')
+        .where('payment.status = :status', { status: 'completed' })
+        .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
+        .andWhere(propertyId ? 'unit.property_id = :propertyId' : '1=1', { propertyId })
         .getMany()
     ]);
 
-    const totalRevenue = invoices.reduce((sum, invoice) => sum + (parseFloat(invoice.total_amount.toString()) || 0), 0);
+    const totalRevenue = payments.reduce((sum, payment) => sum + (parseFloat(payment.amount.toString()) || 0), 0);
     const totalExpenses = expenses.reduce((sum, expense) => sum + (parseFloat(expense.amount.toString()) || 0), 0);
 
-    // ⚡ FIXED monthlyRevenueQuery using entity aliasing
+    // Monthly revenue query
     const monthlyRevenueQuery = this.paymentRepository
-      .createQueryBuilder('p')
+      .createQueryBuilder('payment')
       .select([
-        'EXTRACT(YEAR FROM p.payment_date) AS year',
-        'EXTRACT(MONTH FROM p.payment_date) AS month',
-        'COALESCE(SUM(CAST(p.amount AS DECIMAL)), 0) AS amount'
+        'EXTRACT(YEAR FROM payment.payment_date) AS year',
+        'EXTRACT(MONTH FROM payment.payment_date) AS month',
+        'COALESCE(SUM(CAST(payment.amount AS DECIMAL)), 0) AS amount'
       ])
-      .innerJoin('p.applications', 'pa')
-      .innerJoin('pa.invoice', 'invoice')
-      .where('p.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
-      .andWhere('invoice.status = :status', { status: 'completed' })
+      .leftJoin('payment.invoice', 'invoice')
+      .leftJoin('invoice.lease', 'lease')
+      .leftJoin('lease.unit', 'unit')
+      .where('payment.status = :status', { status: 'completed' })
+      .andWhere('payment.payment_date BETWEEN :startDate AND :endDate', { startDate, endDate })
       .groupBy('year, month')
       .orderBy('year, month', 'ASC');
 
