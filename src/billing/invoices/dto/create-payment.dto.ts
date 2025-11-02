@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '../../../common/enums/payment-method.enum';
 
@@ -15,21 +15,32 @@ class PaymentApplicationDto {
 }
 
 export class CreatePaymentDto {
-
-  @ApiProperty({ example: 1, description: 'ID of the lease this payment is for' })
-  @IsString()
-  @IsNotEmpty()
-  lease_id: string;
-
-  @ApiProperty({ example: 1, description: 'ID of the user creating the payment' })
-  @IsString()
-  user_id: string;
-
-  @ApiProperty({ example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', required: false })
-  @IsOptional()
+  @ApiProperty({ 
+    example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', 
+    description: 'ID of the invoice this payment is for',
+    required: true
+  })
   @IsString()
   @IsUUID()
-  invoice_id?: string;
+  invoice_id: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Custom invoice number. If not provided, one will be generated automatically',
+    example: 'PAY-20231102-ABC123'
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  invoice_number?: string;
+
+  @ApiProperty({ 
+    example: '1', 
+    description: 'ID of the user creating the payment',
+    required: true
+  })
+  @IsString()
+  user_id: string;
 
   @ApiProperty({ example: '2025-09-01T10:00:00Z', required: false })
   @IsOptional()

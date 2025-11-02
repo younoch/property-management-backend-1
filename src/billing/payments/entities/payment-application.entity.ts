@@ -1,4 +1,5 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index, AfterInsert } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, JoinColumn, Index } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { Payment } from './payment.entity';
 import { Invoice } from '../../invoices/entities/invoice.entity';
 import { getManager } from 'typeorm';
@@ -12,10 +13,10 @@ export class PaymentApplication {
   id: string;
 
   @Column()
-  payment_id: string;
+  readonly payment_id: string;
 
   @Column()
-  invoice_id: string;
+  readonly invoice_id: string;
 
   @ManyToOne(() => Payment, (p) => p.applications, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'payment_id' })
@@ -30,11 +31,16 @@ export class PaymentApplication {
     precision: 12,
     scale: 2,
     transformer: {
-      to: (value: string) => value,
+      to: (value: number) => value,
       from: (value: string) => parseFloat(value || '0')
     }
   })
-  amount: string;
+  @ApiProperty({
+    description: 'Amount applied from payment to invoice',
+    example: 100.00,
+    type: Number
+  })
+  amount: number;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
@@ -42,31 +48,6 @@ export class PaymentApplication {
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @AfterInsert()
-  async afterInsert() {
-    // Get the invoice and apply the payment
-    const entityManager = getManager();
-    const invoice = await entityManager.findOne(Invoice, {
-      where: { id: this.invoice_id },
-      relations: ['payment_applications', 'payment_applications.payment']
-    });
-
-    if (invoice) {
-      // Calculate total payment amount for this invoice from all payment applications
-      const totalPaid = invoice.payment_applications
-        .reduce((sum, app) => sum + parseFloat(app.amount.toString() || '0'), 0);
-      
-      // Get the payment date from the associated payment
-      const payment = await entityManager.findOne(Payment, {
-        where: { id: this.payment_id }
-      });
-      
-      const paymentDate = payment?.payment_date || new Date();
-      
-      // Apply the payment to update the invoice status
-      await invoice.applyPayment(parseFloat(this.amount.toString() || '0'), paymentDate);
-      
-      // Save the updated invoice
-      await entityManager.save(Invoice, invoice);
-    }
-  }
+  // Invoice status updates are now handled by the PaymentsService
+  // to prevent race conditions and ensure data consistency
+}

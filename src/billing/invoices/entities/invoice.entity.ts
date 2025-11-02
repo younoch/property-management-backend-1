@@ -496,17 +496,23 @@ export class Invoice {
       return;
     }
 
-    if (this.amount_paid <= 0) {
-      this.status = 'open';
-    } else if (this.balance_due <= 0) {
+    // Use a small epsilon for floating-point comparison
+    const EPSILON = 0.01;
+    const isFullyPaid = Math.abs(this.balance_due) < EPSILON;
+    const hasPayments = this.amount_paid > EPSILON;
+    const hasBalanceDue = this.balance_due > EPSILON;
+
+    if (isFullyPaid) {
       this.status = 'paid';
       this.paid_at = this.paid_at || new Date();
-    } else if (this.amount_paid > 0 && this.balance_due > 0) {
+    } else if (hasPayments && hasBalanceDue) {
       this.status = 'partially_paid';
+    } else if (this.status !== 'draft') {
+      this.status = 'open';
     }
 
     // Check if overdue
-    if (this.due_date && this.status !== 'paid' && this.status !== 'void') {
+    if (this.due_date && this.status === 'open') {
       const dueDate = parseISO(this.due_date);
       const today = new Date();
       

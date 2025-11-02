@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DataSource, In, Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { PaymentMethod } from '../../common/enums/payment-method.enum';
@@ -13,6 +13,8 @@ import { AuditLogService } from '../../common/audit-log.service';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     @Inject('PAYMENT_REPOSITORY')
     private readonly paymentRepo: Repository<Payment>,
@@ -29,177 +31,200 @@ export class PaymentsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createPaymentDto: CreatePaymentDto) {
-    return this.dataSource.transaction(async (transactionalEntityManager) => {
-      // Get the lease to ensure it exists
-      const lease = await this.leaseRepo.findOne({
-        where: { id: createPaymentDto.lease_id },
-      });
+  private parseAmount(value: any): number {
+    const num = parseFloat(value);
+    if (isNaN(num)) throw new Error(`Invalid amount: ${value}`);
+    return num;
+  }
 
-      if (!lease) {
-        throw new NotFoundException(`Lease with ID ${createPaymentDto.lease_id} not found`);
+  private async validateInvoices(invoiceIds: string[], repo: Repository<Invoice>) {
+    const invoices = await repo.find({ where: { id: In(invoiceIds) } });
+    if (invoices.length !== invoiceIds.length) {
+      const found = invoices.map(i => i.id);
+      const missing = invoiceIds.filter(id => !found.includes(id));
+      throw new NotFoundException(`Missing invoice(s): ${missing.join(', ')}`);
+    }
+    return invoices;
+  }
+
+  private async applyPaymentToInvoice(transactionalManager, invoice: Invoice, paymentApp: PaymentApplication) {
+    const totalAmount = this.parseAmount(invoice.total_amount);
+    const currentPaid = this.parseAmount(invoice.amount_paid || 0);
+    const applied = this.parseAmount(paymentApp.amount);
+
+    const newPaid = currentPaid + applied;
+    const newBalance = Math.max(0, totalAmount - newPaid);
+
+    const newStatus =
+      newBalance <= 0.01
+        ? 'paid'
+        : newPaid > 0
+        ? 'partially_paid'
+        : invoice.status;
+
+    await transactionalManager.update(Invoice, invoice.id, {
+      amount_paid: newPaid,
+      balance_due: newBalance,
+      status: newStatus,
+      paid_at: newStatus === 'paid' ? new Date() : invoice.paid_at,
+      updated_at: new Date(),
+    });
+  }
+
+  async create(createPaymentDto: CreatePaymentDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+      const amount = this.parseAmount(createPaymentDto.amount);
+      const applications = (createPaymentDto.applications || []).map(app => ({
+        ...app,
+        amount: this.parseAmount(app.amount),
+      }));
+
+      const totalApplied = applications.reduce((sum, a) => sum + a.amount, 0);
+      if (totalApplied > amount) {
+        throw new Error('Applied amount exceeds total payment amount');
       }
 
-      // Create payment with proper type casting
-      const payment = this.paymentRepo.create({
-        lease_id: createPaymentDto.lease_id,
-        amount: typeof createPaymentDto.amount === 'number' 
-          ? createPaymentDto.amount.toString() 
-          : createPaymentDto.amount,
+      const invoiceIds = [
+        createPaymentDto.invoice_id,
+        ...applications.map(app => app.invoice_id),
+      ].filter(Boolean);
+
+      const invoices = await this.validateInvoices(invoiceIds, this.invoiceRepo);
+
+      const invoiceNumber = createPaymentDto.invoice_number ||
+        `PAY-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random()
+          .toString(36)
+          .substring(2, 7)
+          .toUpperCase()}`;
+
+      const payment = manager.create(Payment, {
+        invoice_id: createPaymentDto.invoice_id,
+        amount,
         payment_method: createPaymentDto.payment_method || PaymentMethod.BANK_TRANSFER,
+        payment_date: createPaymentDto.received_at ? new Date(createPaymentDto.received_at) : new Date(),
+        status: createPaymentDto.status || 'succeeded',
+        invoice_number: invoiceNumber,
         reference: createPaymentDto.reference || null,
         notes: createPaymentDto.notes || null,
-        payment_date: createPaymentDto.received_at 
-          ? new Date(createPaymentDto.received_at) 
-          : new Date(),
+        unapplied_amount: amount,
       });
 
-      const savedPayment = await transactionalEntityManager.save(payment);
+      const savedPayment = await manager.save(payment);
+      const appsToProcess = applications.length === 0 && createPaymentDto.invoice_id
+        ? [{ invoice_id: createPaymentDto.invoice_id, amount }]
+        : applications;
 
-      // Apply to invoices if specified
-      if (createPaymentDto.applications?.length > 0) {
-        const invoiceIds = createPaymentDto.applications.map(app => app.invoice_id);
-        const invoices = await this.invoiceRepo.find({
-          where: { id: In(invoiceIds) },
+      let totalAppliedAmt = 0;
+
+      for (const app of appsToProcess) {
+        const invoice = invoices.find(i => i.id === app.invoice_id);
+        if (!invoice) continue;
+
+        const paymentApp = await manager.save(PaymentApplication, {
+          payment: savedPayment,
+          invoice,
+          amount: this.parseAmount(app.amount),
         });
 
-        if (invoices.length !== createPaymentDto.applications.length) {
-          throw new NotFoundException('One or more invoices not found');
-        }
-
-        // Create payment applications
-        const paymentApplications = createPaymentDto.applications.map(app => {
-          const invoice = invoices.find(inv => inv.id === app.invoice_id);
-          if (!invoice) {
-            throw new NotFoundException(`Invoice with ID ${app.invoice_id} not found`);
-          }
-          const paymentApp = new PaymentApplication();
-          paymentApp.payment_id = savedPayment.id;
-          paymentApp.invoice_id = invoice.id;
-          paymentApp.amount = app.amount.toString();
-          return paymentApp;
-        });
-
-        await transactionalEntityManager.save(paymentApplications);
-
-        // Log each application
-        for (const app of paymentApplications) {
-          const invoice = invoices.find(inv => inv.id === app.invoice_id);
-          if (createPaymentDto.user_id) {
-            await this.auditLogService.log({
-              entityType: 'PaymentApplication',
-              entityId: app.id,
-              action: AuditAction.PAYMENT,
-              userId: createPaymentDto.user_id,
-              newValue: {
-                paymentId: savedPayment.id,
-                invoiceId: invoice.id,
-                amount: app.amount,
-                remainingBalance: invoice.balance_due
-              },
-              description: `Applied $${parseFloat(app.amount).toFixed(2)} from payment #${savedPayment.id} to invoice #${invoice.invoice_number || invoice.id}`
-            });
-          }
+        try {
+          await this.applyPaymentToInvoice(manager, invoice, paymentApp);
+          totalAppliedAmt += paymentApp.amount;
+        } catch (error) {
+          throw error;
         }
       }
 
-      // Log the payment creation
+      savedPayment.unapplied_amount = Math.max(0, amount - totalAppliedAmt);
+      await manager.save(savedPayment);
+
       if (createPaymentDto.user_id) {
         await this.auditLogService.log({
           entityType: 'Payment',
           entityId: savedPayment.id,
           action: AuditAction.CREATE,
           userId: createPaymentDto.user_id,
-          description: `Created payment #${savedPayment.id} for lease #${lease.id}`,
           newValue: {
+            paymentId: savedPayment.id,
             amount: savedPayment.amount,
-            paymentMethod: savedPayment.payment_method,
-            reference: savedPayment.reference,
-            leaseId: savedPayment.lease_id
-          }
+            unappliedAmount: savedPayment.unapplied_amount,
+            status: savedPayment.status,
+          },
+          description: `Created payment #${savedPayment.id}`,
         });
       }
 
-      return savedPayment;
-    });
+      await queryRunner.commitTransaction();
+
+      return this.paymentRepo.findOne({
+        where: { id: savedPayment.id },
+        relations: ['applications'],
+      });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findOne(id: string) {
     const payment = await this.paymentRepo.findOne({
       where: { id },
-      relations: ['applications', 'applications.invoice'],
+      relations: ['applications'],
     });
-
     if (!payment) {
       throw new NotFoundException(`Payment with ID ${id} not found`);
     }
-
     return payment;
   }
 
-  async update(id: string, updatePaymentDto: UpdatePaymentDto) {
+  async update(id: string, dto: UpdatePaymentDto) {
     const payment = await this.paymentRepo.findOneBy({ id });
-    
-    if (!payment) {
-      throw new NotFoundException(`Payment with ID ${id} not found`);
+    if (!payment) throw new NotFoundException(`Payment ${id} not found`);
+
+    const updates: Partial<Payment> = {};
+    if (dto.amount !== undefined) updates.amount = this.parseAmount(dto.amount);
+    if (dto.payment_method !== undefined) updates.payment_method = dto.payment_method;
+    if (dto.reference !== undefined) updates.reference = dto.reference;
+    if (dto.notes !== undefined) updates.notes = dto.notes;
+    if (dto.invoice_id !== undefined && dto.invoice_id !== null) {
+      updates.invoice_id = dto.invoice_id;
     }
 
-    // Update payment fields
-    if (updatePaymentDto.amount !== undefined) {
-      payment.amount = typeof updatePaymentDto.amount === 'number' 
-        ? updatePaymentDto.amount.toString() 
-        : updatePaymentDto.amount;
-    }
-    if (updatePaymentDto.payment_method !== undefined) {
-      payment.payment_method = updatePaymentDto.payment_method;
-    }
-    if (updatePaymentDto.reference !== undefined) {
-      payment.reference = updatePaymentDto.reference;
-    }
-    if (updatePaymentDto.notes !== undefined) {
-      payment.notes = updatePaymentDto.notes;
-    }
-    
-    const updatedPayment = await this.paymentRepo.save(payment);
-    
-    // Log the update if user_id is provided
-    if (updatePaymentDto.user_id) {
+    Object.assign(payment, updates);
+    const updated = await this.paymentRepo.save(payment);
+
+    if (dto.user_id) {
       await this.auditLogService.log({
         entityType: 'Payment',
         entityId: id,
         action: AuditAction.UPDATE,
-        userId: updatePaymentDto.user_id,
+        userId: dto.user_id,
         description: `Updated payment #${id}`,
-        newValue: {
-          amount: updatedPayment.amount,
-          paymentMethod: updatedPayment.payment_method,
-          reference: updatedPayment.reference,
-          notes: updatedPayment.notes
-        }
+        newValue: updated,
       });
     }
 
-    return updatedPayment;
+    return updated;
   }
 
   async remove(id: string, userId?: string) {
-    const payment = await this.paymentRepo.findOne({ 
+    const payment = await this.paymentRepo.findOne({
       where: { id },
       relations: ['applications'],
     });
+    if (!payment) throw new NotFoundException(`Payment ${id} not found`);
 
-    if (!payment) {
-      throw new NotFoundException(`Payment with ID ${id} not found`);
-    }
-
-    // Delete associated payment applications first
-    if (payment.applications?.length > 0) {
+    if (payment.applications?.length) {
       await this.paymentAppRepo.remove(payment.applications);
     }
-
     await this.paymentRepo.remove(payment);
 
-    // Log the deletion if user_id is provided
     if (userId) {
       await this.auditLogService.log({
         entityType: 'Payment',
@@ -214,24 +239,35 @@ export class PaymentsService {
   }
 
   async findByLease(leaseId: string) {
-    return this.paymentRepo.find({
+    const invoices = await this.invoiceRepo.find({
       where: { lease_id: leaseId },
+      select: ['id'],
+    });
+
+    if (!invoices.length) return [];
+
+    return this.paymentRepo.find({
+      where: { invoice_id: In(invoices.map(i => i.id)) },
       order: { created_at: 'DESC' },
-      relations: ['applications'],
+      relations: ['applications', 'invoice'],
     });
   }
 
-  async createForLease(leaseId: string, createPaymentDto: Omit<CreatePaymentDto, 'lease_id'>) {
-    return this.create({
-      ...createPaymentDto,
-      lease_id: leaseId,
+  async createForLease(leaseId: string, dto: Omit<CreatePaymentDto, 'invoice_id'>) {
+    const invoice = await this.invoiceRepo.findOne({
+      where: { lease_id: leaseId },
+      order: { created_at: 'ASC' },
+      select: ['id'],
     });
+    if (!invoice) throw new NotFoundException(`No invoices for lease ${leaseId}`);
+
+    return this.create({ ...dto, invoice_id: invoice.id });
   }
 
   async findAll() {
     return this.paymentRepo.find({
       relations: ['lease'],
-      order: { created_at: 'DESC' }
+      order: { created_at: 'DESC' },
     });
   }
 }

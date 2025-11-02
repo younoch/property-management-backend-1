@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import 'reflect-metadata';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -12,6 +13,15 @@ async function bootstrap() {
   try {
     console.log('Starting application bootstrap...');
     console.log('Environment:', process.env.NODE_ENV || 'development');
+    
+    // Debug: Log database configuration
+    console.log('Database Configuration:', {
+      DB_HOST: process.env.DB_HOST,
+      DB_PORT: process.env.DB_PORT,
+      DB_NAME: process.env.DB_NAME,
+      DB_USERNAME: process.env.DB_USERNAME,
+      NODE_ENV: process.env.NODE_ENV
+    });
     
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       logger: ['warn', 'error'],
