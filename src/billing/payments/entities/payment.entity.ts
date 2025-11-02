@@ -89,14 +89,6 @@ export class Payment extends BaseEntity {
   status: PaymentStatus;
 
   @ApiProperty({
-    description: 'Invoice number for reference (can be same for multiple payments)',
-    example: 'INV-20231102-001',
-    required: true
-  })
-  @Column({ type: 'varchar', length: 50 })
-  invoice_number: string;
-
-  @ApiProperty({
     description: 'Reference number for the payment',
     example: 'REF-789012',
     required: false

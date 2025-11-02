@@ -2,6 +2,7 @@ import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DataSource, In, Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { PaymentMethod } from '../../common/enums/payment-method.enum';
+import { PaymentStatus } from '../../common/enums/payment-status.enum';
 import { AuditAction } from '../../common/enums/audit-action.enum';
 import { Invoice } from '../invoices/entities/invoice.entity';
 import { UpdatePaymentDto } from '../invoices/dto/update-payment.dto';
@@ -92,26 +93,23 @@ export class PaymentsService {
       const invoiceIds = [
         createPaymentDto.invoice_id,
         ...applications.map(app => app.invoice_id),
-      ].filter(Boolean);
+      ].filter(Boolean) as string[];
 
       const invoices = await this.validateInvoices(invoiceIds, this.invoiceRepo);
 
-      const invoiceNumber = createPaymentDto.invoice_number ||
-        `PAY-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random()
-          .toString(36)
-          .substring(2, 7)
-          .toUpperCase()}`;
-
       const payment = manager.create(Payment, {
-        invoice_id: createPaymentDto.invoice_id,
+        invoice_id: createPaymentDto.invoice_id || null,
         amount,
+        unapplied_amount: createPaymentDto.unapplied_amount !== undefined 
+          ? this.parseAmount(createPaymentDto.unapplied_amount) 
+          : amount,
         payment_method: createPaymentDto.payment_method || PaymentMethod.BANK_TRANSFER,
-        payment_date: createPaymentDto.received_at ? new Date(createPaymentDto.received_at) : new Date(),
-        status: createPaymentDto.status || 'succeeded',
-        invoice_number: invoiceNumber,
+        payment_date: createPaymentDto.payment_date 
+          ? new Date(createPaymentDto.payment_date) 
+          : new Date(),
+        status: createPaymentDto.status || PaymentStatus.PENDING,
         reference: createPaymentDto.reference || null,
         notes: createPaymentDto.notes || null,
-        unapplied_amount: amount,
       });
 
       const savedPayment = await manager.save(payment);

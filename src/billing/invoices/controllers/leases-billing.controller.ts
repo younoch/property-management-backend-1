@@ -20,6 +20,7 @@ import { PortfolioScopeGuard } from '../../../guards/portfolio.guard';
 import { In } from 'typeorm';
 import { Payment } from '../../payments/entities/payment.entity';
 import { Invoice } from '../entities/invoice.entity';
+import { PaymentStatus } from '../../../common/enums/payment-status.enum';
 
 @ApiTags('Lease Billing')
 @Controller('leases/:leaseId')
@@ -91,38 +92,28 @@ export class LeaseBillingController {
     description: 'Payment details',
     required: true
   })
-  @ApiCreatedResponse({ 
-    description: 'Payment successfully created',
-    type: Payment
-  })
-  @ApiNotFoundResponse({ 
-    description: 'Invoice not found or does not belong to the specified lease' 
-  })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Invalid input data' 
-  })
+  @ApiResponse({ status: 201, description: 'Payment recorded successfully' })
+  @ApiResponse({ status: 404, description: 'Lease not found' })
   async createPayment(
     @Param('leaseId') leaseId: string, 
     @Body() dto: CreatePaymentLeaseDto
   ) {
-    // Get the invoice and verify it belongs to this lease
-    const invoice = await this.invoicesService.findOne(dto.invoice_id);
-
-    if (!invoice || invoice.lease_id !== leaseId) {
-      throw new NotFoundException(`No invoice found with ID ${dto.invoice_id} for lease ${leaseId}`);
+    // Verify lease exists by checking for any invoices
+    const invoices = await this.invoicesService.findByLease(leaseId);
+    if (!invoices || invoices.length === 0) {
+      throw new NotFoundException(`No invoices found for lease with ID ${leaseId}`);
     }
 
     // Create the payment using the existing create method
     return this.paymentsService.create({
       invoice_id: dto.invoice_id,
       user_id: dto.user_id,
-      received_at: dto.received_at || new Date().toISOString(),
+      payment_date: dto.payment_date || new Date().toISOString(),
       payment_method: dto.payment_method,
       notes: dto.notes,
       amount: dto.amount,
       reference: dto.reference,
-      status: 'succeeded',
+      status: PaymentStatus.SUCCEEDED,
       // Apply full payment to the specified invoice
       applications: [{
         invoice_id: dto.invoice_id,

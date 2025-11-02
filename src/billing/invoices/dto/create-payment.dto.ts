@@ -2,14 +2,21 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '../../../common/enums/payment-method.enum';
+import { PaymentStatus } from '../../../common/enums/payment-status.enum';
 
 class PaymentApplicationDto {
-  @ApiProperty({ example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', description: 'ID of the invoice to apply payment to' })
+  @ApiProperty({ 
+    example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', 
+    description: 'ID of the invoice to apply payment to' 
+  })
   @IsString()
   @IsUUID()
   invoice_id: string;
 
-  @ApiProperty({ example: 100.00, description: 'Amount to apply to this invoice' })
+  @ApiProperty({ 
+    example: 100.00, 
+    description: 'Amount to apply to this invoice' 
+  })
   @IsNumber()
   amount: number;
 }
@@ -18,56 +25,65 @@ export class CreatePaymentDto {
   @ApiProperty({ 
     example: '7c1b22e9-d893-41a6-917c-341d3c4d047a', 
     description: 'ID of the invoice this payment is for',
-    required: true
+    required: false,
+    nullable: true
   })
-  @IsString()
+  @IsOptional()
   @IsUUID()
-  invoice_id: string;
+  invoice_id?: string | null;
+
+  @ApiProperty({ 
+    example: 1500.0,
+    description: 'Total payment amount'
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
 
   @ApiProperty({
-    required: false,
-    description: 'Custom invoice number. If not provided, one will be generated automatically',
-    example: 'PAY-20231102-ABC123'
+    description: 'Unapplied payment amount',
+    example: 0.00,
+    default: 0,
+    required: false
   })
-  @IsString()
   @IsOptional()
-  @MaxLength(50)
-  invoice_number?: string;
+  @IsNumber()
+  unapplied_amount?: number;
 
   @ApiProperty({ 
-    example: '1', 
-    description: 'ID of the user creating the payment',
-    required: true
-  })
-  @IsString()
-  user_id: string;
-
-  @ApiProperty({ example: '2025-09-01T10:00:00Z', required: false })
-  @IsOptional()
-  @IsDateString()
-  received_at?: string;
-
-  @ApiProperty({ 
-    enum: PaymentMethod, 
-    enumName: 'PaymentMethod',
-    example: 'credit_card',
-    description: 'Payment method',
-    required: false 
+    enum: PaymentMethod,
+    description: 'Payment method used for this transaction',
+    default: PaymentMethod.BANK_TRANSFER,
+    required: false
   })
   @IsOptional()
   @IsEnum(PaymentMethod)
   payment_method?: PaymentMethod;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'Date and time when the payment was made',
+    example: '2023-11-02T12:00:00Z',
+    required: false
+  })
   @IsOptional()
-  @IsString()
-  notes?: string;
+  @IsDateString()
+  payment_date?: string | Date;
 
-  @ApiProperty({ example: 1500.0 })
-  @IsNumber()
-  amount: number;
+  @ApiProperty({
+    enum: PaymentStatus,
+    description: 'Status of the payment',
+    default: PaymentStatus.PENDING,
+    required: false
+  })
+  @IsOptional()
+  @IsEnum(PaymentStatus)
+  status?: PaymentStatus;
 
-  @ApiProperty({ example: 'TXN-12345', required: false })
+  @ApiProperty({
+    description: 'Reference number for the payment',
+    example: 'REF-789012',
+    required: false
+  })
   @IsOptional()
   @IsString()
   reference?: string;
@@ -83,10 +99,21 @@ export class CreatePaymentDto {
   @Type(() => PaymentApplicationDto)
   applications?: PaymentApplicationDto[];
 
-  @ApiProperty({ enum: ['pending','succeeded','failed','refunded'], required: false })
+  @ApiProperty({ 
+    description: 'ID of the user creating the payment',
+    required: false
+  })
   @IsOptional()
   @IsString()
-  status?: any;
+  user_id?: string;
+
+  @ApiProperty({ 
+    description: 'Additional notes about the payment',
+    required: false 
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 
