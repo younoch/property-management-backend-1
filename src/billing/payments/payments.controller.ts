@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards, Query, DefaultValuePipe, ParseUUIDPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, getSchemaPath } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from '../invoices/dto/create-payment.dto';
 import { UpdatePaymentDto } from '../invoices/dto/update-payment.dto';
@@ -52,5 +52,88 @@ export class PaymentsController {
   @ApiResponse({ status: 200, description: 'Payment deleted successfully' })
   remove(@Param('id') id: string) {
     return this.paymentsService.remove(id);
+  }
+
+  @Get('property/:propertyId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get payments by property ID with pagination' })
+  @ApiParam({
+    name: 'propertyId',
+    required: true,
+    description: 'Property ID (UUID)',
+    type: 'string',
+    format: 'uuid',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (starts from 1)', type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Number of items per page', type: Number, example: 10 })
+  @ApiQuery({ 
+    name: 'sortBy', 
+    required: false, 
+    description: 'Field to sort by', 
+    enum: ['payment_date', 'amount', 'created_at'],
+    example: 'payment_date' 
+  })
+  @ApiQuery({ 
+    name: 'sortOrder', 
+    required: false, 
+    description: 'Sort order', 
+    enum: ['ASC', 'DESC'],
+    example: 'DESC' 
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'Start date in YYYY-MM-DD format',
+    example: '2023-01-01',
+    type: String
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'End date in YYYY-MM-DD format',
+    example: '2023-12-31',
+    type: String
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Payments retrieved successfully', 
+    schema: {
+      type: 'object',
+      properties: {
+        data: { type: 'array', items: { $ref: getSchemaPath(Payment) } },
+        pagination: {
+          type: 'object',
+          properties: {
+            total: { type: 'number' },
+            page: { type: 'number' },
+            limit: { type: 'number' },
+            totalPages: { type: 'number' }
+          }
+        }
+      }
+    }
+  })
+  async findByPropertyId(
+    @Param('propertyId', new ParseUUIDPipe({ version: '4' })) propertyId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    @Query('sortBy') sortBy: string = 'payment_date',
+    @Query('sortOrder') sortOrder: 'ASC' | 'DESC' = 'DESC',
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
+  ) {
+    // Ensure limit isn't too high
+    limit = Math.min(100, Math.max(1, limit));
+    page = Math.max(1, page);
+    
+    return this.paymentsService.findByPropertyId(propertyId, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      startDate,
+      endDate
+    });
   }
 }

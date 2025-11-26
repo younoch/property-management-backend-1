@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, MoreThanOrEqual, Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { PaymentMethod } from '../../common/enums/payment-method.enum';
 import { PaymentStatus } from '../../common/enums/payment-status.enum';
@@ -267,5 +267,81 @@ export class PaymentsService {
       relations: ['lease'],
       order: { created_at: 'DESC' },
     });
+  }
+
+  async findByPropertyId(
+    propertyId: string,
+    options?: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'ASC' | 'DESC';
+      startDate?: string;
+      endDate?: string;
+    }
+  ) {
+    const { page = 1, limit = 10, sortBy = 'payment_date', sortOrder = 'DESC' } = options || {};
+    const skip = (page - 1) * limit;
+
+    // First find all leases where the lease's unit has the given property_id
+    const leases = await this.leaseRepo
+      .createQueryBuilder('lease')
+      .innerJoin('lease.unit', 'unit')
+      .where('unit.property_id = :propertyId', { propertyId })
+      .select(['lease.id'])
+      .getMany();
+
+    if (!leases.length) return [];
+
+    // Then find all invoices for these leases
+    const invoices = await this.invoiceRepo.find({
+      where: { lease_id: In(leases.map(l => l.id)) },
+      select: ['id'],
+    });
+
+    if (!invoices.length) return [];
+
+    // Handle date range
+    const dateRange: { payment_date?: any } = {};
+    if (options?.startDate) {
+      dateRange.payment_date = MoreThanOrEqual(new Date(options.startDate));
+    }
+    if (options?.endDate) {
+      const endDate = new Date(options.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      dateRange.payment_date = { ...dateRange.payment_date, [options.startDate ? '$and' : '$lte']: endDate };
+    }
+
+    // Handle sorting
+    const order = {};
+    if (['payment_date', 'amount', 'created_at', 'updated_at'].includes(sortBy)) {
+      order[sortBy] = sortOrder;
+    } else {
+      order['payment_date'] = 'DESC'; // Default sorting
+    }
+
+    // Build the where clause with invoice IDs and date range
+    const where: any = { invoice_id: In(invoices.map(i => i.id)) };
+    if (dateRange.payment_date) {
+      where.payment_date = dateRange.payment_date;
+    }
+
+    const [items, total] = await this.paymentRepo.findAndCount({
+      where,
+      order,
+      relations: ['applications', 'invoice'],
+      skip,
+      take: limit,
+    });
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
